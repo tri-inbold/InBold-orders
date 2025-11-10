@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP Orders - Món ăn hôm nay (v6 Debug)</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif; line-height: 1.6; padding: 20px; color: #333; background-color: #f4f5f7; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { max-width: 500px; width: 100%; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1, h2 { color: #1a73e8; text-align: center; }
+        #user-info { display: none; text-align: center; }
+        #user-info h3 { margin: 10px 0 5px; font-size: 1.2em; }
+        #user-info p { color: #5f6368; margin: 0; }
+        #sign-out-btn { background-color: #d93025; }
+        #auth-container { text-align: center; }
+        #sign-in-btn { display: flex; align-items: center; justify-content: center; width: 100%; background-color: #4285F4; font-size: 16px; }
+        #sign-in-btn img { width: 24px; height: 24px; margin-right: 12px; background: white; border-radius: 50%; padding: 4px; }
+        #meal-info { display: none; margin-top: 25px; padding: 20px; background-color: #e8f0fe; border-radius: 8px; text-align: center; }
+        #meal-info h2 { margin-top: 0; }
+        #meal-info .food-name { font-size: 1.5em; font-weight: bold; color: #1967d2; }
+        #meal-info .status { font-style: italic; margin-top: 10px; }
+        .no-meal { color: #d93025; }
+        button { color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>HP Orders</h1>
+        <div id="user-info">
+            <h3 id="user-name"></h3>
+            <p id="user-email"></p>
+            <button id="sign-out-btn">Đăng xuất</button>
+        </div>
+        <div id="auth-container">
+            <button id="sign-in-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon">
+                <span>Đăng nhập bằng Google</span>
+            </button>
+        </div>
+        <div id="meal-info">
+            <h2>Món ăn hôm nay của bạn</h2>
+            <div id="meal-details"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import các hàm cần thiết
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        console.log("DEBUG: Script đã bắt đầu chạy.");
+
+        // Cấu hình Firebase - ĐÃ SỬA LỖI appId
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDrCaGUyr9xLkT-xOqzFd9grp6tN2u7Zo",
+            authDomain: "hp-orders.firebaseapp.com",
+            projectId: "hp-orders",
+            storageBucket: "hp-orders.appspot.com",
+            messagingSenderId: "616722831059",
+            appId: "1:616722831059:web:9d19988d87397e7c13e626" // <-- LỖI ĐÃ ĐƯỢC SỬA TẠI ĐÂY
+        };
+
+        try {
+            // Khởi tạo các dịch vụ Firebase
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+            const provider = new GoogleAuthProvider();
+            console.log("DEBUG: Firebase khởi tạo thành công!");
+
+            // --- CÁC PHẦN TỬ UI ---
+            const userInfoDiv = document.getElementById('user-info');
+            const authContainerDiv = document.getElementById('auth-container');
+            const mealInfoDiv = document.getElementById('meal-info');
+            const signInBtn = document.getElementById('sign-in-btn');
+            const signOutBtn = document.getElementById('sign-out-btn');
+            console.log("DEBUG: Lấy các phần tử UI thành công. Nút đăng nhập:", signInBtn);
+            
+            // --- LOGIC LẤY DỮ LIỆU MÓN ĂN ---
+            async function displayTodaysMeal(staffName) { /* ... nội dung hàm giữ nguyên ... */
+                const getDayKey = () => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
+                const getYearAndWeek = () => {
+                    const date = new Date(); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+                    const week1 = new Date(date.getFullYear(), 0, 4);
+                    const weekNumber = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+                    return { year: date.getFullYear(), week: weekNumber };
+                };
+                
+                const { year, week } = getYearAndWeek();
+                const dayKey = getDayKey();
+                const mealDocPath = `${year}_${week}`;
+                const docRef = doc(db, mealDocPath, dayKey);
+                const mealDetailsContainer = document.getElementById('meal-details');
+
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const dayData = docSnap.data();
+                        const meal = dayData[staffName];
+                        if (meal) {
+                            mealDetailsContainer.innerHTML = `<p class="food-name">${meal.food}</p><p class="status">Trạng thái: ${meal.status}</p>`;
+                        } else {
+                            mealDetailsContainer.innerHTML = `<p class="no-meal">Bạn chưa đặt món cho hôm nay.</p>`;
+                        }
+                    } else {
+                        mealDetailsContainer.innerHTML = `<p class="no-meal">Chưa có thực đơn cho ngày hôm nay.</p>`;
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi lấy món ăn:", error);
+                    mealDetailsContainer.innerHTML = `<p class="no-meal">Lỗi khi tải dữ liệu món ăn.</p>`;
+                }
+                mealInfoDiv.style.display = 'block';
+            }
+
+            // --- LOGIC XÁC THỰC (AUTH) ---
+            onAuthStateChanged(auth, async (user) => {
+                console.log("DEBUG: onAuthStateChanged được kích hoạt. User:", user);
+                if (user) {
+                    const { displayName, email } = user;
+                    const staffDocRef = doc(db, "staff_list", "staffs");
+                    await setDoc(staffDocRef, { [displayName]: { email: email } }, { merge: true });
+
+                    document.getElementById('user-name').textContent = displayName;
+                    document.getElementById('user-email').textContent = email;
+                    userInfoDiv.style.display = 'block';
+                    authContainerDiv.style.display = 'none';
+
+                    displayTodaysMeal(displayName);
+
+                } else {
+                    userInfoDiv.style.display = 'none';
+                    authContainerDiv.style.display = 'block';
+                    mealInfoDiv.style.display = 'none';
+                }
+            });
+
+            // Gán sự kiện cho các nút
+            signInBtn.addEventListener('click', () => {
+                console.log("DEBUG: Nút đăng nhập đã được nhấn!");
+                signInWithRedirect(auth, provider);
+            });
+
+            signOutBtn.addEventListener('click', () => {
+                console.log("DEBUG: Nút đăng xuất đã được nhấn!");
+                signOut(auth).catch((error) => console.error("Lỗi đăng xuất:", error));
+            });
+
+        } catch (error) {
+            console.error("LỖI NGHIÊM TRỌNG: Không thể khởi tạo Firebase. Vui lòng kiểm tra cấu hình.", error);
+        }
+    </script>
+</body>
+</html>
