@@ -6,61 +6,403 @@
     <title>Inbold Menu</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS được giữ nguyên từ phiên bản trước */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-        :root { --primary-gradient: linear-gradient(90deg, #8E2DE2, #4A00E0); --secondary-color: #6c5ce7; --background-color: #12101e; --card-bg-color: rgba(29, 25, 46, 0.7); --text-color: #f0f0f0; --text-muted-color: #a0a0b0; --border-color: rgba(255, 255, 255, 0.1); --success-color: #00b894; --border-radius: 16px; --font-family: 'Poppins', sans-serif; }
+        :root { 
+            --primary-gradient: linear-gradient(90deg, #8E2DE2, #4A00E0); 
+            --secondary-color: #6c5ce7; 
+            --background-color: #12101e; 
+            --card-bg-color: rgba(29, 25, 46, 0.7); 
+            --text-color: #f0f0f0; 
+            --text-muted-color: #a0a0b0; 
+            --border-color: rgba(255, 255, 255, 0.1); 
+            --success-color: #00b894; 
+            --error-color: #ff6b6b;
+            --border-radius: 16px; 
+            --font-family: 'Poppins', sans-serif; 
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: var(--font-family); background-color: var(--background-color); color: var(--text-color); line-height: 1.6; font-size: 13px; }
-        #app { max-width: 600px; margin: 0 auto; background-color: #1a162d; min-height: 100vh; display: flex; flex-direction: column; position: relative; padding-bottom: 100px; }
-        @media (min-width: 620px) { #app { margin: 2rem auto; border-radius: 24px; min-height: calc(100vh - 4rem); } }
-        .glass { background: var(--card-bg-color); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: var(--border-radius); }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.5rem; }
+        body { 
+            font-family: var(--font-family); 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+            line-height: 1.6; 
+            font-size: 13px; 
+        }
+        #app { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background-color: #1a162d; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            padding-bottom: 100px; 
+        }
+        @media (min-width: 620px) { 
+            #app { 
+                margin: 2rem auto; 
+                border-radius: 24px; 
+                min-height: calc(100vh - 4rem); 
+            } 
+        }
+        .glass { 
+            background: var(--card-bg-color); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid var(--border-color); 
+            border-radius: var(--border-radius); 
+        }
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 1.5rem 1.5rem; 
+        }
         header h1 { font-size: 1.8rem; }
         main { flex-grow: 1; padding: 0 1rem; }
-        .icon-btn { background: none; border: none; color: var(--text-muted-color); font-size: 1.5rem; cursor: pointer; }
-        #tab-bar { position: fixed; z-index: 100; bottom: 1rem; left: 50%; transform: translateX(-50%); width: calc(100% - 2rem); max-width: 580px; display: flex; background: rgba(29, 25, 46, 0.85); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 50px; padding: 0.5rem; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        .tab-link { flex: 1; padding: 0.75rem; background: none; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; color: var(--text-muted-color); transition: all 0.3s ease; position: relative; }
-        .tab-link.active { color: white; background: var(--secondary-color); }
-        .search-bar-container { display: flex; align-items: center; gap: 0.5rem; padding: 1rem 0.5rem; }
+        .icon-btn { 
+            background: none; 
+            border: none; 
+            color: var(--text-muted-color); 
+            font-size: 1.5rem; 
+            cursor: pointer; 
+            transition: color 0.3s ease;
+        }
+        .icon-btn:hover { color: var(--text-color); }
+        #tab-bar { 
+            position: fixed; 
+            z-index: 100; 
+            bottom: 1rem; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: calc(100% - 2rem); 
+            max-width: 580px; 
+            display: flex; 
+            background: rgba(29, 25, 46, 0.85); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid var(--border-color); 
+            border-radius: 50px; 
+            padding: 0.5rem; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); 
+        }
+        .tab-link { 
+            flex: 1; 
+            padding: 0.75rem; 
+            background: none; 
+            border: none; 
+            border-radius: 50px; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            color: var(--text-muted-color); 
+            transition: all 0.3s ease; 
+            position: relative; 
+        }
+        .tab-link.active { 
+            color: white; 
+            background: var(--secondary-color); 
+        }
+        .search-bar-container { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            padding: 1rem 0.5rem; 
+        }
         .staff-list { list-style: none; }
-        .staff-item { display: flex; align-items: center; padding: 0.8rem 0.5rem; border-bottom: 1px solid var(--border-color); }
+        .staff-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 0.8rem 0.5rem; 
+            border-bottom: 1px solid var(--border-color); 
+        }
         .staff-item:last-child { border-bottom: none; }
         .staff-item.eaten { opacity: 0.4; }
         .staff-item.eaten .staff-name { text-decoration: line-through; }
-        .staff-details { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; }
-        .staff-name { font-weight: 600; font-size: 1.1rem; }
-        .staff-dish { color: var(--text-muted-color); font-style: italic; max-width: 50%; text-align: right; }
-        .shift-group h3 { padding: 1rem 0.5rem 0.5rem; font-size: 1.2rem; color: var(--secondary-color); }
-        .eaten-checkbox { display: inline-block; position: relative; cursor: pointer; width: 22px; height: 22px; margin-right: 1rem; flex-shrink: 0; }
-        .eaten-checkbox input { opacity: 0; width: 0; height: 0; }
-        .checkmark { position: absolute; top: 0; left: 0; height: 22px; width: 22px; background-color: rgba(255,255,255,0.1); border-radius: 50%; border: 1px solid var(--border-color); }
-        .eaten-checkbox input:checked ~ .checkmark { background-color: var(--success-color); border-color: var(--success-color); }
-        .checkmark:after { content: ""; position: absolute; display: none; left: 7px; top: 3px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+        .staff-details { 
+            flex-grow: 1; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .staff-name { 
+            font-weight: 600; 
+            font-size: 1.1rem; 
+        }
+        .staff-dish { 
+            color: var(--text-muted-color); 
+            font-style: italic; 
+            max-width: 50%; 
+            text-align: right; 
+        }
+        .shift-group h3 { 
+            padding: 1rem 0.5rem 0.5rem; 
+            font-size: 1.2rem; 
+            color: var(--secondary-color); 
+        }
+        .eaten-checkbox { 
+            display: inline-block; 
+            position: relative; 
+            cursor: pointer; 
+            width: 22px; 
+            height: 22px; 
+            margin-right: 1rem; 
+            flex-shrink: 0; 
+        }
+        .eaten-checkbox input { 
+            opacity: 0; 
+            width: 0; 
+            height: 0; 
+        }
+        .checkmark { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            height: 22px; 
+            width: 22px; 
+            background-color: rgba(255,255,255,0.1); 
+            border-radius: 50%; 
+            border: 1px solid var(--border-color); 
+            transition: all 0.3s ease;
+        }
+        .eaten-checkbox input:checked ~ .checkmark { 
+            background-color: var(--success-color); 
+            border-color: var(--success-color); 
+        }
+        .checkmark:after { 
+            content: ""; 
+            position: absolute; 
+            display: none; 
+            left: 7px; 
+            top: 3px; 
+            width: 5px; 
+            height: 10px; 
+            border: solid white; 
+            border-width: 0 3px 3px 0; 
+            transform: rotate(45deg); 
+        }
         .eaten-checkbox input:checked ~ .checkmark:after { display: block; }
-        .card { padding: 1.5rem; margin-bottom: 1rem; }
-        .modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: #00000099; display: flex; align-items: center; justify-content: center; }
-        .modal-content { padding: 2rem; width: 90%; max-width: 400px; position: relative; }
-        .modal-content label { display: block; margin-bottom: 0.5rem; color: var(--text-muted-color); font-size: 1rem; }
-        .shift-toggle, .language-toggle { display: flex; background: #00000033; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
-        .shift-toggle label, .language-toggle button { flex: 1; text-align: center; padding: 0.75rem; border: none; background: none; color: var(--text-muted-color); cursor: pointer; transition: all 0.3s ease; font-size: 1rem; }
+        .card { 
+            padding: 1.5rem; 
+            margin-bottom: 1rem; 
+        }
+        .modal { 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0, 0, 0, 0.6); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .modal-content { 
+            padding: 2rem; 
+            width: 90%; 
+            max-width: 400px; 
+            position: relative; 
+        }
+        .modal-content h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        .modal-content label { 
+            display: block; 
+            margin-bottom: 0.5rem; 
+            color: var(--text-muted-color); 
+            font-size: 1rem; 
+        }
+        .shift-toggle, .language-toggle { 
+            display: flex; 
+            background: rgba(0, 0, 0, 0.2); 
+            border-radius: 12px; 
+            overflow: hidden; 
+            margin-bottom: 1.5rem; 
+        }
+        .shift-toggle label, .language-toggle button { 
+            flex: 1; 
+            text-align: center; 
+            padding: 0.75rem; 
+            border: none; 
+            background: none; 
+            color: var(--text-muted-color); 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            font-size: 1rem; 
+        }
         .shift-toggle input[type="radio"] { display: none; }
-        .shift-toggle input[type="radio"]:checked + label, .language-toggle button.active { background: var(--secondary-color); color: white; font-weight: 600; }
-        input[type="text"] { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border-color); background: #00000033; color: var(--text-color); border-radius: 12px; font-size: 1.1rem; }
+        .shift-toggle input[type="radio"]:checked + label, 
+        .language-toggle button.active { 
+            background: var(--secondary-color); 
+            color: white; 
+            font-weight: 600; 
+        }
+        input[type="text"] { 
+            width: 100%; 
+            padding: 0.8rem; 
+            margin-bottom: 1rem; 
+            border: 1px solid var(--border-color); 
+            background: rgba(0, 0, 0, 0.2); 
+            color: var(--text-color); 
+            border-radius: 12px; 
+            font-size: 1.1rem; 
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
         .hidden { display: none !important; }
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #12101ecc; backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .spinner { border: 5px solid #ffffff33; border-top: 5px solid white; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .close-button { position: absolute; top: 1rem; right: 1rem; color: var(--text-muted-color); font-size: 1.5rem; cursor: pointer; }
-        .btn-primary { width: 100%; padding: 0.8rem; border-radius: 12px; font-size: 1.1rem; cursor: pointer; font-weight: 600; border: none; background: var(--primary-gradient); color: white; margin-top: 0.5rem; }
+        #loader { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(18, 16, 30, 0.8); 
+            backdrop-filter: blur(5px); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 9999; 
+        }
+        .spinner { 
+            border: 5px solid rgba(255, 255, 255, 0.2); 
+            border-top: 5px solid white; 
+            border-radius: 50%; 
+            width: 50px; 
+            height: 50px; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .close-button { 
+            position: absolute; 
+            top: 1rem; 
+            right: 1rem; 
+            color: var(--text-muted-color); 
+            font-size: 1.5rem; 
+            cursor: pointer; 
+            transition: color 0.3s ease;
+        }
+        .close-button:hover {
+            color: var(--text-color);
+        }
+        .btn-primary { 
+            width: 100%; 
+            padding: 0.8rem; 
+            border-radius: 12px; 
+            font-size: 1.1rem; 
+            cursor: pointer; 
+            font-weight: 600; 
+            border: none; 
+            background: var(--primary-gradient); 
+            color: white; 
+            margin-top: 0.5rem; 
+            transition: transform 0.2s ease, opacity 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         .dish-options { margin-top: 1rem; }
-        .dish-option { display: block; padding: 1rem; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.2s ease; font-size: 1.1rem; text-align: center; }
-        .dish-option.selected { border-color: var(--secondary-color); background-color: #6c5ce733; box-shadow: 0 0 10px #6c5ce780; }
-        .day-tabs { display: flex; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
-        .day-tab { padding: 0.5rem; flex-shrink: 0; flex-grow: 1; cursor: pointer; background: none; border: none; font-size: 1rem; color: var(--text-muted-color); white-space: nowrap; border-bottom: 3px solid transparent; text-align: center; }
-        .day-tab.active { color: white; font-weight: bold; border-bottom-color: var(--secondary-color); }
-        .dish-name { font-size: 1.75rem; font-weight: 600; text-align: center; padding: 2.5rem 1rem; background: rgba(0,0,0,0.2); border-radius: var(--border-radius); margin-bottom: 1.5rem; color: white; }
-        #toast-notification { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background-color: var(--success-color); color: white; padding: 1rem 1.5rem; border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1001; transition: bottom 0.5s ease-in-out; }
+        .dish-option { 
+            display: block; 
+            padding: 1rem; 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            margin-bottom: 0.75rem; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            font-size: 1.1rem; 
+            text-align: center; 
+        }
+        .dish-option:hover {
+            border-color: var(--secondary-color);
+            background-color: rgba(108, 92, 231, 0.1);
+        }
+        .dish-option.selected { 
+            border-color: var(--secondary-color); 
+            background-color: rgba(108, 92, 231, 0.2); 
+            box-shadow: 0 0 10px rgba(108, 92, 231, 0.5); 
+        }
+        .day-tabs { 
+            display: flex; 
+            margin-bottom: 1rem; 
+            border-bottom: 1px solid var(--border-color); 
+            overflow-x: auto; 
+        }
+        .day-tab { 
+            padding: 0.5rem; 
+            flex-shrink: 0; 
+            flex-grow: 1; 
+            cursor: pointer; 
+            background: none; 
+            border: none; 
+            font-size: 1rem; 
+            color: var(--text-muted-color); 
+            white-space: nowrap; 
+            border-bottom: 3px solid transparent; 
+            text-align: center; 
+            transition: all 0.3s ease;
+        }
+        .day-tab:hover {
+            color: white;
+        }
+        .day-tab.active { 
+            color: white; 
+            font-weight: bold; 
+            border-bottom-color: var(--secondary-color); 
+        }
+        .dish-name { 
+            font-size: 1.75rem; 
+            font-weight: 600; 
+            text-align: center; 
+            padding: 2.5rem 1rem; 
+            background: rgba(0,0,0,0.2); 
+            border-radius: var(--border-radius); 
+            margin-bottom: 1.5rem; 
+            color: white; 
+        }
+        #toast-notification { 
+            position: fixed; 
+            bottom: -100px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background-color: var(--success-color); 
+            color: white; 
+            padding: 1rem 1.5rem; 
+            border-radius: var(--border-radius); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
+            z-index: 1001; 
+            transition: bottom 0.5s ease-in-out; 
+            max-width: 90%;
+            text-align: center;
+        }
         #toast-notification.show { bottom: 120px; }
+        #toast-notification.error {
+            background-color: var(--error-color);
+        }
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted-color);
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        .logout-btn:hover {
+            color: var(--secondary-color);
+        }
     </style>
 </head>
 <body>
@@ -74,7 +416,7 @@
 
         <main id="main-content"></main>
 
-        <div id="loader"><div class="spinner"></div></div>
+        <div id="loader" class="hidden"><div class="spinner"></div></div>
         
         <div id="settings-modal" class="modal hidden">
             <div class="modal-content glass">
@@ -84,8 +426,10 @@
                 <input type="text" id="department-input" placeholder="Phòng ban của bạn">
                 <label>Loại ca</label>
                 <div class="shift-toggle">
-                    <input type="radio" id="sang" name="shift-type" value="Sáng" checked><label for="sang">Ca sáng</label>
-                    <input type="radio" id="chieu" name="shift-type" value="Chiều"><label for="chieu">Ca Chiều</label>
+                    <input type="radio" id="sang" name="shift-type" value="Sáng" checked>
+                    <label for="sang">Ca sáng</label>
+                    <input type="radio" id="chieu" name="shift-type" value="Chiều">
+                    <label for="chieu">Ca Chiều</label>
                 </div>
                 <label>Ngôn ngữ</label>
                 <div class="language-toggle">
@@ -108,7 +452,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         // --- KHỞI TẠO FIREBASE ---
         const firebaseConfig = {
@@ -150,16 +494,21 @@
             const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             return `${d.getFullYear()}_${weekNo}`;
         };
+        
         const getDayKey = () => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
+        
         const showLoader = () => loader.classList.remove('hidden');
         const hideLoader = () => loader.classList.add('hidden');
+        
         const parseDish = (dishString) => {
             if (!dishString) return '';
             const parts = dishString.split('|');
             return (state.language.startsWith('en') && parts.length > 1) ? parts[1].trim() : parts[0].trim();
         };
-        const showToast = (message) => {
+        
+        const showToast = (message, isError = false) => {
             toast.textContent = message;
+            toast.classList.toggle('error', isError);
             toast.classList.add('show');
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         };
@@ -167,10 +516,15 @@
         async function render() {
             if (!state.authReady) return;
             showLoader();
-            switch (state.currentTab) {
-                case 'today': await renderToday(); break;
-                case 'menu': await renderMenu(); break;
-                case 'order': await renderOrder(); break;
+            try {
+                switch (state.currentTab) {
+                    case 'today': await renderToday(); break;
+                    case 'menu': await renderMenu(); break;
+                    case 'order': await renderOrder(); break;
+                }
+            } catch (error) {
+                console.error('Render error:', error);
+                mainContent.innerHTML = `<div class="card glass"><p style="color: var(--error-color);">Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.</p></div>`;
             }
             hideLoader();
         }
@@ -204,6 +558,7 @@
             }
             mainContent.innerHTML = content + `</div>`;
         }
+
         async function renderMenu() {
             const dayKey = getDayKey();
             const weekString = getWeekString(new Date());
@@ -225,6 +580,7 @@
                 document.getElementById('staff-list-container').innerHTML = `<p style="text-align:center;">Chưa có dữ liệu cho hôm nay.</p>`;
             }
         }
+
         function updateStaffListView(dayData, searchTerm = '') {
             const container = document.getElementById('staff-list-container');
             const staffOrders = Object.entries(dayData).map(([name, order]) => ({ name, ...order }));
@@ -253,6 +609,7 @@
             
             container.innerHTML = html || `<p style="text-align:center;">Không tìm thấy kết quả.</p>`;
         }
+
         async function renderOrder() {
             const today = new Date();
             const targetWeek = today.getDay() >= 1 && today.getDay() <= 3 
@@ -289,24 +646,43 @@
             };
 
             renderDayOptions(days[0]);
+            
+            // Add day tab click handlers
+            document.querySelectorAll('.day-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelector('.day-tab.active')?.classList.remove('active');
+                    tab.classList.add('active');
+                    renderDayOptions(tab.dataset.day);
+                });
+            });
         }
-
 
         async function syncUserProfile() {
             const user = state.currentUser;
             const staffRef = doc(db, "staff_list", "staffs");
             const staffSnap = await getDoc(staffRef);
+            
             if (staffSnap.exists()) {
                 const allStaff = staffSnap.data();
                 if (!allStaff[user.displayName]) {
-                    allStaff[user.displayName] = { email: user.email, depart: "", shift: "Sáng", lan: "vi" };
+                    allStaff[user.displayName] = { 
+                        email: user.email, 
+                        depart: "", 
+                        shift: "Sáng", 
+                        lan: "vi" 
+                    };
                     await setDoc(staffRef, allStaff);
                 }
                 state.staffProfile = allStaff[user.displayName];
                 state.language = state.staffProfile.lan || 'vi';
             } else {
                 const newStaffData = {
-                    [user.displayName]: { email: user.email, depart: "", shift: "Sáng", lan: "vi" }
+                    [user.displayName]: { 
+                        email: user.email, 
+                        depart: "", 
+                        shift: "Sáng", 
+                        lan: "vi" 
+                    }
                 };
                 await setDoc(staffRef, newStaffData);
                 state.staffProfile = newStaffData[user.displayName];
@@ -321,7 +697,7 @@
                         <img src="${user.photoURL}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;">
                         <div>
                             <h1 style="font-size: 1.2rem; margin: 0; color: white;">${user.displayName}</h1>
-                            <button id="logout-btn" style="background:none; border:none; color:#a0a0b0; cursor:pointer; padding:0;">Đăng xuất</button>
+                            <button id="logout-btn" class="logout-btn">Đăng xuất</button>
                         </div>
                     </div>`;
                 settingsBtn.classList.remove('hidden');
@@ -339,22 +715,44 @@
         
         document.body.addEventListener('click', async (e) => {
             const target = e.target;
+            
+            // LOGIN
             if (target.id === 'login-btn') {
                 showLoader();
-                sessionStorage.setItem('isNewLogin', 'true');
-                signInWithRedirect(auth, provider);
+                try {
+                    await signInWithPopup(auth, provider);
+                    // User state will be handled by onAuthStateChanged
+                } catch (error) {
+                    console.error('Login error:', error);
+                    hideLoader();
+                    showToast('Đăng nhập thất bại. Vui lòng thử lại.', true);
+                }
             }
-            if (target.id === 'logout-btn') signOut(auth);
+            
+            // LOGOUT
+            if (target.id === 'logout-btn') {
+                showLoader();
+                try {
+                    await signOut(auth);
+                    showToast('Đã đăng xuất thành công');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    showToast('Đăng xuất thất bại', true);
+                }
+                hideLoader();
+            }
 
+            // TAB NAVIGATION
             const tabButton = target.closest('.tab-link');
             if (tabButton) {
                 if (tabButton.dataset.tab === state.currentTab) return;
-                document.querySelector('.tab-link.active').classList.remove('active');
+                document.querySelector('.tab-link.active')?.classList.remove('active');
                 tabButton.classList.add('active');
                 state.currentTab = tabButton.dataset.tab;
                 await render();
             }
 
+            // SETTINGS MODAL
             if (target.closest('#settings-btn')) {
                 const profile = state.staffProfile;
                 document.getElementById('department-input').value = profile.depart || '';
@@ -362,27 +760,83 @@
                 document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === profile.lan));
                 settingsModal.classList.remove('hidden');
             }
+            
             if (target.id === 'close-settings-btn' || target === settingsModal) {
                 settingsModal.classList.add('hidden');
             }
 
-            if (target.id === 'save-settings-btn') {
-                showLoader();
-                const newProfile = {
-                    ...state.staffProfile,
-                    depart: document.getElementById('department-input').value.trim(),
-                    shift: document.querySelector('input[name="shift-type"]:checked').value,
-                    lan: document.querySelector('.lang-btn.active').dataset.lang,
-                };
-                const staffRef = doc(db, "staff_list", "staffs");
-                await updateDoc(staffRef, { [state.currentUser.displayName]: newProfile });
-                state.staffProfile = newProfile;
-                state.language = newProfile.lan;
-                settingsModal.classList.add('hidden');
-                hideLoader();
-                showToast('Cập nhật thành công!');
+            // LANGUAGE TOGGLE
+            const langBtn = target.closest('.lang-btn');
+            if (langBtn) {
+                document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+                langBtn.classList.add('active');
             }
 
+            // SAVE SETTINGS
+            if (target.id === 'save-settings-btn') {
+                showLoader();
+                try {
+                    const newProfile = {
+                        ...state.staffProfile,
+                        depart: document.getElementById('department-input').value.trim(),
+                        shift: document.querySelector('input[name="shift-type"]:checked').value,
+                        lan: document.querySelector('.lang-btn.active').dataset.lang,
+                    };
+                    const staffRef = doc(db, "staff_list", "staffs");
+                    await updateDoc(staffRef, { [state.currentUser.displayName]: newProfile });
+                    state.staffProfile = newProfile;
+                    state.language = newProfile.lan;
+                    settingsModal.classList.add('hidden');
+                    showToast('Cập nhật thành công!');
+                } catch (error) {
+                    console.error('Settings save error:', error);
+                    showToast('Cập nhật thất bại. Vui lòng thử lại.', true);
+                }
+                hideLoader();
+            }
+
+            // EAT CONFIRMATION
+            if (target.id === 'eat-button') {
+                showLoader();
+                try {
+                    const dayKey = getDayKey();
+                    const weekString = getWeekString(new Date());
+                    const docRef = doc(db, weekString, dayKey);
+                    await updateDoc(docRef, {
+                        [`${state.currentUser.displayName}.status`]: 'eat'
+                    });
+                    await renderToday();
+                    showToast('Đã xác nhận ăn!');
+                } catch (error) {
+                    console.error('Eat confirmation error:', error);
+                    showToast('Xác nhận thất bại', true);
+                }
+                hideLoader();
+            }
+
+            // CHECKBOX IN MENU
+            const checkbox = target.closest('.eaten-checkbox-input');
+            if (checkbox) {
+                showLoader();
+                try {
+                    const staffName = checkbox.dataset.name;
+                    const isChecked = checkbox.checked;
+                    const dayKey = getDayKey();
+                    const weekString = getWeekString(new Date());
+                    const docRef = doc(db, weekString, dayKey);
+                    await updateDoc(docRef, {
+                        [`${staffName}.status`]: isChecked ? 'eat' : 'not'
+                    });
+                    showToast(isChecked ? 'Đã đánh dấu' : 'Đã bỏ đánh dấu');
+                } catch (error) {
+                    console.error('Checkbox update error:', error);
+                    showToast('Cập nhật thất bại', true);
+                    checkbox.checked = !checkbox.checked;
+                }
+                hideLoader();
+            }
+
+            // DISH SELECTION
             const dishOption = target.closest('.dish-option');
             if (dishOption) {
                 const dayKey = dishOption.dataset.dayKey;
@@ -390,63 +844,83 @@
                 
                 const currentDayTab = document.querySelector('.day-tab.active');
                 await renderOrder();
-                if (currentDayTab) { // Ensure tab exists before trying to click
+                
+                if (currentDayTab) {
                     document.querySelector(`.day-tab[data-day="${currentDayTab.dataset.day}"]`)?.classList.add('active');
                 }
 
                 if (Object.values(state.orderSelection).every(dish => dish !== null)) {
                     document.getElementById('submit-order-btn')?.classList.remove('hidden');
-}
+                }
             }
             
+            // SUBMIT ORDER
             if (target.id === 'submit-order-btn') {
                 showLoader();
-                const today = new Date();
-                const targetWeek = today.getDay() >= 1 && today.getDay() <= 3 
-                    ? getWeekString(today) 
-                    : getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+                try {
+                    const today = new Date();
+                    const targetWeek = today.getDay() >= 1 && today.getDay() <= 3 
+                        ? getWeekString(today) 
+                        : getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
 
-                for (const dayKey in state.orderSelection) {
-                    const dayDocRef = doc(db, targetWeek, dayKey);
-                    const updatePayload = {
-                        [`${state.currentUser.displayName}`]: {
-                            food: state.orderSelection[dayKey],
-                            status: 'not',
-                            shift: state.staffProfile.shift,
-                            depart: state.staffProfile.depart,
-                        }
-                    };
-                    await setDoc(dayDocRef, updatePayload, { merge: true });
+                    for (const dayKey in state.orderSelection) {
+                        const dayDocRef = doc(db, targetWeek, dayKey);
+                        const updatePayload = {
+                            [`${state.currentUser.displayName}`]: {
+                                food: state.orderSelection[dayKey],
+                                status: 'not',
+                                shift: state.staffProfile.shift,
+                                depart: state.staffProfile.depart,
+                            }
+                        };
+                        await setDoc(dayDocRef, updatePayload, { merge: true });
+                    }
+                    
+                    showToast('Đặt món thành công!');
+                    state.orderSelection = { mon: null, tue: null, wed: null, thu: null, fri: null };
+                    document.querySelector('.tab-link[data-tab="today"]')?.click();
+                } catch (error) {
+                    console.error('Order submission error:', error);
+                    showToast('Đặt món thất bại. Vui lòng thử lại.', true);
                 }
-                
-                showToast('Đặt món thành công!');
-                state.orderSelection = { mon: null, tue: null, wed: null, thu: null, fri: null };
-                document.querySelector('.tab-link[data-tab="today"]').click();
+                hideLoader();
             }
         });
         
         // --- LUỒNG KHỞI TẠO ỨNG DỤNG ---
         async function main() {
-            await setPersistence(auth, browserLocalPersistence);
+            showLoader();
+            
+            try {
+                await setPersistence(auth, browserLocalPersistence);
 
-            onAuthStateChanged(auth, async (user) => {
-                state.authReady = true;
-                if (user) {
-                    state.currentUser = user;
-                    await syncUserProfile();
-                    updateUIForUser(user);
-                    await render();
+                onAuthStateChanged(auth, async (user) => {
+                    state.authReady = true;
                     
-                    if (sessionStorage.getItem('isNewLogin')) {
-                        showToast(`Chào mừng, ${user.displayName}!`);
-                        sessionStorage.removeItem('isNewLogin');
+                    if (user) {
+                        state.currentUser = user;
+                        showLoader();
+                        try {
+                            await syncUserProfile();
+                            updateUIForUser(user);
+                            await render();
+                            showToast(`Chào mừng, ${user.displayName}!`);
+                        } catch (error) {
+                            console.error('Profile sync error:', error);
+                            showToast('Có lỗi xảy ra khi tải thông tin người dùng', true);
+                        }
+                        hideLoader();
+                    } else {
+                        state.currentUser = null;
+                        updateUIForUser(null);
+                        hideLoader();
                     }
-                } else {
-                    state.currentUser = null;
-                    updateUIForUser(null);
-                }
+                });
+            } catch (error) {
+                console.error('App initialization error:', error);
                 hideLoader();
-            });
+                showToast('Không thể khởi tạo ứng dụng', true);
+            }
         }
 
         main();
