@@ -59,6 +59,8 @@
         .day-tab { padding: 0.5rem; flex-shrink: 0; flex-grow: 1; cursor: pointer; background: none; border: none; font-size: 1rem; color: var(--text-muted-color); white-space: nowrap; border-bottom: 3px solid transparent; text-align: center; }
         .day-tab.active { color: white; font-weight: bold; border-bottom-color: var(--secondary-color); }
         .dish-name { font-size: 1.75rem; font-weight: 600; text-align: center; padding: 2.5rem 1rem; background: rgba(0,0,0,0.2); border-radius: var(--border-radius); margin-bottom: 1.5rem; color: white; }
+        #toast-notification { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background-color: var(--success-color); color: white; padding: 1rem 1.5rem; border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1001; transition: bottom 0.5s ease-in-out; }
+        #toast-notification.show { bottom: 120px; }
     </style>
 </head>
 <body>
@@ -75,261 +77,76 @@
         <div id="loader"><div class="spinner"></div></div>
         
         <div id="settings-modal" class="modal hidden">
-            <div class="modal-content glass">
-                <span id="close-settings-btn" class="close-button">&times;</span>
-                <h2 data-lang-key="settings">Cài đặt</h2>
-                
-                <label data-lang-key="department">Phòng ban</label>
-                <input type="text" id="department-input" placeholder="Phòng ban của bạn">
-
-                <label data-lang-key="shift_type">Loại ca</label>
-                <div class="shift-toggle">
-                    <input type="radio" id="sang" name="shift-type" value="Sáng" checked><label for="sang">Ca sáng</label>
-                    <input type="radio" id="chieu" name="shift-type" value="Chiều"><label for="chieu">Ca Chiều</label>
-                </div>
-                
-                <label data-lang-key="language">Ngôn ngữ</label>
-                <div class="language-toggle">
-                    <button data-lang="vi" class="lang-btn active">VI</button>
-                    <button data-lang="en" class="lang-btn">EN</button>
-                </div>
-
-                <button id="save-settings-btn" class="btn-primary">Lưu thay đổi</button>
-            </div>
+            <!-- ... Nội dung modal giữ nguyên ... -->
         </div>
 
         <nav id="tab-bar" class="hidden">
-            <button class="tab-link active" data-tab="today">Hôm Nay</button>
-            <button class="tab-link" data-tab="menu">Thực Đơn</button>
-            <button class="tab-link" data-tab="order">Đặt Món</button>
+            <!-- ... Nội dung tab bar giữ nguyên ... -->
         </nav>
+        
+        <div id="toast-notification"></div>
     </div>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // --- KHỞI TẠO FIREBASE ---
-        const firebaseConfig = {
-            // apiKey của bạn ở đây. Việc này là an toàn.
-            apiKey: "AIzaSyCDrCaGUyr9xLkT-xOqzFd9grp6tN2u7Zo",
-            authDomain: "hp-orders.firebaseapp.com",
-            projectId: "hp-orders",
-            storageBucket: "hp-orders.appspot.com",
-            messagingSenderId: "616722831059",
-            appId: "1:616722831059:web:9d19988d87397e7c13e626"
-        };
+        const firebaseConfig = { /* ... firebaseConfig của bạn ... */ };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // --- CÁC PHẦN TỬ UI ---
         const mainContent = document.getElementById('main-content');
         const tabBar = document.getElementById('tab-bar');
         const loader = document.getElementById('loader');
         const userProfileDiv = document.getElementById('user-profile');
         const settingsBtn = document.getElementById('settings-btn');
         const settingsModal = document.getElementById('settings-modal');
-        
-        // --- TRẠNG THÁI ỨNG DỤNG ---
+        const toast = document.getElementById('toast-notification');
+
         const state = {
             currentUser: null,
             staffProfile: {},
             language: 'vi',
             currentTab: 'today',
+            authReady: false, // <-- Biến mới để kiểm tra trạng thái xác thực
             orderSelection: { mon: null, tue: null, wed: null, thu: null, fri: null },
         };
         
-        // --- CÁC HÀM HELPER ---
-        const getWeekString = (date) => {
-            const d = new Date(date);
-            d.setHours(0, 0, 0, 0);
-            d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-            const yearStart = new Date(d.getFullYear(), 0, 1);
-            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-            return `${d.getFullYear()}_${weekNo}`;
-        };
-        const getDayKey = () => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
+        const getWeekString = (date) => { /* ... */ };
+        const getDayKey = () => { /* ... */ };
         const showLoader = () => loader.classList.remove('hidden');
         const hideLoader = () => loader.classList.add('hidden');
-        const parseDish = (dishString) => {
-            if (!dishString) return '';
-            const parts = dishString.split('|');
-            return (state.language.startsWith('en') && parts.length > 1) ? parts[1].trim() : parts[0].trim();
+        const parseDish = (dishString) => { /* ... */ };
+        const showToast = (message) => {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
         };
 
-        // --- HÀM RENDER CHÍNH ---
         async function render() {
-            // Không hiển thị loader ở đây, để hàm cha quản lý
+            if (!state.authReady) return; // Không render gì nếu Auth chưa sẵn sàng
+            showLoader();
             switch (state.currentTab) {
                 case 'today': await renderToday(); break;
                 case 'menu': await renderMenu(); break;
                 case 'order': await renderOrder(); break;
             }
+            hideLoader();
         }
 
-        async function renderToday() { /* Giữ nguyên */
-            const dayKey = getDayKey();
-            if (['sun', 'sat'].includes(dayKey)) {
-                mainContent.innerHTML = `<div class="card glass"><h2>Hôm nay không phục vụ bữa ăn.</h2></div>`;
-                return;
-            }
+        async function renderToday() { /* ... */ }
+        async function renderMenu() { /* ... */ }
+        function updateStaffListView(dayData, searchTerm = '') { /* ... */ }
+        async function renderOrder() { /* ... */ }
+        async function syncUserProfile() { /* ... */ }
 
-            const weekString = getWeekString(new Date());
-            const docRef = doc(db, weekString, dayKey);
-            const docSnap = await getDoc(docRef);
-            let content = `<div class="card glass"><h2>Món ăn hôm nay</h2>`;
-
-            if (docSnap.exists()) {
-                const dayData = docSnap.data();
-                const userOrder = dayData[state.currentUser.displayName];
-                if (userOrder && userOrder.food) {
-                    const isEaten = userOrder.status === 'eat';
-                    content += `<div class="dish-name">${parseDish(userOrder.food)}</div>
-                                <button id="eat-button" class="btn-primary" ${isEaten ? 'disabled' : ''}>
-                                    ${isEaten ? 'Đã xác nhận' : 'Xác nhận đã ăn'}
-                                </button>`;
-                } else {
-                    content += `<p>Bạn chưa đặt món cho hôm nay.</p>`;
-                }
-            } else {
-                content += `<p>Chưa có thực đơn cho ngày hôm nay.</p>`;
-            }
-            mainContent.innerHTML = content + `</div>`;
-        }
-        async function renderMenu() { /* Giữ nguyên */
-            const dayKey = getDayKey();
-            const weekString = getWeekString(new Date());
-            const docRef = doc(db, weekString, dayKey);
-            const docSnap = await getDoc(docRef);
-
-            mainContent.innerHTML = `<div class="card glass">
-                <div class="search-bar-container">
-                    <input type="text" id="search-staff" class="glass" placeholder="Tìm kiếm nhân viên...">
-                </div>
-                <div id="staff-list-container"></div>
-            </div>`;
-            
-            if (docSnap.exists()) {
-                const dayData = docSnap.data();
-                updateStaffListView(dayData);
-                document.getElementById('search-staff').addEventListener('input', (e) => updateStaffListView(dayData, e.target.value));
-            } else {
-                document.getElementById('staff-list-container').innerHTML = `<p style="text-align:center;">Chưa có dữ liệu cho hôm nay.</p>`;
-            }
-        }
-        function updateStaffListView(dayData, searchTerm = '') { /* Giữ nguyên */
-             const container = document.getElementById('staff-list-container');
-            const staffOrders = Object.entries(dayData).map(([name, order]) => ({ name, ...order }));
-            const filtered = staffOrders.filter(o => o.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-            const createListHTML = (list) => list.map(order => {
-                const isEaten = order.status === 'eat';
-                return `<li class="staff-item ${isEaten ? 'eaten' : ''}">
-                    <label class="eaten-checkbox">
-                        <input type="checkbox" class="eaten-checkbox-input" data-name="${order.name}" ${isEaten ? 'checked' : ''}>
-                        <span class="checkmark"></span>
-                    </label>
-                    <div class="staff-details">
-                        <span class="staff-name">${order.name}</span>
-                        <span class="staff-dish">${parseDish(order.food)}</span>
-                    </div>
-                </li>`;
-            }).join('');
-            
-            const sang = filtered.filter(o => o.shift === 'Sáng').sort((a,b) => a.name.localeCompare(b.name));
-            const chieu = filtered.filter(o => o.shift === 'Chiều').sort((a,b) => a.name.localeCompare(b.name));
-            
-            let html = '';
-            if (sang.length > 0) html += `<div class="shift-group"><h3>Ca sáng</h3><ul class="staff-list">${createListHTML(sang)}</ul></div>`;
-            if (chieu.length > 0) html += `<div class="shift-group"><h3>Ca Chiều</h3><ul class="staff-list">${createListHTML(chieu)}</ul></div>`;
-            
-            container.innerHTML = html || `<p style="text-align:center;">Không tìm thấy kết quả.</p>`;
-        }
-        async function renderOrder() { /* Giữ nguyên */
-            const today = new Date();
-            const targetWeek = today.getDay() >= 1 && today.getDay() <= 3 
-                ? getWeekString(today) 
-                : getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
-            
-            const menuDoc = await getDoc(doc(db, targetWeek, "Menu"));
-
-            if (!menuDoc.exists()) {
-                mainContent.innerHTML = `<div class="card glass"><p>Thực đơn cho tuần tới chưa được cập nhật.</p></div>`;
-                return;
-            }
-            
-            const menu = menuDoc.data();
-            const days = ["mon", "tue", "wed", "thu", "fri"];
-            const dayNames = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
-
-            let content = `<div class="card glass">
-                <h2>Đặt món cho Tuần ${targetWeek.split('_')[1]}</h2>
-                <div class="day-tabs">${days.map((day, i) => `<button class="day-tab ${i === 0 ? 'active' : ''}" data-day="${day}">${dayNames[day]}</button>`).join('')}</div>
-                <div id="order-form-content"></div>
-                <button id="submit-order-btn" class="btn-primary hidden">Hoàn tất đặt món</button>
-            </div>`;
-            mainContent.innerHTML = content;
-
-            const renderDayOptions = (dayKey) => {
-                const dishes = menu[dayKey]?.split(',').map(d => d.trim()) || [];
-                document.getElementById('order-form-content').innerHTML = `
-                    <div class="dish-options">${dishes.map(dish => `
-                        <div class="dish-option ${state.orderSelection[dayKey] === dish ? 'selected' : ''}" data-dish="${dish}" data-day-key="${dayKey}">
-                            ${parseDish(dish)}
-                        </div>`).join('')}
-                    </div>`;
-            };
-
-            renderDayOptions(days[0]);
-        }
-
-
-        // --- LOGIC XÁC THỰC VÀ QUẢN LÝ USER ---
-        onAuthStateChanged(auth, async (user) => {
-            // Không hiển thị loader ở đây nữa
+        function updateUIForUser(user) {
             if (user) {
-                state.currentUser = user;
-                await syncUserProfile();
-                updateUIForUser(user);
-                await render(); // Render nội dung chính
-                hideLoader(); // **SỬA LỖI:** Chỉ ẩn loader sau khi mọi thứ đã sẵn sàng
-            } else {
-                state.currentUser = null;
-                updateUIForUser(null);
-                hideLoader(); // **SỬA LỖI:** Cũng ẩn loader nếu người dùng chưa đăng nhập
-            }
-        });
-
-        async function syncUserProfile() { /* Giữ nguyên */
-            const user = state.currentUser;
-            const staffRef = doc(db, "staff_list", "staffs");
-            const staffSnap = await getDoc(staffRef);
-            if (staffSnap.exists()) {
-                const allStaff = staffSnap.data();
-                if (!allStaff[user.displayName]) {
-                    // User mới, tạo entry cơ bản
-                    allStaff[user.displayName] = { email: user.email, depart: "", shift: "Sáng", lan: "vi" };
-                    await setDoc(staffRef, allStaff); // Ghi lại toàn bộ document
-                }
-                state.staffProfile = allStaff[user.displayName];
-                state.language = state.staffProfile.lan || 'vi';
-            } else {
-                // Document "staffs" chưa tồn tại, tạo mới
-                const newStaffData = {
-                    [user.displayName]: { email: user.email, depart: "", shift: "Sáng", lan: "vi" }
-                };
-                await setDoc(staffRef, newStaffData);
-                state.staffProfile = newStaffData[user.displayName];
-                state.language = 'vi';
-            }
-        }
-
-        function updateUIForUser(user) { /* Giữ nguyên */
-            if (user) {
+                // Đã đăng nhập
                 userProfileDiv.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <img src="${user.photoURL}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;">
@@ -341,6 +158,7 @@
                 settingsBtn.classList.remove('hidden');
                 tabBar.classList.remove('hidden');
             } else {
+                // Chưa đăng nhập
                 userProfileDiv.innerHTML = `<h1>Inbold Menu</h1>`;
                 settingsBtn.classList.add('hidden');
                 tabBar.classList.add('hidden');
@@ -351,100 +169,59 @@
             }
         }
         
-        // --- EVENT DELEGATION LISTENER ---
-        document.body.addEventListener('click', async (e) => {
-            const target = e.target;
+        document.body.addEventListener('click', async (e) => { /* ... */ });
+        
+        // --- LUỒNG KHỞI TẠO ỨNG DỤNG MỚI ---
+        async function main() {
+            // Bước 1: Thiết lập chế độ duy trì đăng nhập
+            await setPersistence(auth, browserLocalPersistence);
 
-            // Nút đăng nhập/đăng xuất
-            if (target.id === 'login-btn') {
-                showLoader(); // Hiển thị loader trước khi chuyển hướng
-                signInWithRedirect(auth, provider);
-            }
-            if (target.id === 'logout-btn') signOut(auth);
+            // Bước 2: Tạo một Promise để chờ onAuthStateChanged chạy lần đầu tiên
+            const authInitialized = new Promise(resolve => {
+                const unsubscribe = onAuthStateChanged(auth, async (user) => {
+                    unsubscribe(); // Hủy đăng ký ngay sau lần chạy đầu tiên
+                    
+                    if (user) {
+                        state.currentUser = user;
+                        await syncUserProfile();
+                        // Kiểm tra xem có phải là lần đăng nhập mới không
+                        if (sessionStorage.getItem('isNewLogin')) {
+                            showToast(`Chào mừng, ${user.displayName}!`);
+                            sessionStorage.removeItem('isNewLogin');
+                        }
+                    } else {
+                        state.currentUser = null;
+                    }
+                    state.authReady = true;
+                    resolve();
+                });
+            });
 
-            // Tab bar
-            const tabButton = target.closest('.tab-link');
-            if (tabButton) {
-                if (tabButton.dataset.tab === state.currentTab) return;
-                document.querySelector('.tab-link.active').classList.remove('active');
-                tabButton.classList.add('active');
-                state.currentTab = tabButton.dataset.tab;
+            // Bước 3: Chờ cho quá trình xác thực ban đầu hoàn tất
+            await authInitialized;
+
+            // Bước 4: Sau khi đã biết chắc chắn trạng thái đăng nhập, cập nhật UI và render
+            updateUIForUser(state.currentUser);
+            if (state.currentUser) {
                 await render();
             }
+            hideLoader();
+        }
 
-            // Mở/đóng Cài đặt
-            if (target.closest('#settings-btn')) {
-                const profile = state.staffProfile;
-                document.getElementById('department-input').value = profile.depart || '';
-                document.querySelector(`input[name="shift-type"][value="${profile.shift}"]`).checked = true;
-                document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === profile.lan));
-                settingsModal.classList.remove('hidden');
-            }
-            if (target.id === 'close-settings-btn' || target === settingsModal) {
-                settingsModal.classList.add('hidden');
-            }
+        // Bắt đầu ứng dụng
+        main();
 
-            // Lưu cài đặt
-            if (target.id === 'save-settings-btn') {
+        // Xử lý sự kiện click riêng cho login để đánh dấu
+        document.body.addEventListener('click', e => {
+            if (e.target.id === 'login-btn') {
                 showLoader();
-                const newProfile = {
-                    ...state.staffProfile,
-                    depart: document.getElementById('department-input').value.trim(),
-                    shift: document.querySelector('input[name="shift-type"]:checked').value,
-                    lan: document.querySelector('.lang-btn.active').dataset.lang,
-                };
-                const staffRef = doc(db, "staff_list", "staffs");
-                await updateDoc(staffRef, { [state.currentUser.displayName]: newProfile });
-                state.staffProfile = newProfile;
-                state.language = newProfile.lan;
-                settingsModal.classList.add('hidden');
-                hideLoader();
-                alert('Cập nhật thành công!');
+                // Đặt một cờ trong sessionStorage
+                sessionStorage.setItem('isNewLogin', 'true');
+
+                signInWithRedirect(auth, provider);
             }
-
-            // Chọn món trong tab Đặt món
-            const dishOption = target.closest('.dish-option');
-            if (dishOption) {
-                const dayKey = dishOption.dataset.dayKey;
-                state.orderSelection[dayKey] = dishOption.dataset.dish;
-                
-                const currentDayTab = document.querySelector('.day-tab.active');
-                await renderOrder(); // Render lại để cập nhật
-                document.querySelector(`.day-tab[data-day="${currentDayTab.dataset.day}"]`).classList.add('active');
-
-                if (Object.values(state.orderSelection).every(dish => dish !== null)) {
-                    document.getElementById('submit-order-btn').classList.remove('hidden');
-                }
-            }
-            
-            // Submit đơn hàng
-            if (target.id === 'submit-order-btn') {
-                showLoader();
-                const today = new Date();
-                const targetWeek = today.getDay() >= 1 && today.getDay() <= 3 
-                    ? getWeekString(today) 
-                    : getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
-
-                for (const dayKey in state.orderSelection) {
-                    const dayDocRef = doc(db, targetWeek, dayKey);
-                    const updatePayload = {
-                        [`${state.currentUser.displayName}`]: {
-                            food: state.orderSelection[dayKey],
-                            status: 'not',
-                            shift: state.staffProfile.shift,
-                            depart: state.staffProfile.depart,
-                        }
-                    };
-                    await setDoc(dayDocRef, updatePayload, { merge: true });
-                }
-                
-                alert('Đặt món thành công!');
-                state.orderSelection = { mon: null, tue: null, wed: null, thu: null, fri: null };
-                document.querySelector('.tab-link[data-tab="today"]').click(); // Tự động click
-            }
-
-            // ... các listener khác có thể thêm vào đây
         });
+
     </script>
 </body>
 </html>
