@@ -5,32 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inbold Menu</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Toàn bộ nội dung file style.css được dán vào đây */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        :root { --primary-gradient: linear-gradient(90deg, #8E2DE2, #4A00E0); --secondary-color: #6c5ce7; --background-color: #12101e; --card-bg-color: rgba(29, 25, 46, 0.7); --text-color: #f0f0f0; --text-muted-color: #a0a0b0; --border-color: rgba(255, 255, 255, 0.1); --success-color: #00b894; --border-radius: 16px; --font-family: 'Poppins', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-family); background-color: var(--background-color); color: var(--text-color); line-height: 1.6; font-size: 13px; }
+        #app { max-width: 600px; margin: 0 auto; background-color: #1a162d; min-height: 100vh; display: flex; flex-direction: column; position: relative; padding-bottom: 100px; }
+        @media (min-width: 620px) { #app { margin: 2rem auto; border-radius: 24px; min-height: calc(100vh - 4rem); } }
+        .glass { background: var(--card-bg-color); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: var(--border-radius); }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.5rem; }
+        header h1 { font-size: 1.8rem; }
+        main { flex-grow: 1; padding: 0 1rem; }
+        .icon-btn { background: none; border: none; color: var(--text-muted-color); font-size: 1.5rem; cursor: pointer; }
+        #tab-bar { position: fixed; z-index: 100; bottom: 1rem; left: 50%; transform: translateX(-50%); width: calc(100% - 2rem); max-width: 580px; display: flex; background: rgba(29, 25, 46, 0.85); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 50px; padding: 0.5rem; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .tab-link { flex: 1; padding: 0.75rem; background: none; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer; color: var(--text-muted-color); transition: all 0.3s ease; position: relative; }
+        .tab-link.active { color: white; background: var(--secondary-color); }
+        .search-bar-container { display: flex; align-items: center; gap: 0.5rem; padding: 1rem 0.5rem; }
+        .staff-list { list-style: none; }
+        .staff-item { display: flex; align-items: center; padding: 0.8rem 0.5rem; border-bottom: 1px solid var(--border-color); }
+        .staff-item:last-child { border-bottom: none; }
+        .staff-item.eaten { opacity: 0.4; }
+        .staff-item.eaten .staff-name { text-decoration: line-through; }
+        .staff-details { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; }
+        .staff-name { font-weight: 600; font-size: 1.1rem; }
+        .staff-dish { color: var(--text-muted-color); font-style: italic; max-width: 50%; text-align: right; }
+        .shift-group h3 { padding: 1rem 0.5rem 0.5rem; font-size: 1.2rem; color: var(--secondary-color); }
+        .eaten-checkbox { display: inline-block; position: relative; cursor: pointer; width: 22px; height: 22px; margin-right: 1rem; flex-shrink: 0; }
+        .eaten-checkbox input { opacity: 0; width: 0; height: 0; }
+        .checkmark { position: absolute; top: 0; left: 0; height: 22px; width: 22px; background-color: rgba(255,255,255,0.1); border-radius: 50%; border: 1px solid var(--border-color); }
+        .eaten-checkbox input:checked ~ .checkmark { background-color: var(--success-color); border-color: var(--success-color); }
+        .checkmark:after { content: ""; position: absolute; display: none; left: 7px; top: 3px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+        .eaten-checkbox input:checked ~ .checkmark:after { display: block; }
+        .card { padding: 1.5rem; margin-bottom: 1rem; }
+        .modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: #00000099; display: flex; align-items: center; justify-content: center; }
+        .modal-content { padding: 2rem; width: 90%; max-width: 400px; position: relative; }
+        .modal-content label { display: block; margin-bottom: 0.5rem; color: var(--text-muted-color); font-size: 1rem; }
+        .shift-toggle, .language-toggle { display: flex; background: #00000033; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+        .shift-toggle label, .language-toggle button { flex: 1; text-align: center; padding: 0.75rem; border: none; background: none; color: var(--text-muted-color); cursor: pointer; transition: all 0.3s ease; font-size: 1rem; }
+        .shift-toggle input[type="radio"] { display: none; }
+        .shift-toggle input[type="radio"]:checked + label, .language-toggle button.active { background: var(--secondary-color); color: white; font-weight: 600; }
+        input[type="text"] { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border-color); background: #00000033; color: var(--text-color); border-radius: 12px; font-size: 1.1rem; }
+        .hidden { display: none !important; }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #12101ecc; backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 5px solid #ffffff33; border-top: 5px solid white; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .close-button { position: absolute; top: 1rem; right: 1rem; color: var(--text-muted-color); font-size: 1.5rem; cursor: pointer; }
+        .btn-primary { width: 100%; padding: 0.8rem; border-radius: 12px; font-size: 1.1rem; cursor: pointer; font-weight: 600; border: none; background: var(--primary-gradient); color: white; margin-top: 0.5rem; }
+        .dish-options { margin-top: 1rem; }
+        .dish-option { display: block; padding: 1rem; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.2s ease; font-size: 1.1rem; text-align: center; }
+        .dish-option.selected { border-color: var(--secondary-color); background-color: #6c5ce733; box-shadow: 0 0 10px #6c5ce780; }
+        .day-tabs { display: flex; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
+        .day-tab { padding: 0.5rem; flex-shrink: 0; flex-grow: 1; cursor: pointer; background: none; border: none; font-size: 1rem; color: var(--text-muted-color); white-space: nowrap; border-bottom: 3px solid transparent; text-align: center; }
+        .day-tab.active { color: white; font-weight: bold; border-bottom-color: var(--secondary-color); }
+        .dish-name { font-size: 1.75rem; font-weight: 600; text-align: center; padding: 2.5rem 1rem; background: rgba(0,0,0,0.2); border-radius: var(--border-radius); margin-bottom: 1.5rem; color: white; }
+    </style>
 </head>
 <body>
     <div id="app">
         <header>
-            <!-- Vùng này sẽ được cập nhật bởi JS để hiển thị thông tin user hoặc nút đăng nhập -->
             <div id="user-profile">
                 <h1>Inbold Menu</h1>
             </div>
-            <!-- Nút Cài đặt bị ẩn ban đầu -->
             <button id="settings-btn" class="icon-btn hidden"><i class="fas fa-cog"></i></button>
         </header>
 
-        <main id="main-content">
-             <!-- Nội dung chính sẽ được render ở đây -->
-        </main>
+        <main id="main-content"></main>
 
-        <div id="loader" class="hidden"><div class="spinner"></div></div>
+        <!-- Loader hiển thị mặc định để giải quyết vấn đề "đăng nhập 2 lần" -->
+        <div id="loader"><div class="spinner"></div></div>
         
-        <!-- Modal Cài đặt (giữ nguyên cấu trúc) -->
         <div id="settings-modal" class="modal hidden">
             <div class="modal-content glass">
-                <span class="close-button">&times;</span>
+                <span id="close-settings-btn" class="close-button">&times;</span>
                 <h2 data-lang-key="settings">Cài đặt</h2>
                 
-                <!-- Loại bỏ User Select, vì user đã được xác thực -->
                 <label data-lang-key="department">Phòng ban</label>
                 <input type="text" id="department-input" placeholder="Phòng ban của bạn">
 
@@ -47,19 +96,346 @@
                 </div>
 
                 <button id="save-settings-btn" class="btn-primary" data-lang-key="save_settings">Lưu thay đổi</button>
-                <!-- Nút Thêm thành viên có thể được thêm lại sau này nếu cần quyền admin -->
             </div>
         </div>
 
-        <!-- Tab Bar bị ẩn ban đầu -->
         <nav id="tab-bar" class="hidden">
-            <button class="tab-link" data-tab="menu" data-lang-key="menu">Thực Đơn</button>
-            <button class="tab-link active" data-tab="today" data-lang-key="today">Hôm Nay</button>
-            <button class="tab-link" data-tab="order" data-lang-key="order">Đặt Món</button>
+            <button class="tab-link active" data-tab="today">Hôm Nay</button>
+            <button class="tab-link" data-tab="menu">Thực Đơn</button>
+            <button class="tab-link" data-tab="order">Đặt Món</button>
         </nav>
     </div>
     
-    <!-- Quan trọng: Đảm bảo script được load dưới dạng "module" -->
-    <script type="module" src="script.js"></script>
+    <script type="module">
+        // Toàn bộ nội dung file script.js được viết lại và dán vào đây
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        // --- KHỞI TẠO FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDrCaGUyr9xLkT-xOqzFd9grp6tN2u7Zo",
+            authDomain: "hp-orders.firebaseapp.com",
+            projectId: "hp-orders",
+            storageBucket: "hp-orders.appspot.com",
+            messagingSenderId: "616722831059",
+            appId: "1:616722831059:web:9d19988d87397e7c13e626"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // --- CÁC PHẦN TỬ UI ---
+        const mainContent = document.getElementById('main-content');
+        const tabBar = document.getElementById('tab-bar');
+        const loader = document.getElementById('loader');
+        const userProfileDiv = document.getElementById('user-profile');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        
+        // --- TRẠNG THÁI ỨNG DỤNG ---
+        const state = {
+            currentUser: null,
+            staffProfile: {},
+            language: 'vi',
+            currentTab: 'today',
+            orderSelection: { mon: null, tue: null, wed: null, thu: null, fri: null },
+        };
+        
+        // --- CÁC HÀM HELPER ---
+        const getWeekString = (date) => {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+            const yearStart = new Date(d.getFullYear(), 0, 1);
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getFullYear()}_${weekNo}`;
+        };
+        const getDayKey = () => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
+        const showLoader = () => loader.classList.remove('hidden');
+        const hideLoader = () => loader.classList.add('hidden');
+        const parseDish = (dishString) => {
+            if (!dishString) return '';
+            const parts = dishString.split('|');
+            return (state.language.startsWith('en') && parts.length > 1) ? parts[1].trim() : parts[0].trim();
+        };
+
+        // --- HÀM RENDER CHÍNH ---
+        async function render() {
+            showLoader();
+            switch (state.currentTab) {
+                case 'today': await renderToday(); break;
+                case 'menu': await renderMenu(); break;
+                case 'order': await renderOrder(); break;
+            }
+            hideLoader();
+        }
+
+        // --- RENDER CÁC TAB ---
+        async function renderToday() {
+            const dayKey = getDayKey();
+            if (['sun', 'sat'].includes(dayKey)) {
+                mainContent.innerHTML = `<div class="card glass"><h2>Hôm nay không phục vụ bữa ăn.</h2></div>`;
+                return;
+            }
+
+            const weekString = getWeekString(new Date());
+            const docRef = doc(db, weekString, dayKey);
+            const docSnap = await getDoc(docRef);
+            let content = `<div class="card glass"><h2>Món ăn hôm nay</h2>`;
+
+            if (docSnap.exists()) {
+                const dayData = docSnap.data();
+                const userOrder = dayData[state.currentUser.displayName];
+                if (userOrder && userOrder.food) {
+                    const isEaten = userOrder.status === 'eat';
+                    content += `<div class="dish-name">${parseDish(userOrder.food)}</div>
+                                <button id="eat-button" class="btn-primary" ${isEaten ? 'disabled' : ''}>
+                                    ${isEaten ? 'Đã xác nhận' : 'Xác nhận đã ăn'}
+                                </button>`;
+                } else {
+                    content += `<p>Bạn chưa đặt món cho hôm nay.</p>`;
+                }
+            } else {
+                content += `<p>Chưa có thực đơn cho ngày hôm nay.</p>`;
+            }
+            mainContent.innerHTML = content + `</div>`;
+        }
+
+        async function renderMenu() {
+            const dayKey = getDayKey();
+            const weekString = getWeekString(new Date());
+            const docRef = doc(db, weekString, dayKey);
+            const docSnap = await getDoc(docRef);
+
+            mainContent.innerHTML = `<div class="card glass">
+                <div class="search-bar-container">
+                    <input type="text" id="search-staff" class="glass" placeholder="Tìm kiếm nhân viên...">
+                </div>
+                <div id="staff-list-container"></div>
+            </div>`;
+            
+            if (docSnap.exists()) {
+                const dayData = docSnap.data();
+                updateStaffListView(dayData);
+                document.getElementById('search-staff').addEventListener('input', (e) => updateStaffListView(dayData, e.target.value));
+            } else {
+                document.getElementById('staff-list-container').innerHTML = `<p style="text-align:center;">Chưa có dữ liệu cho hôm nay.</p>`;
+            }
+        }
+
+        function updateStaffListView(dayData, searchTerm = '') {
+            const container = document.getElementById('staff-list-container');
+            const staffOrders = Object.entries(dayData).map(([name, order]) => ({ name, ...order }));
+            const filtered = staffOrders.filter(o => o.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            const createListHTML = (list) => list.map(order => {
+                const isEaten = order.status === 'eat';
+                return `<li class="staff-item ${isEaten ? 'eaten' : ''}">
+                    <label class="eaten-checkbox">
+                        <input type="checkbox" class="eaten-checkbox-input" data-name="${order.name}" ${isEaten ? 'checked' : ''}>
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="staff-details">
+                        <span class="staff-name">${order.name}</span>
+                        <span class="staff-dish">${parseDish(order.food)}</span>
+                    </div>
+                </li>`;
+            }).join('');
+            
+            const sang = filtered.filter(o => o.shift === 'Sáng').sort((a,b) => a.name.localeCompare(b.name));
+            const chieu = filtered.filter(o => o.shift === 'Chiều').sort((a,b) => a.name.localeCompare(b.name));
+            
+            let html = '';
+            if (sang.length > 0) html += `<div class="shift-group"><h3>Ca sáng</h3><ul class="staff-list">${createListHTML(sang)}</ul></div>`;
+            if (chieu.length > 0) html += `<div class="shift-group"><h3>Ca Chiều</h3><ul class="staff-list">${createListHTML(chieu)}</ul></div>`;
+            
+            container.innerHTML = html || `<p style="text-align:center;">Không tìm thấy kết quả.</p>`;
+        }
+
+        async function renderOrder() {
+            const today = new Date();
+            const targetWeek = today.getDay() >= 1 && today.getDay() <= 3 
+                ? getWeekString(today) 
+                : getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+            
+            const menuDoc = await getDoc(doc(db, targetWeek, "Menu"));
+
+            if (!menuDoc.exists()) {
+                mainContent.innerHTML = `<div class="card glass"><p>Thực đơn cho tuần tới chưa được cập nhật.</p></div>`;
+                return;
+            }
+            
+            const menu = menuDoc.data();
+            const days = ["mon", "tue", "wed", "thu", "fri"];
+            const dayNames = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
+
+            let content = `<div class="card glass">
+                <h2>Đặt món cho Tuần ${targetWeek.split('_')[1]}</h2>
+                <div class="day-tabs">${days.map((day, i) => `<button class="day-tab ${i === 0 ? 'active' : ''}" data-day="${day}">${dayNames[day]}</button>`).join('')}</div>
+                <div id="order-form-content"></div>
+                <button id="submit-order-btn" class="btn-primary hidden">Hoàn tất đặt món</button>
+            </div>`;
+            mainContent.innerHTML = content;
+
+            const renderDayOptions = (dayKey) => {
+                const dishes = menu[dayKey]?.split(',').map(d => d.trim()) || [];
+                document.getElementById('order-form-content').innerHTML = `
+                    <div class="dish-options">${dishes.map(dish => `
+                        <div class="dish-option ${state.orderSelection[dayKey] === dish ? 'selected' : ''}" data-dish="${dish}" data-day-key="${dayKey}">
+                            ${parseDish(dish)}
+                        </div>`).join('')}
+                    </div>`;
+            };
+
+            renderDayOptions(days[0]);
+        }
+
+
+        // --- LOGIC XÁC THỰC VÀ QUẢN LÝ USER ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                state.currentUser = user;
+                await syncUserProfile();
+                updateUIForUser(user);
+                await render();
+            } else {
+                state.currentUser = null;
+                updateUIForUser(null);
+            }
+            hideLoader(); // Ẩn loader sau khi xác thực xong
+        });
+
+        async function syncUserProfile() {
+            const user = state.currentUser;
+            const staffRef = doc(db, "staff_list", "staffs");
+            const staffSnap = await getDoc(staffRef);
+            if (staffSnap.exists()) {
+                const allStaff = staffSnap.data();
+                if (!allStaff[user.displayName]) {
+                    // User mới, tạo entry cơ bản
+                    allStaff[user.displayName] = { email: user.email, depart: "", shift: "Sáng", lan: "vi" };
+                    await setDoc(staffRef, allStaff); // Ghi lại toàn bộ document
+                }
+                state.staffProfile = allStaff[user.displayName];
+                state.language = state.staffProfile.lan || 'vi';
+            }
+        }
+
+        function updateUIForUser(user) {
+            if (user) {
+                userProfileDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="${user.photoURL}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                        <div>
+                            <h1 style="font-size: 1.2rem; margin: 0; color: white;">${user.displayName}</h1>
+                            <button id="logout-btn" style="background:none; border:none; color:#a0a0b0; cursor:pointer; padding:0;">Đăng xuất</button>
+                        </div>
+                    </div>`;
+                settingsBtn.classList.remove('hidden');
+                tabBar.classList.remove('hidden');
+            } else {
+                userProfileDiv.innerHTML = `<h1>Inbold Menu</h1>`;
+                settingsBtn.classList.add('hidden');
+                tabBar.classList.add('hidden');
+                mainContent.innerHTML = `<div class="card glass" style="text-align:center;">
+                    <h2>Chào mừng!</h2><p>Vui lòng đăng nhập để sử dụng ứng dụng.</p>
+                    <button id="login-btn" class="btn-primary">Đăng nhập bằng Google</button>
+                </div>`;
+            }
+        }
+        
+        // --- EVENT LISTENERS ---
+        document.body.addEventListener('click', async (e) => {
+            // Nút đăng nhập/đăng xuất
+            if (e.target.id === 'login-btn') signInWithRedirect(auth, provider);
+            if (e.target.id === 'logout-btn') signOut(auth);
+
+            // Tab bar
+            if (e.target.closest('.tab-link')) {
+                const tabButton = e.target.closest('.tab-link');
+                if (tabButton.dataset.tab === state.currentTab) return;
+                document.querySelector('.tab-link.active').classList.remove('active');
+                tabButton.classList.add('active');
+                state.currentTab = tabButton.dataset.tab;
+                await render();
+            }
+
+            // Mở/đóng Cài đặt
+            if (e.target.closest('#settings-btn')) {
+                const profile = state.staffProfile;
+                document.getElementById('department-input').value = profile.depart || '';
+                document.querySelector(`input[name="shift-type"][value="${profile.shift}"]`).checked = true;
+                document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === profile.lan));
+                settingsModal.classList.remove('hidden');
+            }
+            if (e.target.id === 'close-settings-btn' || e.target === settingsModal) {
+                settingsModal.classList.add('hidden');
+            }
+
+            // Lưu cài đặt
+            if (e.target.id === 'save-settings-btn') {
+                showLoader();
+                const newProfile = {
+                    ...state.staffProfile,
+                    depart: document.getElementById('department-input').value.trim(),
+                    shift: document.querySelector('input[name="shift-type"]:checked').value,
+                    lan: document.querySelector('.lang-btn.active').dataset.lang,
+                };
+                const staffRef = doc(db, "staff_list", "staffs");
+                await updateDoc(staffRef, { [state.currentUser.displayName]: newProfile });
+                state.staffProfile = newProfile;
+                state.language = newProfile.lan;
+                settingsModal.classList.add('hidden');
+                hideLoader();
+                alert('Cập nhật thành công!');
+            }
+
+            // Chọn món trong tab Đặt món
+            const dishOption = e.target.closest('.dish-option');
+            if (dishOption) {
+                const dayKey = dishOption.dataset.dayKey;
+                state.orderSelection[dayKey] = dishOption.dataset.dish;
+                // Cập nhật lại UI cho ngày đó để hiển thị lựa chọn
+                const currentDay = document.querySelector('.day-tab.active').dataset.day;
+                await renderOrder(); // Render lại để cập nhật
+                document.querySelector(`.day-tab[data-day="${currentDay}"]`).click(); // Giữ lại tab ngày hiện tại
+
+                // Kiểm tra nếu đã chọn đủ 5 ngày thì hiện nút submit
+                if (Object.values(state.orderSelection).every(dish => dish !== null)) {
+                    document.getElementById('submit-order-btn').classList.remove('hidden');
+                }
+            }
+            
+            // Submit đơn hàng
+            if (e.target.id === 'submit-order-btn') {
+                showLoader();
+                const today = new Date();
+                const targetWeek = today.getDay() >= 1 && today.getDay() <= 3 
+                    ? getWeekString(today) 
+                    : getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+
+                const updates = {};
+                for (const dayKey in state.orderSelection) {
+                    const dayDocRef = doc(db, targetWeek, dayKey);
+                    updates[`${state.currentUser.displayName}`] = {
+                        food: state.orderSelection[dayKey],
+                        status: 'not',
+                        shift: state.staffProfile.shift,
+                        depart: state.staffProfile.depart,
+                    };
+                    // Dùng setDoc với merge để cập nhật 1 nhân viên mà không xóa người khác
+                    await setDoc(dayDocRef, updates, { merge: true });
+                }
+                hideLoader();
+                alert('Đặt món thành công!');
+                // Reset và chuyển về tab today
+                state.orderSelection = { mon: null, tue: null, wed: null, thu: null, fri: null };
+                document.querySelector('.tab-link[data-tab="today"]').click();
+            }
+        });
+    </script>
 </body>
 </html>
