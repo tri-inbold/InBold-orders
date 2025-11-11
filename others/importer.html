@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbold Menu - Data Importer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #1a1a1a; color: #e0e0e0; line-height: 1.6; padding: 2rem; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 800px; margin: 0 auto; background-color: #2a2a2a; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h1, h2 { color: #a370f7; border-bottom: 2px solid #a370f7; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        p { margin-bottom: 1.5rem; color: #b0b0b0; }
+        button { font-family: inherit; font-size: 1rem; font-weight: bold; background-color: #a370f7; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 5px; cursor: pointer; transition: all 0.2s ease; display: block; width: 100%; margin-bottom: 1rem; }
+        button:hover { background-color: #b388f9; transform: translateY(-2px); }
+        button:disabled { background-color: #555; cursor: not-allowed; transform: none; }
+        .btn-logout { background-color: #555; }
+        .warning { background-color: rgba(255, 184, 78, 0.1); border: 1px solid #ffb84e; color: #ffb84e; padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem; }
+        input[type="file"] { background: #333; border: 1px dashed #777; padding: 1rem; border-radius: 5px; width: 100%; margin-bottom: 1rem; color: #eee; }
+        #log-container { margin-top: 2rem; }
+        #log { background-color: #111; color: #00ff4c; padding: 1rem; border-radius: 5px; white-space: pre-wrap; font-family: 'Courier New', Courier, monospace; min-height: 100px; max-height: 400px; overflow-y: auto; }
+        .hidden { display: none; }
+        .step { font-weight: bold; color: #f0e68c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Công cụ Import Nhân sự</h1>
+
+        <div id="login-section">
+            <p>Vui lòng đăng nhập bằng tài khoản Admin để sử dụng công cụ này.</p>
+            <button id="login-btn">Đăng nhập bằng Google</button>
+        </div>
+
+        <div id="importer-section" class="hidden">
+            <div id="user-info" style="margin-bottom: 1rem;"></div>
+            <div class="warning">
+                <strong>Cảnh báo:</strong> Thao tác này sẽ <strong>GHI ĐÈ</strong> toàn bộ dữ liệu trong document <code>staff_list/staffs</code>. Hãy chắc chắn rằng file Excel của bạn là phiên bản mới và đầy đủ nhất.
+            </div>
+            
+            <label for="file-input">Chọn file Excel (.xlsx)</label>
+            <input type="file" id="file-input" accept=".xlsx, .xls">
+            <button id="import-btn" disabled>Bắt đầu Import</button>
+            <button id="logout-btn" class="btn-logout">Đăng xuất</button>
+        </div>
+        
+        <div id="log-container">
+            <h2>Log</h2>
+            <pre id="log">Chờ lệnh...</pre>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDrCaGUyr9xLkT-xOqzFd9grp6tN2u7Zo",
+            authDomain: "hp-orders.firebaseapp.com",
+            projectId: "hp-orders",
+            storageBucket: "hp-orders.appspot.com",
+            messagingSenderId: "616722831059",
+            appId: "1:616722831059:web:9d19988d87397e7c13e626"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const loginSection = document.getElementById('login-section');
+        const importerSection = document.getElementById('importer-section');
+        const userInfoDiv = document.getElementById('user-info');
+        const logEl = document.getElementById('log');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const fileInput = document.getElementById('file-input');
+        const importBtn = document.getElementById('import-btn');
+
+        const log = (message, isError = false) => {
+            const color = isError ? 'red' : '#00ff4c';
+            logEl.innerHTML += `\n<span style="color: ${color};">> ${message}</span>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        };
+        const emailToKey = (email) => email.replace(/[.@]/g, '_');
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loginSection.classList.add('hidden');
+                importerSection.classList.remove('hidden');
+                userInfoDiv.innerHTML = `Đã đăng nhập với: <strong>${user.email}</strong>`;
+                log('Đăng nhập thành công. Sẵn sàng import.');
+            } else {
+                loginSection.classList.remove('hidden');
+                importerSection.classList.add('hidden');
+                logEl.textContent = 'Chờ lệnh...';
+            }
+        });
+        
+        loginBtn.addEventListener('click', () => signInWithPopup(auth, provider).catch(err => log('Đăng nhập thất bại: ' + err.message, true)));
+        logoutBtn.addEventListener('click', () => signOut(auth));
+        fileInput.addEventListener('change', () => {
+            importBtn.disabled = !fileInput.files.length > 0;
+        });
+
+        importBtn.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                log('Vui lòng chọn một file.', true);
+                return;
+            }
+
+            importBtn.disabled = true;
+            logEl.innerHTML = ''; // Xóa log cũ
+            log(`Đã chọn file: ${file.name}`);
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    log('Đang đọc file...');
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    log(`Đọc thành công, tìm thấy ${rows.length} dòng.`);
+
+                    log('<span class="step">Bắt đầu chuyển đổi dữ liệu...</span>');
+                    const staffsObject = {};
+                    let processedCount = 0;
+
+                    for (const row of rows) {
+                        const email = row[0];
+                        const name = row[1];
+                        const depart = row[2];
+                        const language = row[3];
+
+                        if (email && typeof email === 'string' && email.includes('@')) {
+                            const emailKey = emailToKey(email);
+                            staffsObject[emailKey] = {
+                                name: name || 'Chưa có tên',
+                                email: email,
+                                depart: depart || 'Chưa phân loại',
+                                lan: (language || 'vi').toLowerCase(),
+                                shift: 'M' // Mặc định ca sáng
+                            };
+                            processedCount++;
+                        }
+                    }
+
+                    if (processedCount === 0) {
+                        throw new Error('Không tìm thấy dữ liệu hợp lệ trong file. Hãy chắc chắn cột A là email.');
+                    }
+                    log(`Chuyển đổi thành công ${processedCount} nhân viên.`);
+                    log('<span class="step">Bắt đầu upload lên Firestore...</span>');
+
+                    await setDoc(doc(db, "staff_list", "staffs"), staffsObject);
+
+                    log('<span style="color: lightgreen;">HOÀN TẤT! Dữ liệu đã được import thành công.</span>');
+
+                } catch (error) {
+                    console.error(error);
+                    log(`Lỗi nghiêm trọng: ${error.message}`, true);
+                } finally {
+                    importBtn.disabled = false;
+                }
+            };
+
+            reader.onerror = (error) => {
+                log('Lỗi khi đọc file: ' + error, true);
+                importBtn.disabled = false;
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>
