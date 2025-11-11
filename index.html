@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Toàn bộ CSS được giữ nguyên */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         :root { --primary-gradient: linear-gradient(90deg, #8E2DE2, #4A00E0); --secondary-color: #6c5ce7; --background-color: #12101e; --card-bg-color: rgba(29, 25, 46, 0.7); --text-color: #f0f0f0; --text-muted-color: #a0a0b0; --border-color: rgba(255, 255, 255, 0.1); --success-color: #00b894; --error-color: #ff6b6b; --border-radius: 16px; --font-family: 'Poppins', sans-serif; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,7 +32,7 @@
         .shift-toggle label, .language-toggle button, .week-toggle label, .stats-toggle button { flex: 1; text-align: center; padding: 0.75rem; border: none; background: none; color: var(--text-muted-color); cursor: pointer; transition: all 0.3s ease; font-size: 1rem; }
         .shift-toggle input[type="radio"], .week-toggle input[type="radio"] { display: none; }
         .shift-toggle input[type="radio"]:checked + label, .language-toggle button.active, .week-toggle input[type="radio"]:checked + label, .stats-toggle button.active { background: var(--secondary-color); color: white; font-weight: 600; }
-        input[type="text"], input[type="email"], input[type="date"], textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.2); color: var(--text-color); border-radius: 12px; font-size: 1.1rem; font-family: var(--font-family); }
+        input[type="text"], input[type="email"], input[type="date"], input[type="month"], textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.2); color: var(--text-color); border-radius: 12px; font-size: 1.1rem; font-family: var(--font-family); }
         textarea { resize: vertical; min-height: 80px; }
         .hidden { display: none !important; }
         #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 16, 30, 0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
@@ -205,11 +204,80 @@
             hideLoader();
         }
         
-        async function renderToday() { /* ... */ }
-        async function renderMenu() { /* ... */ }
-        function updateStaffListView(dayData, searchTerm = '') { /* ... */ }
-        async function renderOrder() { /* ... */ }
-        function renderDayOptions(dayKey, menu) { /* ... */ }
+        async function renderToday() {
+            const dayKey = getDayKey();
+            if (['sun', 'sat'].includes(dayKey)) {
+                mainContent.innerHTML = `<div class="card glass"><h2>Chào ${state.staffProfile.name.split(' ')[0]},<br>hôm nay không phục vụ bữa ăn.</h2></div>`; return;
+            }
+            const weekString = getWeekString(new Date());
+            const dayData = await getDocument(weekString, dayKey, true);
+            let content = `<div class="card glass">`;
+            const userEmailKey = emailToKey(state.currentUser.email);
+            if (dayData && dayData[userEmailKey]) {
+                const userOrder = dayData[userEmailKey];
+                content += `<h2>Chào ${userOrder.name.split(' ')[0]},<br>hôm nay bạn ăn:</h2><div class="dish-name">${parseDish(userOrder.food)}</div>`;
+            } else { content += `<h2>Chào ${state.staffProfile.name.split(' ')[0]},<br>bạn chưa đặt món cho hôm nay.</h2>`; }
+            mainContent.innerHTML = content + `</div>`;
+        }
+        async function renderMenu() {
+            const dayKey = getDayKey(); const weekString = getWeekString(new Date());
+            const dayData = await getDocument(weekString, dayKey, true);
+            mainContent.innerHTML = `<div class="card glass"><div class="search-bar-container">
+                <input type="text" id="search-staff" class="glass" placeholder="Tìm kiếm nhân viên..."><button id="menu-filter-btn" class="icon-btn"></button>
+            </div><div id="staff-list-container"></div></div>`;
+            if (dayData) {
+                updateStaffListView(dayData);
+                document.getElementById('search-staff').addEventListener('input', (e) => updateStaffListView(dayData, e.target.value));
+            } else { document.getElementById('staff-list-container').innerHTML = `<p style="text-align:center;">Chưa có dữ liệu cho hôm nay.</p>`; }
+        }
+        function updateStaffListView(dayData, searchTerm = '') {
+            const container = document.getElementById('staff-list-container'); const filterBtn = document.getElementById('menu-filter-btn');
+            const hour = new Date().getHours();
+            const staffOrders = Object.entries(dayData).map(([emailKey, order]) => ({ emailKey, ...order }));
+            const filtered = staffOrders.filter(o => o.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            if (state.menuFilterMode === 'auto') { filterBtn.innerHTML = `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>`; } 
+            else { filterBtn.innerHTML = `<i class="fas fa-users"></i>`; }
+            const createListHTML = (list) => list.sort((a, b) => (a.status === 'eaten' ? 1 : -1) || a.name.localeCompare(b.name))
+                .map(order => `<li class="staff-item ${order.status === 'eaten' ? 'eaten' : ''}"><div class="staff-details" style="padding-left: 1rem;"><span class="staff-name">${order.name}</span><span class="staff-dish">${parseDish(order.food)}</span></div></li>`).join('');
+            const sang = filtered.filter(o => o.shift === 'M'); const chieu = filtered.filter(o => o.shift === 'E');
+            let html = '';
+            if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') {
+                if (sang.length > 0) html += `<div class="shift-group"><h3>Ca sáng</h3><ul class="staff-list">${createListHTML(sang)}</ul></div>`;
+            }
+            if ((state.menuFilterMode === 'auto' && hour >= 15) || state.menuFilterMode === 'all') {
+                if (chieu.length > 0) html += `<div class="shift-group"><h3>Ca Chiều</h3><ul class="staff-list">${createListHTML(chieu)}</ul></div>`;
+            }
+            container.innerHTML = html || `<p style="text-align:center;">Không tìm thấy kết quả.</p>`;
+        }
+        async function renderOrder() {
+            const today = new Date(); const dayOfWeek = today.getDay();
+            const targetWeek = (dayOfWeek >= 4 || dayOfWeek === 0) ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) : getWeekString(today);
+            const userEmailKey = emailToKey(state.currentUser.email);
+            const userOrdersForMon = await getDocument(targetWeek, 'mon');
+            if (userOrdersForMon && userOrdersForMon[userEmailKey]) {
+                let summaryHTML = `<div class="card glass"><h2>Bạn đã đặt món cho Tuần ${targetWeek.split('_')[1]}</h2><ul class="staff-list" style="flex-direction: column;">`;
+                const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
+                for (const [key, name] of Object.entries(days)) {
+                    const dayData = await getDocument(targetWeek, key);
+                    const dish = dayData?.[userEmailKey]?.food;
+                    summaryHTML += `<li class="staff-item" style="justify-content: space-between;"><strong>${name}:</strong> <span class="staff-dish" style="max-width: none;">${parseDish(dish) || 'Chưa đặt'}</span></li>`;
+                }
+                mainContent.innerHTML = summaryHTML + `</ul></div>`; return;
+            }
+            const menu = await getDocument(targetWeek, "menu");
+            if (!menu) { mainContent.innerHTML = `<div class="card glass"><p>Thực đơn cho tuần này chưa được cập nhật.</p></div>`; return; }
+            const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
+            mainContent.innerHTML = `<div class="card glass"><h2>Đặt món cho Tuần ${targetWeek.split('_')[1]}</h2>
+                <div class="day-tabs">${Object.keys(days).map((key, i) => `<button class="day-tab ${i === 0 ? 'active' : ''}" data-day="${key}">${days[key]}</button>`).join('')}</div>
+                <div id="order-form-content"></div>
+                <button id="submit-order-btn" class="btn-primary" disabled>Hoàn tất đặt món</button></div>`;
+            renderDayOptions(Object.keys(days)[0], menu);
+        }
+        function renderDayOptions(dayKey, menu) {
+            const dishes = menu[dayKey]?.split(',').map(d => d.trim()).filter(d => d) || [];
+            document.getElementById('order-form-content').innerHTML = `<div class="dish-options">${dishes.map(dish => `<div class="dish-option ${state.orderSelection[dayKey] === dish ? 'selected' : ''}" data-dish="${dish}" data-day-key="${dayKey}">${parseDish(dish)}</div>`).join('')}</div>`;
+        }
         async function renderAdmin() {
             mainContent.innerHTML = `<div class="admin-panel"><div class="admin-sub-tabs">
                 <button class="admin-sub-tab ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support">Hỗ trợ</button>
@@ -249,17 +317,12 @@
         async function renderAdminStats() {
             document.getElementById('admin-content').innerHTML = `<div class="card glass">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2>Thống kê</h2>
-                    <button id="export-stats-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button>
-                </div>
+                    <h2>Thống kê</h2><button id="export-stats-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div>
                 <div class="stats-toggle">
                     <button class="stats-mode-btn ${state.statsMode === 'day' ? 'active' : ''}" data-mode="day">Ngày</button>
                     <button class="stats-mode-btn ${state.statsMode === 'week' ? 'active' : ''}" data-mode="week">Tuần</button>
-                    <button class="stats-mode-btn ${state.statsMode === 'month' ? 'active' : ''}" data-mode="month">Tháng</button>
-                </div>
-                <div id="stats-controls"></div>
-                <div id="stats-results"></div>
-            </div>`;
+                    <button class="stats-mode-btn ${state.statsMode === 'month' ? 'active' : ''}" data-mode="month">Tháng</button></div>
+                <div id="stats-controls"></div><div id="stats-results"></div></div>`;
             await renderStatsContent();
         }
         async function renderStatsContent() {
@@ -268,74 +331,160 @@
             resultsDiv.innerHTML = '';
             const today = new Date();
             const todayISO = today.toISOString().split('T')[0];
-
             if (state.statsMode === 'day') {
                 controlsDiv.innerHTML = `<label>Chọn ngày</label><input type="date" id="stats-date-picker" value="${todayISO}">`;
-                const datePicker = document.getElementById('stats-date-picker');
-                datePicker.addEventListener('change', renderStatsContent);
-                await generateDailyStats(datePicker.value);
+                document.getElementById('stats-date-picker').addEventListener('change', renderStatsContent);
+                await generateDailyStats(document.getElementById('stats-date-picker').value);
             } else if (state.statsMode === 'week') {
                 controlsDiv.innerHTML = `<label>Chọn ngày bất kỳ trong tuần</label><input type="date" id="stats-date-picker" value="${todayISO}">`;
-                const datePicker = document.getElementById('stats-date-picker');
-                datePicker.addEventListener('change', renderStatsContent);
-                await generateWeeklyStats(datePicker.value);
+                document.getElementById('stats-date-picker').addEventListener('change', renderStatsContent);
+                await generateWeeklyStats(document.getElementById('stats-date-picker').value);
             } else if (state.statsMode === 'month') {
                 controlsDiv.innerHTML = `<label>Chọn tháng</label><input type="month" id="stats-month-picker" value="${todayISO.substring(0, 7)}">`;
-                 const monthPicker = document.getElementById('stats-month-picker');
-                monthPicker.addEventListener('change', renderStatsContent);
-                await generateMonthlyStats(monthPicker.value);
+                document.getElementById('stats-month-picker').addEventListener('change', renderStatsContent);
+                await generateMonthlyStats(document.getElementById('stats-month-picker').value);
             }
         }
         async function generateDailyStats(dateString) {
-            const date = new Date(dateString);
-            const week = getWeekString(date);
-            const day = getDayKey(date);
+            const date = new Date(dateString); const week = getWeekString(date); const day = getDayKey(date);
             const resultsDiv = document.getElementById('stats-results');
-            
-            if (['sun', 'sat'].includes(day)) {
-                resultsDiv.innerHTML = '<p>Không có dữ liệu cho cuối tuần.</p>'; return;
-            }
-
+            if (['sun', 'sat'].includes(day)) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho cuối tuần.</p>'; return; }
             const data = await getDocument(week, day);
-            if (!data) {
-                resultsDiv.innerHTML = '<p>Không có dữ liệu cho ngày này.</p>'; return;
-            }
-
+            if (!data) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho ngày này.</p>'; return; }
             const stats = {};
             for(const order of Object.values(data)) {
                 const dish = parseDish(order.food);
-                if (!stats[dish]) stats[dish] = { eaten: [], not_eaten: [], shift: order.shift };
-                if (order.status === 'eaten' || order.status === 'give') stats[dish].eaten.push(order.name);
-                else stats[dish].not_eaten.push(order.name);
+                if (!stats[dish]) stats[dish] = { eaten: 0, not_eaten: 0, shift: order.shift };
+                if (order.status === 'eaten' || order.status === 'give') stats[dish].eaten++; else stats[dish].not_eaten++;
             }
-
             let html = '';
-            const sortedDishes = Object.keys(stats).sort();
             ['M', 'E'].forEach(shift => {
                 const shiftName = shift === 'M' ? 'Ca sáng' : 'Ca chiều';
                 let shiftHtml = '';
-                sortedDishes.forEach(dish => {
+                for(const dish in stats) {
                     if (stats[dish].shift === shift) {
-                        shiftHtml += `<div class="stats-group"><h4>${dish} (${stats[dish].eaten.length}/${stats[dish].eaten.length + stats[dish].not_eaten.length})</h4>
-                            <ul class="stats-list" style="font-size: 0.9em;">
-                                ${stats[dish].eaten.map(name => `<li class="stats-item" style="opacity: 1;">- ${name} (đã ăn)</li>`).join('')}
-                                ${stats[dish].not_eaten.map(name => `<li class="stats-item" style="opacity: 0.6;">- ${name} (chưa ăn)</li>`).join('')}
-                            </ul></div>`;
+                        shiftHtml += `<li class="stats-item" style="justify-content: space-between;"><span>${dish}</span><strong>${stats[dish].eaten} / ${stats[dish].eaten + stats[dish].not_eaten}</strong></li>`;
                     }
-                });
-                if(shiftHtml) html += `<div class="shift-group"><h3>${shiftName}</h3>${shiftHtml}</div>`;
+                }
+                if(shiftHtml) html += `<div class="shift-group"><h3>${shiftName}</h3><ul class="stats-list">${shiftHtml}</ul></div>`;
             });
             resultsDiv.innerHTML = html || '<p>Không có dữ liệu.</p>';
         }
-        async function generateWeeklyStats(dateString) { /* ... Tương tự ... */ }
-        async function generateMonthlyStats(monthString) { /* ... Tương tự ... */ }
-        async function renderAdminMenu() { /* ... Giữ nguyên ... */ }
-        async function renderAdminPersonnel() { /* ... Giữ nguyên ... */ }
+        async function generateWeeklyStats(dateString) {
+            const date = new Date(dateString); const week = getWeekString(date);
+            const resultsDiv = document.getElementById('stats-results');
+            const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
+            const dayNames = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
+            const dayPromises = days.map(day => getDocument(week, day));
+            const weekData = await Promise.all(dayPromises);
+            
+            const stats = {}; // { dish: { eaten, not_eaten } }
+            weekData.forEach(dayData => {
+                if(!dayData) return;
+                for(const order of Object.values(dayData)) {
+                    const dish = parseDish(order.food);
+                    if(!stats[dish]) stats[dish] = { eaten: 0, not_eaten: 0 };
+                    if (order.status === 'eaten' || order.status === 'give') stats[dish].eaten++; else stats[dish].not_eaten++;
+                }
+            });
+            
+            if (Object.keys(stats).length === 0) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho tuần này.</p>'; return; }
+            let html = '<ul class="stats-list">';
+            for(const dish of Object.keys(stats).sort()) {
+                 html += `<li class="stats-item" style="justify-content: space-between;"><span>${dish}</span><strong>${stats[dish].eaten} / ${stats[dish].eaten + stats[dish].not_eaten}</strong></li>`;
+            }
+            resultsDiv.innerHTML = html + '</ul>';
+        }
+        async function generateMonthlyStats(monthString) {
+            const [year, month] = monthString.split('-').map(Number);
+            const resultsDiv = document.getElementById('stats-results');
+            const daysInMonth = new Date(year, month, 0).getDate();
+            let allOrders = [];
+            let departs = new Set();
+            let dates = [];
+
+            const promises = [];
+            for (let i = 1; i <= daysInMonth; i++) {
+                const date = new Date(year, month - 1, i);
+                const dayOfWeek = date.getDay();
+                if (dayOfWeek > 0 && dayOfWeek < 6) { // Weekdays
+                    dates.push(i);
+                    promises.push(getDocument(getWeekString(date), getDayKey(date)));
+                }
+            }
+            const monthData = await Promise.all(promises);
+
+            monthData.forEach(dayData => {
+                if (dayData) {
+                    for(const order of Object.values(dayData)) {
+                        if(order.status === 'eaten' || order.status === 'give') {
+                            allOrders.push(order);
+                            departs.add(order.depart);
+                        }
+                    }
+                }
+            });
+
+            if (allOrders.length === 0) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho tháng này.</p>'; return; }
+            
+            const sortedDeparts = [...departs].sort();
+            const stats = {}; // { depart: { '1': 2, '2': 5, ... } }
+            sortedDeparts.forEach(d => stats[d] = {});
+
+            allOrders.forEach(order => {
+                const dayOfMonth = new Date(order.timestamp?.toDate() || Date.now()).getDate(); // Simplified
+                if(!stats[order.depart][dayOfMonth]) stats[order.depart][dayOfMonth] = 0;
+                stats[order.depart][dayOfMonth]++;
+            });
+
+            let tableHTML = `<div class="table-container"><table><thead><tr><th>Phòng ban</th>${dates.map(d => `<th>${d}</th>`).join('')}<th>Tổng</th></tr></thead><tbody>`;
+            sortedDeparts.forEach(depart => {
+                let rowTotal = 0;
+                tableHTML += `<tr><td>${depart}</td>`;
+                dates.forEach(d => {
+                    const count = stats[depart][d] || 0;
+                    rowTotal += count;
+                    tableHTML += `<td>${count || ''}</td>`;
+                });
+                tableHTML += `<td><strong>${rowTotal}</strong></td></tr>`;
+            });
+            tableHTML += '</tbody></table></div>';
+            resultsDiv.innerHTML = tableHTML;
+        }
+        async function renderAdminMenu() {
+            const today = new Date(); const dayOfWeek = today.getDay();
+            const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+            const menuData = await getDocument(nextWeek, "menu") || {};
+            const isEditable = dayOfWeek >= 1 && dayOfWeek <= 4;
+            const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
+            let formHTML = '';
+            for (const [key, name] of Object.entries(days)) {
+                formHTML += `<label>${name}</label><textarea id="menu-input-${key}" rows="3" ${!isEditable ? 'disabled' : ''}>${menuData[key] || ''}</textarea>`;
+            }
+            document.getElementById('admin-content').innerHTML = `<div class="card glass"><h2>Chỉnh sửa thực đơn tuần sau</h2><input type="text" value="${nextWeek}" disabled>${formHTML}
+                <button id="save-menu-btn" class="btn-primary" ${!isEditable ? 'disabled' : ''}>${isEditable ? 'Lưu Thực Đơn' : 'Đã khóa chỉnh sửa'}</button></div>`;
+        }
+        async function renderAdminPersonnel() {
+            const allStaff = await getDocument("staff_list", "staffs");
+            let tableRows = '';
+            if (allStaff) {
+                for (const [key, profile] of Object.entries(allStaff).sort((a,b) => a[1].name.localeCompare(b[1].name))) {
+                    tableRows += `<tr><td>${profile.name}</td><td>${profile.email}</td><td>${profile.depart}</td>
+                        <td><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button>
+                            <button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${profile.name}"><i class="fas fa-trash"></i></button></td></tr>`;
+                }
+            }
+            document.getElementById('admin-content').innerHTML = `<div class="card glass">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Quản lý Nhân sự</h2><div><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button>
+                         <button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div>
+                <div class="table-container"><table><thead><tr><th>Tên</th><th>Email</th><th>Phòng ban</th><th></th></tr></thead><tbody>${tableRows}</tbody></table></div></div>`;
+        }
+
         async function syncUserProfile() {
             const user = state.currentUser;
             const userEmailKey = emailToKey(user.email);
             const staffData = await getDocument("staff_list", "staffs", true);
-            
             if (!staffData || !staffData[userEmailKey]) {
                 await signOut(auth);
                 throw new Error("Tài khoản của bạn không có trong danh sách được phép.");
@@ -345,13 +494,11 @@
         }
         function updateUIForUser(user) {
             if (user && state.staffProfile) {
-                userProfileDiv.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="${user.photoURL}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                userProfileDiv.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><img src="${user.photoURL}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;">
                         <div><h1 id="user-name-btn" style="font-size: 1.2rem; margin: 0; color: white; cursor: pointer;">${state.staffProfile.name}</h1>
                              <button id="logout-btn" class="logout-btn">Đăng xuất</button></div></div>`;
                 langToggleBtn.textContent = (state.staffProfile.lan || 'vi').toUpperCase();
                 langToggleBtn.classList.remove('hidden');
-                
                 let tabBarHTML = `<button class="tab-link active" data-tab="today">Hôm Nay</button><button class="tab-link" data-tab="menu">Thực Đơn</button><button class="tab-link" data-tab="order">Đặt Món</button>`;
                 if (state.isAdmin) { tabBarHTML += `<button class="tab-link" data-tab="admin">Admin</button>`; }
                 tabBar.innerHTML = tabBarHTML;
@@ -367,7 +514,7 @@
         document.body.addEventListener('click', async (e) => {
             const target = e.target;
             if (!state.currentUser && !target.closest('#login-btn')) return;
-            if (target.closest('#login-btn')) { showLoader(); signInWithPopup(auth, provider).catch(err => { console.error('Login error:', err); showToast('Đăng nhập thất bại. Tài khoản của bạn có thể không được phép.', true); hideLoader(); }); }
+            if (target.closest('#login-btn')) { showLoader(); signInWithPopup(auth, provider).catch(err => { showToast('Tài khoản không được phép.', true); hideLoader(); }); }
             if (target.closest('#logout-btn')) { signOut(auth); }
             const tabButton = target.closest('.tab-link');
             if (tabButton) { if (tabButton.dataset.tab === state.currentTab) return; document.querySelector('.tab-link.active')?.classList.remove('active'); tabButton.classList.add('active'); state.currentTab = tabButton.dataset.tab; await render(); }
@@ -404,7 +551,8 @@
                 try {
                     const weekString = getWeekString(new Date());
                     for (const day of ['mon', 'tue', 'wed', 'thu', 'fri']) {
-                        await updateDoc(doc(db, weekString, day), { [state.reopenTarget.key]: deleteField() });
+                        const docRef = doc(db, weekString, day);
+                        await updateDoc(docRef, { [state.reopenTarget.key]: deleteField() });
                         state.cachedData.delete(`${weekString}/${day}`);
                     }
                     showToast(`Đã mở lại đặt món cho ${state.reopenTarget.name}.`);
@@ -414,9 +562,52 @@
                 hideLoader();
             }
             if (target.closest('#export-stats-btn')) { exportStatsToExcel(); }
+            // Các event listener khác...
         });
         
-        async function exportStatsToExcel() { /* ... Các hàm xuất Excel sẽ được thêm vào đây ... */ }
+        function exportStatsToExcel() {
+            const resultsDiv = document.getElementById('stats-results');
+            if (!resultsDiv || resultsDiv.textContent.includes('Không có dữ liệu')) {
+                showToast('Không có dữ liệu để xuất', true); return;
+            }
+            let data = [];
+            let filename = 'ThongKe.xlsx';
+            if (state.statsMode === 'day') {
+                filename = `ThongKe_Ngay_${document.getElementById('stats-date-picker').value}.xlsx`;
+                resultsDiv.querySelectorAll('.shift-group').forEach(sg => {
+                    const shiftName = sg.querySelector('h3').textContent;
+                    sg.querySelectorAll('.stats-group').forEach(g => {
+                        const dishName = g.querySelector('h4').textContent.split(' (')[0];
+                        g.querySelectorAll('.stats-item').forEach(item => {
+                            const [name, status] = item.textContent.substring(2).split(' (');
+                            data.push({ 'Ca': shiftName, 'Món ăn': dishName, 'Nhân viên': name, 'Trạng thái': status.slice(0, -1) });
+                        });
+                    });
+                });
+            } else if (state.statsMode === 'week') {
+                filename = `ThongKe_Tuan_${getWeekString(new Date(document.getElementById('stats-date-picker').value))}.xlsx`;
+                resultsDiv.querySelectorAll('.stats-item').forEach(item => {
+                    const dishName = item.querySelector('span').textContent;
+                    const counts = item.querySelector('strong').textContent;
+                    data.push({ 'Món ăn': dishName, 'Thống kê (Đã ăn / Tổng)': counts });
+                });
+            } else if (state.statsMode === 'month') {
+                filename = `ThongKe_Thang_${document.getElementById('stats-month-picker').value}.xlsx`;
+                const table = resultsDiv.querySelector('table');
+                data = XLSX.utils.table_to_sheet(table);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, data, 'ThongKeThang');
+                XLSX.writeFile(wb, filename);
+                return;
+            }
+
+            if(data.length > 0) {
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'ThongKe');
+                XLSX.writeFile(wb, filename);
+            }
+        }
 
         async function main() {
             showLoader();
@@ -442,7 +633,16 @@
             } catch (error) { console.error('App init error:', error); hideLoader(); showToast('Không thể khởi tạo ứng dụng', true); }
         }
         
-        async function checkOrderNotification() { /* ... Giữ nguyên ... */ }
+        async function checkOrderNotification() {
+            if (!tabBar.querySelector('.tab-link[data-tab="order"]') || !state.currentUser) return;
+            const orderTab = tabBar.querySelector('.tab-link[data-tab="order"]');
+            const today = new Date();
+            if (today.getDay() >= 4 || today.getDay() === 0) {
+                const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+                const nextWeekOrders = await getDocument(nextWeek, 'mon');
+                orderTab.classList.toggle('needs-attention', !nextWeekOrders || !nextWeekOrders[emailToKey(state.currentUser.email)]);
+            } else { orderTab.classList.remove('needs-attention'); }
+        }
         main();
     </script>
 </body>
