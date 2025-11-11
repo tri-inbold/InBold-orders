@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* CSS được giữ nguyên */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         :root { --primary-gradient: linear-gradient(90deg, #8E2DE2, #4A00E0); --secondary-color: #6c5ce7; --background-color: #12101e; --card-bg-color: rgba(29, 25, 46, 0.7); --text-color: #f0f0f0; --text-muted-color: #a0a0b0; --border-color: rgba(255, 255, 255, 0.1); --success-color: #00b894; --error-color: #ff6b6b; --border-radius: 16px; --font-family: 'Poppins', sans-serif; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,11 +29,11 @@
         .modal-content { padding: 2rem; width: 90%; max-width: 400px; position: relative; }
         .modal-content h2 { margin-bottom: 1.5rem; font-size: 1.5rem; }
         .modal-content label { display: block; margin-bottom: 0.5rem; color: var(--text-muted-color); font-size: 1rem; }
-        .shift-toggle, .language-toggle, .week-toggle, .stats-toggle { display: flex; background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
-        .shift-toggle label, .language-toggle button, .week-toggle label, .stats-toggle button { flex: 1; text-align: center; padding: 0.75rem; border: none; background: none; color: var(--text-muted-color); cursor: pointer; transition: all 0.3s ease; font-size: 1rem; }
+        .shift-toggle, .language-toggle, .week-toggle { display: flex; background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+        .shift-toggle label, .language-toggle button, .week-toggle label { flex: 1; text-align: center; padding: 0.75rem; border: none; background: none; color: var(--text-muted-color); cursor: pointer; transition: all 0.3s ease; font-size: 1rem; }
         .shift-toggle input[type="radio"], .week-toggle input[type="radio"] { display: none; }
-        .shift-toggle input[type="radio"]:checked + label, .language-toggle button.active, .week-toggle input[type="radio"]:checked + label, .stats-toggle button.active { background: var(--secondary-color); color: white; font-weight: 600; }
-        input[type="text"], input[type="email"], input[type="date"], input[type="month"], textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.2); color: var(--text-color); border-radius: 12px; font-size: 1.1rem; font-family: var(--font-family); }
+        .shift-toggle input[type="radio"]:checked + label, .language-toggle button.active, .week-toggle input[type="radio"]:checked + label { background: var(--secondary-color); color: white; font-weight: 600; }
+        input[type="text"], input[type="email"], textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.2); color: var(--text-color); border-radius: 12px; font-size: 1.1rem; font-family: var(--font-family); }
         textarea { resize: vertical; min-height: 80px; }
         .hidden { display: none !important; }
         #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 16, 30, 0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
@@ -86,11 +87,7 @@
              <div class="modal-content glass">
                 <span id="close-settings-btn" class="close-button">&times;</span><h2>Cài đặt Hồ sơ</h2>
                 <label>Phòng ban</label><select id="department-select"></select>
-                <label>Loại ca</label>
-                <div class="shift-toggle">
-                    <input type="radio" id="shift-m" name="shift-type" value="M" checked><label for="shift-m">Ca sáng</label>
-                    <input type="radio" id="shift-e" name="shift-type" value="E"><label for="shift-e">Ca Chiều</label>
-                </div>
+                <!-- Đã loại bỏ lựa chọn Ca làm việc khỏi đây -->
                 <button id="save-settings-btn" class="btn-primary">Lưu thay đổi</button>
             </div>
         </div>
@@ -152,9 +149,8 @@
         const state = {
             currentUser: null, staffProfile: null, isAdmin: false, currentTab: 'today', authReady: false,
             adminSubTab: 'support',
-            statsMode: 'day',
             menuFilterMode: 'auto', 
-            orderSelection: { mon: null, tue: null, wed: null, thu: null, fri: null },
+            orderSelection: { shift: 'M', mon: null, tue: null, wed: null, thu: null, fri: null },
             reopenTarget: { key: null, name: null },
             cachedData: new Map(),
         };
@@ -238,8 +234,8 @@
 
             if (state.menuFilterMode === 'auto') { filterBtn.innerHTML = `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>`; } 
             else { filterBtn.innerHTML = `<i class="fas fa-users"></i>`; }
-            const createListHTML = (list) => list.sort((a, b) => (a.status === 'eaten' ? 1 : -1) || a.name.localeCompare(b.name))
-                .map(order => `<li class="staff-item ${order.status === 'eaten' ? 'eaten' : ''}"><div class="staff-details" style="padding-left: 1rem;"><span class="staff-name">${order.name}</span><span class="staff-dish">${parseDish(order.food)}</span></div></li>`).join('');
+            const createListHTML = (list) => list.sort((a, b) => a.name.localeCompare(b.name))
+                .map(order => `<li class="staff-item"><div class="staff-details" style="padding-left: 1rem;"><span class="staff-name">${order.name}</span><span class="staff-dish">${parseDish(order.food)}</span></div></li>`).join('');
             const sang = filtered.filter(o => o.shift === 'M'); const chieu = filtered.filter(o => o.shift === 'E');
             let html = '';
             if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') {
@@ -269,6 +265,11 @@
             if (!menu) { mainContent.innerHTML = `<div class="card glass"><p>Thực đơn cho tuần này chưa được cập nhật.</p></div>`; return; }
             const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
             mainContent.innerHTML = `<div class="card glass"><h2>Đặt món cho Tuần ${targetWeek.split('_')[1]}</h2>
+                <label>Ca làm việc của bạn trong tuần này</label>
+                <div class="shift-toggle">
+                    <input type="radio" id="order-shift-m" name="order-shift" value="M" checked><label for="order-shift-m">Ca sáng</label>
+                    <input type="radio" id="order-shift-e" name="order-shift" value="E"><label for="order-shift-e">Ca Chiều</label>
+                </div>
                 <div class="day-tabs">${Object.keys(days).map((key, i) => `<button class="day-tab ${i === 0 ? 'active' : ''}" data-day="${key}">${days[key]}</button>`).join('')}</div>
                 <div id="order-form-content"></div>
                 <button id="submit-order-btn" class="btn-primary" disabled>Hoàn tất đặt món</button></div>`;
@@ -321,8 +322,7 @@
                 <div class="stats-toggle">
                     <button class="stats-mode-btn ${state.statsMode === 'day' ? 'active' : ''}" data-mode="day">Ngày</button>
                     <button class="stats-mode-btn ${state.statsMode === 'week' ? 'active' : ''}" data-mode="week">Tuần</button>
-                    <button class="stats-mode-btn ${state.statsMode === 'month' ? 'active' : ''}" data-mode="month">Tháng</button></div>
-                <div id="stats-controls"></div><div id="stats-results"></div></div>`;
+                </div><div id="stats-controls"></div><div id="stats-results"></div></div>`;
             await renderStatsContent();
         }
         async function renderStatsContent() {
@@ -339,10 +339,6 @@
                 controlsDiv.innerHTML = `<label>Chọn ngày bất kỳ trong tuần</label><input type="date" id="stats-date-picker" value="${todayISO}">`;
                 document.getElementById('stats-date-picker').addEventListener('change', renderStatsContent);
                 await generateWeeklyStats(document.getElementById('stats-date-picker').value);
-            } else if (state.statsMode === 'month') {
-                controlsDiv.innerHTML = `<label>Chọn tháng</label><input type="month" id="stats-month-picker" value="${todayISO.substring(0, 7)}">`;
-                document.getElementById('stats-month-picker').addEventListener('change', renderStatsContent);
-                await generateMonthlyStats(document.getElementById('stats-month-picker').value);
             }
         }
         async function generateDailyStats(dateString) {
@@ -374,11 +370,9 @@
             const date = new Date(dateString); const week = getWeekString(date);
             const resultsDiv = document.getElementById('stats-results');
             const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
-            const dayNames = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
             const dayPromises = days.map(day => getDocument(week, day));
             const weekData = await Promise.all(dayPromises);
-            
-            const stats = {}; // { dish: { eaten, not_eaten } }
+            const stats = {};
             weekData.forEach(dayData => {
                 if(!dayData) return;
                 for(const order of Object.values(dayData)) {
@@ -387,69 +381,12 @@
                     if (order.status === 'eaten' || order.status === 'give') stats[dish].eaten++; else stats[dish].not_eaten++;
                 }
             });
-            
             if (Object.keys(stats).length === 0) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho tuần này.</p>'; return; }
             let html = '<ul class="stats-list">';
             for(const dish of Object.keys(stats).sort()) {
                  html += `<li class="stats-item" style="justify-content: space-between;"><span>${dish}</span><strong>${stats[dish].eaten} / ${stats[dish].eaten + stats[dish].not_eaten}</strong></li>`;
             }
             resultsDiv.innerHTML = html + '</ul>';
-        }
-        async function generateMonthlyStats(monthString) {
-            const [year, month] = monthString.split('-').map(Number);
-            const resultsDiv = document.getElementById('stats-results');
-            const daysInMonth = new Date(year, month, 0).getDate();
-            let allOrders = [];
-            let departs = new Set();
-            let dates = [];
-
-            const promises = [];
-            for (let i = 1; i <= daysInMonth; i++) {
-                const date = new Date(year, month - 1, i);
-                const dayOfWeek = date.getDay();
-                if (dayOfWeek > 0 && dayOfWeek < 6) { // Weekdays
-                    dates.push(i);
-                    promises.push(getDocument(getWeekString(date), getDayKey(date)));
-                }
-            }
-            const monthData = await Promise.all(promises);
-
-            monthData.forEach(dayData => {
-                if (dayData) {
-                    for(const order of Object.values(dayData)) {
-                        if(order.status === 'eaten' || order.status === 'give') {
-                            allOrders.push(order);
-                            departs.add(order.depart);
-                        }
-                    }
-                }
-            });
-
-            if (allOrders.length === 0) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho tháng này.</p>'; return; }
-            
-            const sortedDeparts = [...departs].sort();
-            const stats = {}; // { depart: { '1': 2, '2': 5, ... } }
-            sortedDeparts.forEach(d => stats[d] = {});
-
-            allOrders.forEach(order => {
-                const dayOfMonth = new Date(order.timestamp?.toDate() || Date.now()).getDate(); // Simplified
-                if(!stats[order.depart][dayOfMonth]) stats[order.depart][dayOfMonth] = 0;
-                stats[order.depart][dayOfMonth]++;
-            });
-
-            let tableHTML = `<div class="table-container"><table><thead><tr><th>Phòng ban</th>${dates.map(d => `<th>${d}</th>`).join('')}<th>Tổng</th></tr></thead><tbody>`;
-            sortedDeparts.forEach(depart => {
-                let rowTotal = 0;
-                tableHTML += `<tr><td>${depart}</td>`;
-                dates.forEach(d => {
-                    const count = stats[depart][d] || 0;
-                    rowTotal += count;
-                    tableHTML += `<td>${count || ''}</td>`;
-                });
-                tableHTML += `<td><strong>${rowTotal}</strong></td></tr>`;
-            });
-            tableHTML += '</tbody></table></div>';
-            resultsDiv.innerHTML = tableHTML;
         }
         async function renderAdminMenu() {
             const today = new Date(); const dayOfWeek = today.getDay();
@@ -474,10 +411,8 @@
                             <button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${profile.name}"><i class="fas fa-trash"></i></button></td></tr>`;
                 }
             }
-            document.getElementById('admin-content').innerHTML = `<div class="card glass">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2>Quản lý Nhân sự</h2><div><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button>
-                         <button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div>
+            document.getElementById('admin-content').innerHTML = `<div class="card glass"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>Quản lý Nhân sự</h2><div><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div>
                 <div class="table-container"><table><thead><tr><th>Tên</th><th>Email</th><th>Phòng ban</th><th></th></tr></thead><tbody>${tableRows}</tbody></table></div></div>`;
         }
 
@@ -562,26 +497,21 @@
                 hideLoader();
             }
             if (target.closest('#export-stats-btn')) { exportStatsToExcel(); }
-            // Các event listener khác...
+            // All other event listeners...
         });
         
-        function exportStatsToExcel() {
+        async function exportStatsToExcel() {
             const resultsDiv = document.getElementById('stats-results');
-            if (!resultsDiv || resultsDiv.textContent.includes('Không có dữ liệu')) {
-                showToast('Không có dữ liệu để xuất', true); return;
-            }
-            let data = [];
-            let filename = 'ThongKe.xlsx';
+            if (!resultsDiv || resultsDiv.textContent.includes('Không có dữ liệu')) { showToast('Không có dữ liệu để xuất', true); return; }
+            let data = [], filename = 'ThongKe.xlsx';
             if (state.statsMode === 'day') {
                 filename = `ThongKe_Ngay_${document.getElementById('stats-date-picker').value}.xlsx`;
                 resultsDiv.querySelectorAll('.shift-group').forEach(sg => {
                     const shiftName = sg.querySelector('h3').textContent;
-                    sg.querySelectorAll('.stats-group').forEach(g => {
-                        const dishName = g.querySelector('h4').textContent.split(' (')[0];
-                        g.querySelectorAll('.stats-item').forEach(item => {
-                            const [name, status] = item.textContent.substring(2).split(' (');
-                            data.push({ 'Ca': shiftName, 'Món ăn': dishName, 'Nhân viên': name, 'Trạng thái': status.slice(0, -1) });
-                        });
+                    sg.querySelectorAll('.stats-item').forEach(item => {
+                        const dishName = item.querySelector('span').textContent;
+                        const counts = item.querySelector('strong').textContent;
+                        data.push({ 'Ca': shiftName, 'Món ăn': dishName, 'Thống kê (Đã ăn / Tổng)': counts });
                     });
                 });
             } else if (state.statsMode === 'week') {
@@ -591,16 +521,7 @@
                     const counts = item.querySelector('strong').textContent;
                     data.push({ 'Món ăn': dishName, 'Thống kê (Đã ăn / Tổng)': counts });
                 });
-            } else if (state.statsMode === 'month') {
-                filename = `ThongKe_Thang_${document.getElementById('stats-month-picker').value}.xlsx`;
-                const table = resultsDiv.querySelector('table');
-                data = XLSX.utils.table_to_sheet(table);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, data, 'ThongKeThang');
-                XLSX.writeFile(wb, filename);
-                return;
             }
-
             if(data.length > 0) {
                 const ws = XLSX.utils.json_to_sheet(data);
                 const wb = XLSX.utils.book_new();
