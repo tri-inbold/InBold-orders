@@ -7,185 +7,999 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
         :root {
-            --primary-gradient: linear-gradient(90deg, #8E2DE2, #4A00E0);
-            --secondary-color: #6c5ce7;
-            --background-color: #12101e;
-            --card-bg-color: rgba(29, 25, 46, 0.7);
-            --text-color: #f0f0f0;
-            --text-muted-color: #a0a0b0;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --success-color: #00b894;
-            --error-color: #ff6b6b;
-            --border-radius: 16px;
-            --font-family: 'Poppins', sans-serif;
+            --primary: #8B5CF6;
+            --primary-dark: #7C3AED;
+            --primary-light: #A78BFA;
+            --secondary: #3B82F6;
+            --accent: #EC4899;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --dark-bg: #0F172A;
+            --card-bg: #1E293B;
+            --card-hover: #334155;
+            --border: #334155;
+            --text: #F1F5F9;
+            --text-muted: #94A3B8;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: var(--font-family);
-            background-color: var(--background-color);
-            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text);
             line-height: 1.6;
             font-size: 14px;
+            overflow-x: hidden;
         }
+        
         #app {
-            max-width: 420px;
+            max-width: 1200px;
             margin: 0 auto;
-            background-color: #1a162d;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            position: relative;
             padding-bottom: 100px;
         }
-        @media (min-width: 450px) {
-            #app {
-                margin: 2rem auto;
-                border-radius: 24px;
-                min-height: calc(100vh - 4rem);
-                box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        
+        /* Header */
+        header {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+        }
+        
+        .user-profile:hover {
+            background: var(--card-bg);
+        }
+        
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            object-fit: cover;
+        }
+        
+        .user-info h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .user-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+        
+        .icon-btn:hover {
+            background: var(--card-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .icon-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        /* Main Content */
+        main {
+            flex-grow: 1;
+            padding: 1.5rem;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Hero Section */
+        .hero-card {
+            background: var(--gradient-1);
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-greeting {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        .hero-title {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .hero-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-icon.purple { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon.blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-icon.pink { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-icon.green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        
+        .tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .tabs::-webkit-scrollbar-track {
+            background: var(--card-bg);
+            border-radius: 2px;
+        }
+        
+        .tabs::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .tab-btn:hover {
+            background: var(--card-hover);
+            color: var(--text);
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+        
+        /* Food Options */
+        .food-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .food-option {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .food-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-1);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .food-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+        }
+        
+        .food-option:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .food-option.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
+        }
+        
+        .food-option.selected::before {
+            transform: scaleX(1);
+        }
+        
+        .food-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .food-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        /* Staff List */
+        .staff-list {
+            list-style: none;
+        }
+        
+        .staff-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .staff-item:hover {
+            background: var(--card-hover);
+            transform: translateX(4px);
+        }
+        
+        .staff-item.eaten {
+            opacity: 0.5;
+        }
+        
+        .staff-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient-1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+        
+        .staff-details {
+            flex: 1;
+        }
+        
+        .staff-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+        
+        .staff-dish {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+        }
+        
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--card-hover);
+        }
+        
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text);
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            padding-left: 44px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+        
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-        .glass {
-            background: var(--card-bg-color);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
         }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.5rem; }
-        main { flex-grow: 1; padding: 0 1rem; }
-        .icon-btn { background: none; border: none; color: var(--text-muted-color); font-size: 1.5rem; cursor: pointer; }
-        #lang-toggle-btn { font-size: 1.1rem; font-weight: 600; width: 48px; height: 48px; border-radius: 12px; background: rgba(0,0,0,0.2); }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: var(--card-hover);
+            color: var(--text);
+        }
+        
+        /* Bottom Navigation */
         #tab-bar {
             position: fixed;
-            z-index: 100;
             bottom: 1rem;
             left: 50%;
             transform: translateX(-50%);
-            width: calc(100% - 2rem);
-            max-width: 400px;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 8px;
             display: flex;
-            background: rgba(29, 25, 46, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 0.5rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            gap: 4px;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+            width: calc(100% - 2rem);
+            max-width: 600px;
         }
-        .tab-link {
+        
+        .nav-item {
             flex: 1;
-            padding: 0.5rem;
-            background: none;
+            padding: 12px 16px;
+            border-radius: 16px;
+            background: transparent;
             border: none;
-            border-radius: 50px;
-            font-size: 1.2rem;
-            font-weight: 600;
+            color: var(--text-muted);
             cursor: pointer;
-            color: var(--text-muted-color);
             transition: all 0.3s ease;
-            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-item i {
+            font-size: 20px;
+        }
+        
+        .nav-item:hover {
+            color: var(--text);
+        }
+        
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .nav-item.needs-attention::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            right: 20px;
+            width: 8px;
+            height: 8px;
+            background: var(--error);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+            }
+        }
+        
+        /* Toast */
+        #toast-notification {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%) translateY(200px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            z-index: 1001;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 90%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        #toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        #toast-notification.success {
+            border-color: var(--success);
+        }
+        
+        #toast-notification.error {
+            border-color: var(--error);
+        }
+        
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
             justify-content: center;
         }
-        .tab-link.active { color: white; background: var(--secondary-color); }
-        .tab-link .tab-text { font-size: 0.7rem; display: block; margin-top: 4px; font-weight: 400; }
-        .tab-link.needs-attention::after { content: ''; position: absolute; top: 10px; right: 15px; width: 8px; height: 8px; background-color: #ff4757; border-radius: 50%; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 #ff4757b3; } 70% { box-shadow: 0 0 0 10px #ff475700; } 100% { box-shadow: 0 0 0 0 #ff475700; } }
-        .card { padding: 1.5rem; margin-bottom: 1rem; }
-        .modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; }
-        .modal-content { padding: 2rem; width: 90%; max-width: 400px; position: relative; }
-        .modal-content h2 { margin-bottom: 1.5rem; font-size: 1.5rem; }
-        .modal-content label { display: block; margin-bottom: 0.5rem; color: var(--text-muted-color); font-size: 1rem; }
-        .shift-toggle, .language-toggle, .week-toggle, .stats-toggle { display: flex; background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
-        .shift-toggle label, .language-toggle button, .week-toggle label, .stats-toggle button { flex: 1; text-align: center; padding: 0.75rem; border: none; background: none; color: var(--text-muted-color); cursor: pointer; transition: all 0.3s ease; font-size: 1rem; }
-        .shift-toggle input[type="radio"], .week-toggle input[type="radio"] { display: none; }
-        .shift-toggle input[type="radio"]:checked + label, .language-toggle button.active, .week-toggle input[type="radio"]:checked + label, .stats-toggle button.active { background: var(--secondary-color); color: white; font-weight: 600; }
-        input[type="text"], input[type="email"], input[type="date"], input[type="month"], textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.2); color: var(--text-color); border-radius: 12px; font-size: 1.1rem; font-family: var(--font-family); }
-        textarea { resize: vertical; min-height: 80px; }
-        .hidden { display: none !important; }
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 16, 30, 0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .spinner { border: 5px solid rgba(255, 255, 255, 0.2); border-top: 5px solid white; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .close-button { position: absolute; top: 1rem; right: 1rem; color: var(--text-muted-color); font-size: 1.5rem; cursor: pointer; }
-        .btn-primary { width: 100%; padding: 0.8rem; border-radius: 12px; font-size: 1.1rem; cursor: pointer; font-weight: 600; border: none; background: var(--primary-gradient); color: white; margin-top: 0.5rem; }
-        .btn-secondary { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: var(--text-color); }
-        .btn-danger { background: var(--error-color); }
-        .btn-primary:disabled { background: #555; cursor: not-allowed; opacity: 0.7; }
-        .dish-name { font-size: 1.75rem; font-weight: 600; text-align: center; padding: 2.5rem 1rem; background: rgba(0,0,0,0.2); border-radius: var(--border-radius); margin-bottom: 1.5rem; color: white; }
-        #toast-notification { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background-color: var(--success-color); color: white; padding: 1rem 1.5rem; border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1001; transition: bottom 0.5s ease-in-out; max-width: 90%; text-align: center; }
-        #toast-notification.show { bottom: 120px; }
-        #toast-notification.error { background-color: var(--error-color); }
-        .logout-btn { background: none; border: none; color: var(--text-muted-color); cursor: pointer; padding: 0; font-size: 0.9rem; }
-        .search-bar-container { display: flex; align-items: center; gap: 0.5rem; padding: 1rem 0.5rem; }
-        #menu-filter-btn { flex-shrink: 0; width: 45px; height: 45px; border-radius: 12px; background: rgba(0,0,0,0.2); font-size: 1.1rem; color: var(--text-muted-color); }
-        .staff-list, .stats-list { list-style: none; display: flex; flex-direction: column; }
-        .staff-item, .stats-item { display: flex; align-items: center; padding: 0.8rem 0.5rem; border-bottom: 1px solid var(--border-color); }
-        .staff-item.eaten { opacity: 0.5; order: 1; transform: scale(0.98); }
-        .staff-item.eaten .staff-name { text-decoration: line-through; }
-        .staff-details { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; }
-        .staff-name { font-weight: 600; font-size: 1.1rem; }
-        .staff-dish { color: var(--text-muted-color); font-style: italic; max-width: 50%; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .shift-group h3, .stats-group h3 { padding: 1rem 0.5rem 0.5rem; font-size: 1.2rem; color: var(--secondary-color); }
-        .day-tabs, .admin-sub-tabs { display: flex; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
-        .day-tab, .admin-sub-tab { padding: 0.5rem; flex-shrink: 0; flex-grow: 1; cursor: pointer; background: none; border: none; font-size: 1rem; color: var(--text-muted-color); white-space: nowrap; border-bottom: 3px solid transparent; text-align: center; }
-        .day-tab.active, .admin-sub-tab.active { color: white; font-weight: bold; border-bottom-color: var(--secondary-color); }
-        .dish-options { margin-top: 1rem; }
-        .dish-option { display: block; padding: 1rem; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.2s ease; font-size: 1.1rem; text-align: center; }
-        .dish-option.selected { border-color: var(--secondary-color); background-color: rgba(108, 92, 231, 0.2); box-shadow: 0 0 10px rgba(108, 92, 231, 0.5); }
-        .dish-option[disabled] { opacity: 0.4; cursor: not-allowed; background: none; border-color: var(--border-color); box-shadow: none; }
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { font-weight: 600; color: var(--secondary-color); }
-        td .icon-btn { font-size: 1rem; margin: 0 0.25rem; }
-        .menu-day-editor { margin-bottom: 1.5rem; }
-        .menu-dish-input-group { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
-        .menu-dish-input-group input { margin-bottom: 0; }
-        .menu-dish-input-group .icon-btn { height: 42px; width: 42px; border-radius: 12px; background: rgba(0,0,0,0.2); }
+        
+        .toast-icon.success {
+            background: var(--success);
+        }
+        
+        .toast-icon.error {
+            background: var(--error);
+        }
+        
+        /* Loader */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(139, 92, 246, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: rgba(139, 92, 246, 0.1);
+        }
+        
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+        }
+        
+        tr:hover {
+            background: rgba(139, 92, 246, 0.05);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Shift Toggle */
+        .shift-toggle {
+            display: flex;
+            gap: 8px;
+            background: rgba(139, 92, 246, 0.1);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .shift-toggle input[type="radio"] {
+            display: none;
+        }
+        
+        .shift-toggle label {
+            flex: 1;
+            padding: 8px 16px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        
+        .shift-toggle input[type="radio"]:checked + label {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Utilities */
+        .hidden {
+            display: none !important;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .hero-title {
+                font-size: 32px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .food-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-item span {
+                display: none;
+            }
+            
+            #tab-bar {
+                width: calc(100% - 1rem);
+            }
+        }
+        
+        @media (min-width: 769px) {
+            #app {
+                padding: 2rem;
+            }
+            
+            header {
+                border-radius: var(--radius-lg);
+                margin-bottom: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="app">
         <header>
-            <div id="user-profile"><h1>Inbold Menu</h1></div>
-            <button id="lang-toggle-btn" class="icon-btn hidden"></button>
+            <div id="user-profile" class="user-profile">
+                <h1 style="font-size: 24px; font-weight: 800; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Inbold Menu</h1>
+            </div>
+            <div class="header-actions">
+                <button id="lang-toggle-btn" class="icon-btn hidden"></button>
+            </div>
         </header>
 
         <main id="main-content"></main>
-        <div id="loader"><div class="spinner"></div></div>
         
+        <!-- Modals -->
         <div id="settings-modal" class="modal hidden">
-             <div class="modal-content glass">
-                <span id="close-settings-btn" class="close-button">&times;</span><h2>Cài đặt Hồ sơ</h2>
-                <label>Phòng ban</label><select id="department-select"></select>
-                <button id="save-settings-btn" class="btn-primary">Lưu thay đổi</button>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Cài đặt</h2>
+                    <button id="close-settings-btn" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phòng ban</label>
+                    <select id="department-select" class="form-select"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Loại ca</label>
+                    <div class="shift-toggle">
+                        <input type="radio" id="shift-m" name="shift-type" value="M" checked>
+                        <label for="shift-m">Ca sáng</label>
+                        <input type="radio" id="shift-e" name="shift-type" value="E">
+                        <label for="shift-e">Ca chiều</label>
+                    </div>
+                </div>
+                <button id="save-settings-btn" class="btn btn-primary btn-block">Lưu thay đổi</button>
             </div>
         </div>
+        
         <div id="personnel-modal" class="modal hidden">
-             <div class="modal-content glass">
-                <span id="close-personnel-modal-btn" class="close-button">&times;</span>
-                <h2 id="personnel-modal-title">Thêm Nhân viên</h2>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="personnel-modal-title" class="modal-title">Thêm nhân viên</h2>
+                    <button id="close-personnel-modal-btn" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
                 <input type="hidden" id="personnel-original-email-key">
-                <label>Tên</label><input type="text" id="personnel-name-input">
-                <label>Email</label><input type="email" id="personnel-email-input">
-                <label>Phòng ban</label><select id="personnel-depart-select"></select>
-                <button id="save-personnel-btn" class="btn-primary">Lưu</button>
+                <div class="form-group">
+                    <label class="form-label">Tên</label>
+                    <input type="text" id="personnel-name-input" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="personnel-email-input" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phòng ban</label>
+                    <select id="personnel-depart-select" class="form-select"></select>
+                </div>
+                <button id="save-personnel-btn" class="btn btn-primary btn-block">Lưu</button>
             </div>
         </div>
+        
         <div id="reopen-order-modal" class="modal hidden">
-            <div class="modal-content glass">
-                <span id="close-reopen-order-modal-btn" class="close-button">&times;</span>
-                <h2 id="reopen-order-modal-title"></h2>
-                <p>Thao tác này sẽ xóa mọi dữ liệu đặt món của người này trong tuần, cho phép họ đặt lại. Bạn có chắc chắn?</p>
-                <button id="confirm-reopen-order-btn" class="btn-danger">Xác nhận Mở lại</button>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="reopen-order-modal-title" class="modal-title"></h2>
+                    <button id="close-reopen-order-modal-btn" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Thao tác này sẽ xóa mọi dữ liệu đặt món của người này trong tuần, cho phép họ đặt lại. Bạn có chắc chắn?</p>
+                <button id="confirm-reopen-order-btn" class="btn btn-danger btn-block">Xác nhận Mở lại</button>
+            </div>
+        </div>
+        
+        <div id="delete-personnel-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Xóa nhân viên</h2>
+                    <button id="close-delete-personnel-modal-btn" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <p id="delete-personnel-text" style="color: var(--text-muted); margin-bottom: 1.5rem;"></p>
+                <div style="display: flex; gap: 12px;">
+                    <button id="cancel-delete-personnel-btn" class="btn btn-secondary" style="flex: 1;">Hủy</button>
+                    <button id="confirm-delete-personnel-btn" class="btn btn-danger" style="flex: 1;">Xóa</button>
+                </div>
             </div>
         </div>
 
         <nav id="tab-bar" class="hidden"></nav>
         <div id="toast-notification"></div>
+        <div id="loader" class="hidden"><div class="spinner"></div></div>
     </div>
     
     <script type="module">
@@ -208,51 +1022,88 @@
         const provider = new GoogleAuthProvider();
         
         const ADMIN_EMAILS = ['tri.vu.trong@inbold.com', 'truc.tran@inbold.com'];
+        const FOOD_ICONS = ['🍜', '🍲', '🥘', '🍛', '🍝', '🥗', '🍱', '🍣', '🥙', '🌮'];
 
-        const mainContent = document.getElementById('main-content');
-        const tabBar = document.getElementById('tab-bar');
-        const loader = document.getElementById('loader');
-        const userProfileDiv = document.getElementById('user-profile');
-        const langToggleBtn = document.getElementById('lang-toggle-btn');
-        const settingsModal = document.getElementById('settings-modal');
-        const personnelModal = document.getElementById('personnel-modal');
-        const reopenOrderModal = document.getElementById('reopen-order-modal');
-        const toast = document.getElementById('toast-notification');
+        const elements = {
+            mainContent: document.getElementById('main-content'),
+            tabBar: document.getElementById('tab-bar'),
+            loader: document.getElementById('loader'),
+            userProfileDiv: document.getElementById('user-profile'),
+            langToggleBtn: document.getElementById('lang-toggle-btn'),
+            settingsModal: document.getElementById('settings-modal'),
+            personnelModal: document.getElementById('personnel-modal'),
+            reopenOrderModal: document.getElementById('reopen-order-modal'),
+            deletePersonnelModal: document.getElementById('delete-personnel-modal'),
+            toast: document.getElementById('toast-notification'),
+        };
 
         const state = {
-            currentUser: null, staffProfile: null, isAdmin: false, currentTab: 'today', authReady: false,
+            currentUser: null,
+            staffProfile: null,
+            isAdmin: false,
+            currentTab: 'today',
             adminSubTab: 'support',
-            statsMode: 'day',
-            menuFilterMode: 'auto', 
-            orderSelection: { shift: 'M', mon: null, tue: null, wed: null, thu: null, fri: null },
+            authReady: false,
+            menuFilterMode: 'auto',
+            orderSelection: { mon: null, tue: null, wed: null, thu: null, fri: null },
             reopenTarget: { key: null, name: null },
+            deleteTarget: { key: null, name: null },
             cachedData: new Map(),
+            statsViewMode: 'day',
+            statsViewDate: new Date(),
         };
-        
+
+        // Utility Functions
         const getWeekString = (date) => {
-            const d = new Date(date); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() + 4 - (d.getDay() || 7));
             const yearStart = new Date(d.getFullYear(), 0, 1);
             const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             return `${d.getFullYear()}_${weekNo}`;
         };
+
         const getDayKey = (date = new Date()) => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()];
-        const showLoader = () => loader.classList.remove('hidden');
-        const hideLoader = () => loader.classList.add('hidden');
+        const showLoader = () => elements.loader.classList.remove('hidden');
+        const hideLoader = () => elements.loader.classList.add('hidden');
+        const emailToKey = (email) => email.replace(/[.@]/g, '_');
+
         const parseDish = (dishString) => {
             if (!dishString) return '';
             const parts = dishString.split('|');
             const lang = state.staffProfile?.lan || 'vi';
             return (lang.startsWith('en') && parts.length > 1) ? parts[1].trim() : parts[0].trim();
         };
-        const showToast = (message, isError = false) => {
-            toast.textContent = message; toast.classList.toggle('error', isError); toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+
+        const showToast = (message, type = 'success') => {
+            const iconMap = {
+                success: '<i class="fas fa-check"></i>',
+                error: '<i class="fas fa-times"></i>',
+                info: '<i class="fas fa-info"></i>'
+            };
+            elements.toast.innerHTML = `
+                <div class="toast-icon ${type}">${iconMap[type]}</div>
+                <span>${message}</span>
+            `;
+            elements.toast.className = `show ${type}`;
+            setTimeout(() => {
+                elements.toast.classList.remove('show');
+            }, 3000);
         };
-        const emailToKey = (email) => email.replace(/[.@]/g, '_');
+
+        const getInitials = (name) => {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        };
+
+        const getFoodIcon = (index) => {
+            return FOOD_ICONS[index % FOOD_ICONS.length];
+        };
 
         async function getDocument(collection, documentId, forceRefresh = false) {
             const cacheKey = `${collection}/${documentId}`;
-            if (!forceRefresh && state.cachedData.has(cacheKey)) return state.cachedData.get(cacheKey);
+            if (!forceRefresh && state.cachedData.has(cacheKey)) {
+                return state.cachedData.get(cacheKey);
+            }
             const docRef = doc(db, collection, documentId);
             const docSnap = await getDoc(docRef);
             const data = docSnap.exists() ? docSnap.data() : null;
@@ -261,503 +1112,1096 @@
         }
 
         async function render() {
-            if (!state.authReady || !state.staffProfile) { hideLoader(); return; }
+            if (!state.authReady || !state.staffProfile) {
+                hideLoader();
+                return;
+            }
             showLoader();
             try {
                 switch (state.currentTab) {
-                    case 'today': await renderToday(); break;
-                    case 'menu': await renderMenu(); break;
-                    case 'order': await renderOrder(); break;
-                    case 'admin': await renderAdmin(); break;
+                    case 'today':
+                        await renderToday();
+                        break;
+                    case 'menu':
+                        await renderMenu();
+                        break;
+                    case 'order':
+                        await renderOrder();
+                        break;
+                    case 'admin':
+                        await renderAdmin();
+                        break;
                 }
-            } catch (error) { console.error('Render error:', error); mainContent.innerHTML = `<div class="card glass"><p>Có lỗi xảy ra khi tải dữ liệu.</p></div>`; }
+            } catch (error) {
+                console.error('Render error:', error);
+                elements.mainContent.innerHTML = `
+                    <div class="card">
+                        <p style="color: var(--error); text-align: center;">
+                            <i class="fas fa-exclamation-circle"></i> 
+                            Có lỗi xảy ra khi tải dữ liệu.
+                        </p>
+                    </div>
+                `;
+            }
             hideLoader();
         }
-        
+
         async function renderToday() {
             const dayKey = getDayKey();
+            const firstName = state.staffProfile.name.split(' ')[0];
+            
             if (['sun', 'sat'].includes(dayKey)) {
-                mainContent.innerHTML = `<div class="card glass"><h2>Chào ${state.staffProfile.name.split(' ')[0]},<br>hôm nay không phục vụ bữa ăn.</h2></div>`; return;
+                elements.mainContent.innerHTML = `
+                    <div class="card hero-card">
+                        <div class="hero-content">
+                            <div class="hero-greeting">Chào ${firstName} 👋</div>
+                            <div class="hero-title">Cuối tuần vui vẻ!</div>
+                            <div class="hero-subtitle">Hôm nay không phục vụ bữa ăn</div>
+                        </div>
+                    </div>
+                `;
+                return;
             }
+
             const weekString = getWeekString(new Date());
             const dayData = await getDocument(weekString, dayKey, true);
-            let content = `<div class="card glass">`;
             const userEmailKey = emailToKey(state.currentUser.email);
+
             if (dayData && dayData[userEmailKey]) {
                 const userOrder = dayData[userEmailKey];
-                content += `<h2>Chào ${userOrder.name.split(' ')[0]},<br>hôm nay bạn ăn:</h2><div class="dish-name">${parseDish(userOrder.food)}</div>`;
-            } else { content += `<h2>Chào ${state.staffProfile.name.split(' ')[0]},<br>bạn chưa đặt món cho hôm nay.</h2>`; }
-            mainContent.innerHTML = content + `</div>`;
+                const dishName = parseDish(userOrder.food);
+                elements.mainContent.innerHTML = `
+                    <div class="card hero-card">
+                        <div class="hero-content">
+                            <div class="hero-greeting">Chào ${firstName} 👋</div>
+                            <div class="hero-title">${dishName}</div>
+                            <div class="hero-subtitle">Hôm nay bạn ăn món này</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                elements.mainContent.innerHTML = `
+                    <div class="card hero-card">
+                        <div class="hero-content">
+                            <div class="hero-greeting">Chào ${firstName} 👋</div>
+                            <div class="hero-title">Chưa có món</div>
+                            <div class="hero-subtitle">Bạn chưa đặt món cho hôm nay</div>
+                        </div>
+                    </div>
+                `;
+            }
         }
+
         async function renderMenu() {
-            const dayKey = getDayKey(); const weekString = getWeekString(new Date());
+            const dayKey = getDayKey();
+            const weekString = getWeekString(new Date());
             const dayData = await getDocument(weekString, dayKey, true);
-            mainContent.innerHTML = `<div class="card glass"><div class="search-bar-container">
-                <input type="text" id="search-staff" class="glass" placeholder="Tìm kiếm nhân viên..."><button id="menu-filter-btn" class="icon-btn"></button>
-            </div><div id="staff-list-container"></div></div>`;
+
+            let content = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Danh sách hôm nay</h2>
+                        <button id="menu-filter-btn" class="icon-btn">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                    <div class="search-bar">
+                        <div class="search-wrapper">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="search-staff" class="search-input" placeholder="Tìm kiếm nhân viên...">
+                        </div>
+                    </div>
+                    <div id="staff-list-container"></div>
+                </div>
+            `;
+
+            elements.mainContent.innerHTML = content;
+
             if (dayData) {
                 updateStaffListView(dayData);
-                document.getElementById('search-staff').addEventListener('input', (e) => updateStaffListView(dayData, e.target.value));
-            } else { document.getElementById('staff-list-container').innerHTML = `<p style="text-align:center;">Chưa có dữ liệu cho hôm nay.</p>`; }
+                document.getElementById('search-staff').addEventListener('input', (e) => {
+                    updateStaffListView(dayData, e.target.value);
+                });
+            } else {
+                document.getElementById('staff-list-container').innerHTML = `
+                    <p class="text-center" style="color: var(--text-muted); padding: 2rem;">
+                        Chưa có dữ liệu cho hôm nay
+                    </p>
+                `;
+            }
         }
-        function updateStaffListView(dayData, searchTerm = '') {
-            const container = document.getElementById('staff-list-container'); const filterBtn = document.getElementById('menu-filter-btn');
-            const hour = new Date().getHours();
-            const staffOrders = Object.entries(dayData).map(([emailKey, order]) => ({ emailKey, ...order }));
-            const filtered = staffOrders.filter(o => o.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-            if (state.menuFilterMode === 'auto') { filterBtn.innerHTML = `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>`; } 
-            else { filterBtn.innerHTML = `<i class="fas fa-users"></i>`; }
-            const createListHTML = (list) => list.sort((a, b) => a.name.localeCompare(b.name))
-                .map(order => `<li class="staff-item"><div class="staff-details" style="padding-left: 1rem;"><span class="staff-name">${order.name}</span><span class="staff-dish">${parseDish(order.food)}</span></div></li>`).join('');
-            const sang = filtered.filter(o => o.shift === 'M'); const chieu = filtered.filter(o => o.shift === 'E');
-            let html = '';
+        function updateStaffListView(dayData, searchTerm = '') {
+            const container = document.getElementById('staff-list-container');
+            const filterBtn = document.getElementById('menu-filter-btn');
+            const hour = new Date().getHours();
+
+            const staffOrders = Object.entries(dayData)
+                .map(([emailKey, order]) => ({ emailKey, ...order }))
+                .filter(o => o.name && o.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            filterBtn.innerHTML = state.menuFilterMode === 'auto' 
+                ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>`
+                : `<i class="fas fa-users"></i>`;
+
+            const createListHTML = (list) => {
+                return list
+                    .sort((a, b) => (a.status === 'eaten' ? 1 : -1) || a.name.localeCompare(b.name))
+                    .map(order => `
+                        <li class="staff-item ${order.status === 'eaten' ? 'eaten' : ''}">
+                            <div class="staff-avatar">${getInitials(order.name)}</div>
+                            <div class="staff-details">
+                                <div class="staff-name">${order.name}</div>
+                                <div class="staff-dish">${parseDish(order.food)}</div>
+                            </div>
+                        </li>
+                    `).join('');
+            };
+
+            const sang = staffOrders.filter(o => o.shift === 'M');
+            const chieu = staffOrders.filter(o => o.shift === 'E');
+
+            let html = '<ul class="staff-list">';
+            
             if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') {
-                if (sang.length > 0) html += `<div class="shift-group"><h3>Ca sáng</h3><ul class="staff-list">${createListHTML(sang)}</ul></div>`;
+                if (sang.length > 0) {
+                    html += `<h3 style="color: var(--primary); padding: 1rem 0 0.5rem; font-size: 18px;">☀️ Ca sáng</h3>${createListHTML(sang)}`;
+                }
             }
+            
             if ((state.menuFilterMode === 'auto' && hour >= 15) || state.menuFilterMode === 'all') {
-                if (chieu.length > 0) html += `<div class="shift-group"><h3>Ca Chiều</h3><ul class="staff-list">${createListHTML(chieu)}</ul></div>`;
+                if (chieu.length > 0) {
+                    html += `<h3 style="color: var(--primary); padding: 1rem 0 0.5rem; font-size: 18px;">🌙 Ca chiều</h3>${createListHTML(chieu)}`;
+                }
             }
-            container.innerHTML = html || `<p style="text-align:center;">Không tìm thấy kết quả.</p>`;
+            
+            html += '</ul>';
+
+            container.innerHTML = html || `<p class="text-center" style="color: var(--text-muted); padding: 2rem;">Không tìm thấy kết quả</p>`;
         }
+
         async function renderOrder() {
-            const today = new Date(); const dayOfWeek = today.getDay();
-            const targetWeek = (dayOfWeek >= 4 || dayOfWeek === 0) ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) : getWeekString(today);
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const targetWeek = (dayOfWeek >= 4 || dayOfWeek === 0) 
+                ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000))
+                : getWeekString(today);
+
             const userEmailKey = emailToKey(state.currentUser.email);
             const userOrdersForMon = await getDocument(targetWeek, 'mon');
+
+            // Check if user already ordered
             if (userOrdersForMon && userOrdersForMon[userEmailKey]) {
-                let summaryHTML = `<div class="card glass"><h2>Bạn đã đặt món cho Tuần ${targetWeek.split('_')[1]}</h2><ul class="staff-list" style="flex-direction: column;">`;
-                const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
+                const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
+                let summaryHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Đã đặt món tuần ${targetWeek.split('_')[1]}</h2>
+                        </div>
+                        <ul class="staff-list">
+                `;
+
                 for (const [key, name] of Object.entries(days)) {
                     const dayData = await getDocument(targetWeek, key);
                     const dish = dayData?.[userEmailKey]?.food;
-                    summaryHTML += `<li class="staff-item" style="justify-content: space-between;"><strong>${name}:</strong> <span class="staff-dish" style="max-width: none;">${parseDish(dish) || 'Chưa đặt'}</span></li>`;
+                    summaryHTML += `
+                        <li class="staff-item">
+                            <div class="staff-avatar">${name.slice(-1)}</div>
+                            <div class="staff-details">
+                                <div class="staff-name">${name}</div>
+                                <div class="staff-dish">${parseDish(dish) || 'Chưa đặt'}</div>
+                            </div>
+                        </li>
+                    `;
                 }
-                mainContent.innerHTML = summaryHTML + `</ul></div>`; return;
+
+                elements.mainContent.innerHTML = summaryHTML + `</ul></div>`;
+                return;
             }
+
+            // Show order form
             const menu = await getDocument(targetWeek, "menu");
-            if (!menu) { mainContent.innerHTML = `<div class="card glass"><p>Thực đơn cho tuần này chưa được cập nhật.</p></div>`; return; }
-            const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
-            mainContent.innerHTML = `<div class="card glass"><h2>Đặt món cho Tuần ${targetWeek.split('_')[1]}</h2>
-                <label>Ca làm việc của bạn trong tuần này</label>
-                <div class="shift-toggle">
-                    <input type="radio" id="order-shift-m" name="order-shift" value="M" checked><label for="order-shift-m">Ca sáng</label>
-                    <input type="radio" id="order-shift-e" name="order-shift" value="E"><label for="order-shift-e">Ca Chiều</label>
+            if (!menu) {
+                elements.mainContent.innerHTML = `
+                    <div class="card">
+                        <div class="text-center">
+                            <i class="fas fa-calendar-times" style="font-size: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--text-muted);">Thực đơn cho tuần này chưa được cập nhật</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
+            
+            elements.mainContent.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Đặt món tuần ${targetWeek.split('_')[1]}</h2>
+                    </div>
+                    <div class="tabs" id="day-tabs">
+                        ${Object.keys(days).map((key, i) => `
+                            <button class="tab-btn ${i === 0 ? 'active' : ''}" data-day="${key}">
+                                ${days[key]}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="order-form-content"></div>
+                    <button id="submit-order-btn" class="btn btn-primary btn-block mt-3" disabled>
+                        <i class="fas fa-check-circle"></i>
+                        Hoàn tất đặt món
+                    </button>
                 </div>
-                <div class="day-tabs">${Object.keys(days).map((key, i) => `<button class="day-tab ${i === 0 ? 'active' : ''}" data-day="${key}">${days[key]}</button>`).join('')}</div>
-                <div id="order-form-content"></div>
-                <button id="submit-order-btn" class="btn-primary" disabled>Hoàn tất đặt món</button></div>`;
+            `;
+
             renderDayOptions(Object.keys(days)[0], menu);
+
+            // Add day tab listeners
+            document.querySelectorAll('#day-tabs .tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#day-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderDayOptions(btn.dataset.day, menu);
+                });
+            });
         }
+
         function renderDayOptions(dayKey, menu) {
             const dishes = menu[dayKey]?.split(',').map(d => d.trim()).filter(d => d) || [];
-            document.getElementById('order-form-content').innerHTML = `<div class="dish-options">${dishes.map(dish => `<div class="dish-option ${state.orderSelection[dayKey] === dish ? 'selected' : ''}" data-dish="${dish}" data-day-key="${dayKey}">${parseDish(dish)}</div>`).join('')}</div>`;
+            const content = document.getElementById('order-form-content');
+            
+            content.innerHTML = `
+                <div class="food-options">
+                    ${dishes.map((dish, index) => `
+                        <div class="food-option ${state.orderSelection[dayKey] === dish ? 'selected' : ''}" 
+                             data-dish="${dish}" data-day-key="${dayKey}">
+                            <div class="food-icon">${getFoodIcon(index)}</div>
+                            <div class="food-name">${parseDish(dish)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Check if all days are selected
+            const allSelected = Object.values(state.orderSelection).every(dish => dish !== null);
+            document.getElementById('submit-order-btn').disabled = !allSelected;
         }
+
         async function renderAdmin() {
-            mainContent.innerHTML = `<div class="admin-panel"><div class="admin-sub-tabs">
-                <button class="admin-sub-tab ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support">Hỗ trợ</button>
-                <button class="admin-sub-tab ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats">Thống kê</button>
-                <button class="admin-sub-tab ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu">Thực đơn</button>
-                <button class="admin-sub-tab ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel">Nhân sự</button>
-            </div><div id="admin-content"></div></div>`;
+            elements.mainContent.innerHTML = `
+                <div class="card">
+                    <div class="tabs">
+                        <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support">
+                            <i class="fas fa-headset"></i> Hỗ trợ
+                        </button>
+                        <button class="tab-btn ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats">
+                            <i class="fas fa-chart-bar"></i> Thống kê
+                        </button>
+                        <button class="tab-btn ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu">
+                            <i class="fas fa-utensils"></i> Thực đơn
+                        </button>
+                        <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel">
+                            <i class="fas fa-users"></i> Nhân sự
+                        </button>
+                    </div>
+                    <div id="admin-content"></div>
+                </div>
+            `;
+            
             await renderAdminSubTab();
         }
+
         async function renderAdminSubTab() {
-             switch(state.adminSubTab) {
-                case 'support': await renderAdminSupport(); break;
-                case 'stats': await renderAdminStats(); break;
-                case 'menu': await renderAdminMenu(); break;
-                case 'personnel': await renderAdminPersonnel(); break;
+            switch (state.adminSubTab) {
+                case 'support':
+                    await renderAdminSupport();
+                    break;
+                case 'stats':
+                    await renderAdminStats();
+                    break;
+                case 'menu':
+                    await renderAdminMenu();
+                    break;
+                case 'personnel':
+                    await renderAdminPersonnel();
+                    break;
             }
         }
+
         async function renderAdminSupport() {
             const thisWeek = getWeekString(new Date());
-            const [allStaff, monOrders] = await Promise.all([ getDocument("staff_list", "staffs", true), getDocument(thisWeek, "mon") ]);
+            const [allStaff, monOrders] = await Promise.all([
+                getDocument("staff_list", "staffs", true),
+                getDocument(thisWeek, "mon")
+            ]);
+
             let notOrderedList = [];
             if (allStaff) {
                 for (const key in allStaff) {
                     if (key.startsWith('guest_')) continue;
-                    if (!monOrders || !monOrders[key]) { notOrderedList.push({ key, profile: allStaff[key] }); }
-                }
-            }
-            notOrderedList.sort((a,b) => a.profile.name.localeCompare(b.profile.name));
-            document.getElementById('admin-content').innerHTML = `<div class="card glass"><h2>Hỗ trợ</h2>
-                <div class="shift-group"><h3>Nhân viên chưa đặt món tuần này</h3><ul class="staff-list">
-                    ${notOrderedList.length > 0 ? notOrderedList.map(item => `<li class="staff-item" style="justify-content: space-between;">
-                        <span>${item.profile.name}</span>
-                        <button class="btn-secondary reopen-order-btn" style="padding: 0.2rem 0.8rem; margin: 0;" data-key="${item.key}" data-name="${item.profile.name}">Mở đặt lại</button>
-                    </li>`).join('') : '<p>Mọi người đã đặt món đủ.</p>'}
-                </ul></div></div>`;
-        }
-        async function renderAdminStats() {
-            document.getElementById('admin-content').innerHTML = `<div class="card glass">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2>Thống kê</h2><button id="export-stats-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div>
-                <div class="stats-toggle">
-                    <button class="stats-mode-btn ${state.statsMode === 'day' ? 'active' : ''}" data-mode="day">Ngày</button>
-                    <button class="stats-mode-btn ${state.statsMode === 'week' ? 'active' : ''}" data-mode="week">Tuần</button>
-                </div><div id="stats-controls"></div><div id="stats-results"></div></div>`;
-            await renderStatsContent();
-        }
-        async function renderStatsContent() {
-            const controlsDiv = document.getElementById('stats-controls');
-            const resultsDiv = document.getElementById('stats-results');
-            resultsDiv.innerHTML = '';
-            const today = new Date();
-            const todayISO = today.toISOString().split('T')[0];
-            if (state.statsMode === 'day') {
-                controlsDiv.innerHTML = `<label>Chọn ngày</label><input type="date" id="stats-date-picker" value="${todayISO}">`;
-                document.getElementById('stats-date-picker').addEventListener('change', renderStatsContent);
-                await generateDailyStats(document.getElementById('stats-date-picker').value);
-            } else if (state.statsMode === 'week') {
-                controlsDiv.innerHTML = `<label>Chọn ngày bất kỳ trong tuần</label><input type="date" id="stats-date-picker" value="${todayISO}">`;
-                document.getElementById('stats-date-picker').addEventListener('change', renderStatsContent);
-                await generateWeeklyStats(document.getElementById('stats-date-picker').value);
-            }
-        }
-        async function generateDailyStats(dateString) {
-            const date = new Date(dateString); const week = getWeekString(date); const day = getDayKey(date);
-            const resultsDiv = document.getElementById('stats-results');
-            if (['sun', 'sat'].includes(day)) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho cuối tuần.</p>'; return; }
-            const data = await getDocument(week, day);
-            if (!data) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho ngày này.</p>'; return; }
-            const stats = {};
-            for(const order of Object.values(data)) {
-                const dish = parseDish(order.food);
-                if (!stats[dish]) stats[dish] = { eaten: 0, not_eaten: 0, shift: order.shift };
-                if (order.status === 'eaten' || order.status === 'give') stats[dish].eaten++; else stats[dish].not_eaten++;
-            }
-            let html = '';
-            ['M', 'E'].forEach(shift => {
-                const shiftName = shift === 'M' ? 'Ca sáng' : 'Ca chiều';
-                let shiftHtml = '';
-                for(const dish in stats) {
-                    if (stats[dish].shift === shift) {
-                        shiftHtml += `<li class="stats-item" style="justify-content: space-between;"><span>${dish}</span><strong>${stats[dish].eaten} / ${stats[dish].eaten + stats[dish].not_eaten}</strong></li>`;
+                    if (!monOrders || !monOrders[key]) {
+                        notOrderedList.push({ key, profile: allStaff[key] });
                     }
                 }
-                if(shiftHtml) html += `<div class="shift-group"><h3>${shiftName}</h3><ul class="stats-list">${shiftHtml}</ul></div>`;
-            });
-            resultsDiv.innerHTML = html || '<p>Không có dữ liệu.</p>';
-        }
-        async function generateWeeklyStats(dateString) {
-            const date = new Date(dateString); const week = getWeekString(date);
-            const resultsDiv = document.getElementById('stats-results');
-            const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
-            const dayPromises = days.map(day => getDocument(week, day));
-            const weekData = await Promise.all(dayPromises);
-            const stats = {};
-            weekData.forEach(dayData => {
-                if(!dayData) return;
-                for(const order of Object.values(dayData)) {
-                    const dish = parseDish(order.food);
-                    if(!stats[dish]) stats[dish] = { eaten: 0, not_eaten: 0 };
-                    if (order.status === 'eaten' || order.status === 'give') stats[dish].eaten++; else stats[dish].not_eaten++;
-                }
-            });
-            if (Object.keys(stats).length === 0) { resultsDiv.innerHTML = '<p>Không có dữ liệu cho tuần này.</p>'; return; }
-            let html = '<ul class="stats-list">';
-            for(const dish of Object.keys(stats).sort()) {
-                 html += `<li class="stats-item" style="justify-content: space-between;"><span>${dish}</span><strong>${stats[dish].eaten} / ${stats[dish].eaten + stats[dish].not_eaten}</strong></li>`;
             }
-            resultsDiv.innerHTML = html + '</ul>';
+
+            notOrderedList.sort((a, b) => a.profile.name.localeCompare(b.profile.name));
+
+            document.getElementById('admin-content').innerHTML = `
+                <div class="mt-3">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 18px;">
+                        <i class="fas fa-exclamation-circle"></i> 
+                        Nhân viên chưa đặt món tuần này
+                    </h3>
+                    ${notOrderedList.length > 0 ? `
+                        <ul class="staff-list">
+                            ${notOrderedList.map(item => `
+                                <li class="staff-item">
+                                    <div class="staff-avatar">${getInitials(item.profile.name)}</div>
+                                    <div class="staff-details">
+                                        <div class="staff-name">${item.profile.name}</div>
+                                        <div class="staff-dish">${item.profile.email}</div>
+                                    </div>
+                                    <button class="btn btn-secondary reopen-order-btn" data-key="${item.key}" data-name="${item.profile.name}">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    ` : `
+                        <p class="text-center" style="color: var(--text-muted); padding: 2rem;">
+                            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 1rem; display: block;"></i>
+                            Mọi người đã đặt món đủ!
+                        </p>
+                    `}
+                </div>
+            `;
         }
+
+        async function renderAdminStats() {
+            const content = document.getElementById('admin-content');
+            
+            content.innerHTML = `
+                <div class="mt-3">
+                    <div class="tabs">
+                        <button class="tab-btn ${state.statsViewMode === 'day' ? 'active' : ''}" data-mode="day">Ngày</button>
+                        <button class="tab-btn ${state.statsViewMode === 'week' ? 'active' : ''}" data-mode="week">Tuần</button>
+                        <button class="tab-btn ${state.statsViewMode === 'month' ? 'active' : ''}" data-mode="month">Tháng</button>
+                    </div>
+                    <div id="stats-content" class="mt-3"></div>
+                    <button id="export-stats-btn" class="btn btn-primary btn-block mt-3">
+                        <i class="fas fa-file-excel"></i>
+                        Tải về XLSX
+                    </button>
+                </div>
+            `;
+
+            await renderStatsContent();
+        }
+
+        async function renderStatsContent() {
+            const statsContent = document.getElementById('stats-content');
+            
+            if (state.statsViewMode === 'day') {
+                const dayKey = getDayKey(state.statsViewDate);
+                const weekString = getWeekString(state.statsViewDate);
+                const dayData = await getDocument(weekString, dayKey);
+
+                if (!dayData) {
+                    statsContent.innerHTML = `<p class="text-center" style="color: var(--text-muted);">Không có dữ liệu</p>`;
+                    return;
+                }
+
+                const stats = {};
+                Object.values(dayData).forEach(order => {
+                    const dish = parseDish(order.food);
+                    stats[dish] = (stats[dish] || 0) + 1;
+                });
+
+                statsContent.innerHTML = `
+                    <div class="stats-grid">
+                        ${Object.entries(stats).map(([dish, count], index) => `
+                            <div class="stat-card">
+                                <div class="stat-icon ${['purple', 'blue', 'pink', 'green'][index % 4]}">
+                                    ${getFoodIcon(index)}
+                                </div>
+                                <div class="stat-value">${count}</div>
+                                <div class="stat-label">${dish}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                statsContent.innerHTML = `<p class="text-center" style="color: var(--text-muted);">Chức năng đang được xây dựng</p>`;
+            }
+        }
+
         async function renderAdminMenu() {
-            const today = new Date(); const dayOfWeek = today.getDay();
+            const today = new Date();
+            const dayOfWeek = today.getDay();
             const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
             const menuData = await getDocument(nextWeek, "menu") || {};
             const isEditable = dayOfWeek >= 1 && dayOfWeek <= 4;
             const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
+
             let formHTML = '';
             for (const [key, name] of Object.entries(days)) {
-                const dishes = menuData[key]?.split(',').map(d => d.trim()) || [''];
-                formHTML += `<div class="menu-day-editor"><label>${name}</label><div id="dish-list-${key}">
-                    ${dishes.map(dish => `<div class="menu-dish-input-group"><input type="text" class="menu-dish-input" data-day="${key}" value="${dish}" ${!isEditable ? 'disabled' : ''}><button class="icon-btn remove-dish-btn" ${!isEditable ? 'disabled' : ''}><i class="fas fa-minus"></i></button></div>`).join('')}
-                </div><button class="btn-secondary add-dish-btn" data-day="${key}" style="width: auto; padding: 0.5rem 1rem;" ${!isEditable ? 'disabled' : ''}><i class="fas fa-plus"></i> Thêm món</button></div>`;
+                formHTML += `
+                    <div class="form-group">
+                        <label class="form-label">${name}</label>
+                        <textarea id="menu-input-${key}" class="form-textarea" rows="3" ${!isEditable ? 'disabled' : ''}>${menuData[key] || ''}</textarea>
+                    </div>
+                `;
             }
-            document.getElementById('admin-content').innerHTML = `<div class="card glass"><h2>Chỉnh sửa thực đơn tuần sau</h2><input type="text" value="${nextWeek}" disabled>${formHTML}
-                <button id="save-menu-btn" class="btn-primary" ${!isEditable ? 'disabled' : ''}>${isEditable ? 'Lưu Thực Đơn' : 'Đã khóa chỉnh sửa'}</button></div>`;
+
+            document.getElementById('admin-content').innerHTML = `
+                <div class="mt-3">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">Chỉnh sửa thực đơn tuần sau</h3>
+                    <div class="form-group">
+                        <label class="form-label">Tuần</label>
+                        <input type="text" class="form-input" value="${nextWeek}" disabled>
+                    </div>
+                    ${formHTML}
+                    <button id="save-menu-btn" class="btn ${isEditable ? 'btn-primary' : 'btn-secondary'} btn-block" ${!isEditable ? 'disabled' : ''}>
+                        <i class="fas ${isEditable ? 'fa-save' : 'fa-lock'}"></i>
+                        ${isEditable ? 'Lưu Thực đơn' : 'Đã khóa chỉnh sửa'}
+                    </button>
+                </div>
+            `;
         }
+
         async function renderAdminPersonnel() {
-            const allStaff = await getDocument("staff_list", "staffs");
+            const allStaff = await getDocument("staff_list", "staffs", true);
             let tableRows = '';
+
             if (allStaff) {
-                for (const [key, profile] of Object.entries(allStaff).sort((a,b) => a[1].name.localeCompare(b[1].name))) {
-                    tableRows += `<tr><td>${profile.name}</td><td>${profile.email}</td><td>${profile.depart}</td>
-                        <td><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button>
-                            <button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${profile.name}"><i class="fas fa-trash"></i></button></td></tr>`;
-                }
+                const sorted = Object.entries(allStaff).sort((a, b) => a[1].name.localeCompare(b[1].name));
+                tableRows = sorted.map(([key, profile]) => `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="staff-avatar" style="width: 32px; height: 32px; font-size: 12px;">
+                                    ${getInitials(profile.name)}
+                                </div>
+                                <span>${profile.name}</span>
+                            </div>
+                        </td>
+                        <td>${profile.email}</td>
+                        <td>${profile.depart || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="icon-btn edit-personnel-btn" data-key="${key}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${profile.name}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
             }
-            document.getElementById('admin-content').innerHTML = `<div class="card glass"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2>Quản lý Nhân sự</h2><div><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button>
-                         <button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div>
-                <div class="table-container"><table><thead><tr><th>Tên</th><th>Email</th><th>Phòng ban</th><th></th></tr></thead><tbody>${tableRows}</tbody></table></div></div>`;
+
+            document.getElementById('admin-content').innerHTML = `
+                <div class="mt-3">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--primary); font-size: 18px;">Quản lý nhân sự</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="add-personnel-btn" class="icon-btn">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button id="export-personnel-btn" class="icon-btn">
+                                <i class="fas fa-file-excel"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tên</th>
+                                    <th>Email</th>
+                                    <th>Phòng ban</th>
+                                    <th style="width: 120px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows || '<tr><td colspan="4" class="text-center" style="color: var(--text-muted);">Chưa có dữ liệu</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
         }
 
         async function syncUserProfile() {
             const user = state.currentUser;
             const userEmailKey = emailToKey(user.email);
             const staffData = await getDocument("staff_list", "staffs", true);
+
             if (!staffData || !staffData[userEmailKey]) {
                 await signOut(auth);
                 throw new Error("Tài khoản của bạn không có trong danh sách được phép.");
             }
+
             state.staffProfile = staffData[userEmailKey];
             state.isAdmin = ADMIN_EMAILS.includes(user.email);
         }
+
         function updateUIForUser(user) {
             if (user && state.staffProfile) {
-                userProfileDiv.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><img src="${user.photoURL}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;">
-                        <div><h1 id="user-name-btn" style="font-size: 1.2rem; margin: 0; color: white; cursor: pointer;">${state.staffProfile.name}</h1>
-                             <button id="logout-btn" class="logout-btn">Đăng xuất</button></div></div>`;
-                langToggleBtn.textContent = (state.staffProfile.lan || 'vi').toUpperCase();
-                langToggleBtn.classList.remove('hidden');
-                let tabBarHTML = `<button class="tab-link active" data-tab="today">Hôm Nay</button><button class="tab-link" data-tab="menu">Thực Đơn</button><button class="tab-link" data-tab="order">Đặt Món</button>`;
-                if (state.isAdmin) { tabBarHTML += `<button class="tab-link" data-tab="admin">Admin</button>`; }
-                tabBar.innerHTML = tabBarHTML;
-                tabBar.classList.remove('hidden');
+                elements.userProfileDiv.innerHTML = `
+                    <div class="user-profile">
+                        <img src="${user.photoURL}" alt="avatar" class="user-avatar">
+                        <div class="user-info">
+                            <h2>${state.staffProfile.name}</h2>
+                            <p id="logout-btn" style="cursor: pointer;">Đăng xuất</p>
+                        </div>
+                    </div>
+                `;
+
+                elements.langToggleBtn.textContent = (state.staffProfile.lan || 'vi').toUpperCase();
+                elements.langToggleBtn.classList.remove('hidden');
+
+                let tabBarHTML = `
+                    <button class="nav-item active" data-tab="today">
+                        <i class="fas fa-home"></i>
+                        <span>Hôm Nay</span>
+                    </button>
+                    <button class="nav-item" data-tab="menu">
+                        <i class="fas fa-list"></i>
+                        <span>Thực đơn</span>
+                    </button>
+                    <button class="nav-item" data-tab="order">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Đặt Món</span>
+                    </button>
+                `;
+
+                if (state.isAdmin) {
+                    tabBarHTML += `
+                        <button class="nav-item" data-tab="admin">
+                            <i class="fas fa-crown"></i>
+                            <span>Admin</span>
+                        </button>
+                    `;
+                }
+
+                elements.tabBar.innerHTML = tabBarHTML;
+                elements.tabBar.classList.remove('hidden');
             } else {
-                userProfileDiv.innerHTML = `<h1>Inbold Menu</h1>`;
-                langToggleBtn.classList.add('hidden');
-                tabBar.classList.add('hidden');
-                mainContent.innerHTML = `<div class="card glass" style="text-align:center;"><h2>Chào mừng!</h2><p>Vui lòng đăng nhập bằng tài khoản công ty.</p><button id="login-btn" class="btn-primary">Đăng nhập bằng Google</button></div>`;
+                elements.userProfileDiv.innerHTML = `
+                    <h1 style="font-size: 24px; font-weight: 800; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        Inbold Menu
+                    </h1>
+                `;
+                elements.langToggleBtn.classList.add('hidden');
+                elements.tabBar.classList.add('hidden');
+                elements.mainContent.innerHTML = `
+                    <div class="card hero-card">
+                        <div class="hero-content">
+                            <div class="hero-title">Chào mừng! 👋</div>
+                            <div class="hero-subtitle" style="margin-bottom: 2rem;">Vui lòng đăng nhập bằng tài khoản công ty</div>
+                            <button id="login-btn" class="btn btn-primary">
+                                <i class="fab fa-google"></i>
+                                Đăng nhập bằng Google
+                            </button>
+                        </div>
+                    </div>
+                `;
             }
         }
-        
+
+        // Event Listeners
         document.body.addEventListener('click', async (e) => {
-            const target = e.target;
-            if (!state.currentUser && !target.closest('#login-btn')) return;
-            if (target.closest('#login-btn')) { showLoader(); signInWithPopup(auth, provider).catch(err => { showToast('Tài khoản không được phép.', true); hideLoader(); }); }
-            if (target.closest('#logout-btn')) { signOut(auth); }
-            const tabButton = target.closest('.tab-link');
-            if (tabButton) { if (tabButton.dataset.tab === state.currentTab) return; document.querySelector('.tab-link.active')?.classList.remove('active'); tabButton.classList.add('active'); state.currentTab = tabButton.dataset.tab; await render(); }
-            const adminSubTab = target.closest('.admin-sub-tab');
-            if (adminSubTab) { if (adminSubTab.dataset.subtab === state.adminSubTab) return; document.querySelector('.admin-sub-tab.active')?.classList.remove('active'); adminSubTab.classList.add('active'); state.adminSubTab = adminSubTab.dataset.subtab; await renderAdmin(); }
-            if (target.closest('#lang-toggle-btn')) {
+            const target = e.target.closest('button, .user-profile');
+            if (!target) return;
+
+            // Login
+            if (target.id === 'login-btn' || target.closest('#login-btn')) {
+                showLoader();
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (err) {
+                    console.error('Login error:', err);
+                    showToast('Đăng nhập thất bại. Tài khoản của bạn có thể không được phép.', 'error');
+                    hideLoader();
+                }
+                return;
+            }
+
+            // Logout
+            if (target.id === 'logout-btn' || target.closest('#logout-btn')) {
+                if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                    await signOut(auth);
+                    showToast('Đã đăng xuất thành công');
+                }
+                return;
+            }
+
+            // User profile click - open settings
+            if (target.classList.contains('user-profile')) {
+                const profile = state.staffProfile;
+                const departsData = await getDocument('staff_list', 'departs');
+                const departSelect = document.getElementById('department-select');
+                
+                if (departsData) {
+                    departSelect.innerHTML = (departsData.list || [])
+                        .map(d => `<option value="${d}" ${d === profile.depart ? 'selected' : ''}>${d}</option>`)
+                        .join('') + `<option value="${departsData.guest || 'Khách'}" ${departsData.guest === profile.depart ? 'selected' : ''}>${departsData.guest || 'Khách'}</option>`;
+                }
+                
+                document.querySelector(`input[name="shift-type"][value="${profile.shift}"]`).checked = true;
+                elements.settingsModal.classList.remove('hidden');
+                return;
+            }
+
+            // Tab Navigation
+            if (target.classList.contains('nav-item')) {
+                const tab = target.dataset.tab;
+                if (tab === state.currentTab) return;
+                
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                target.classList.add('active');
+                state.currentTab = tab;
+                await render();
+                return;
+            }
+
+            // Admin Sub Tabs
+            if (target.dataset.subtab) {
+                state.adminSubTab = target.dataset.subtab;
+                document.querySelectorAll('[data-subtab]').forEach(btn => btn.classList.remove('active'));
+                target.classList.add('active');
+                await renderAdminSubTab();
+                return;
+            }
+
+            // Stats mode tabs
+            if (target.dataset.mode) {
+                state.statsViewMode = target.dataset.mode;
+                document.querySelectorAll('[data-mode]').forEach(btn => btn.classList.remove('active'));
+                target.classList.add('active');
+                await renderStatsContent();
+                return;
+            }
+
+            // Language Toggle
+            if (target.id === 'lang-toggle-btn') {
                 showLoader();
                 try {
                     const newLang = state.staffProfile.lan === 'vi' ? 'en' : 'vi';
-                    await updateDoc(doc(db, "staff_list", "staffs"), { [`${emailToKey(state.currentUser.email)}.lan`]: newLang });
-                    state.staffProfile.lan = newLang; state.cachedData.delete("staff_list/staffs");
-                    langToggleBtn.textContent = newLang.toUpperCase();
-                    showToast(`Switched to ${newLang.toUpperCase()}`); await render();
-                } catch (error) { showToast('Language switch failed', true); }
+                    await updateDoc(doc(db, "staff_list", "staffs"), {
+                        [`${emailToKey(state.currentUser.email)}.lan`]: newLang
+                    });
+                    state.staffProfile.lan = newLang;
+                    state.cachedData.delete("staff_list/staffs");
+                    elements.langToggleBtn.textContent = newLang.toUpperCase();
+                    showToast(`Language switched to ${newLang.toUpperCase()}`);
+                    await render();
+                } catch (error) {
+                    showToast('Language switch failed', 'error');
+                }
                 hideLoader();
+                return;
             }
-            if(target.closest('.stats-mode-btn')) {
-                const mode = target.dataset.mode;
-                if (mode === state.statsMode) return;
-                document.querySelector('.stats-mode-btn.active')?.classList.remove('active');
-                target.classList.add('active');
-                state.statsMode = mode;
-                await renderStatsContent();
+
+            // Menu Filter
+            if (target.id === 'menu-filter-btn' || target.closest('#menu-filter-btn')) {
+                state.menuFilterMode = state.menuFilterMode === 'auto' ? 'all' : 'auto';
+                const dayKey = getDayKey();
+                const weekString = getWeekString(new Date());
+                const dayData = await getDocument(weekString, dayKey, true);
+                if (dayData) updateStaffListView(dayData);
+                return;
             }
-            const reopenBtn = target.closest('.reopen-order-btn');
-            if (reopenBtn) {
-                state.reopenTarget = { key: reopenBtn.dataset.key, name: reopenBtn.dataset.name };
+
+            // Settings Modal
+            if (target.id === 'close-settings-btn' || (target === elements.settingsModal && e.target === elements.settingsModal)) {
+                elements.settingsModal.classList.add('hidden');
+                return;
+            }
+
+            if (target.id === 'save-settings-btn') {
+                showLoader();
+                try {
+                    const newProfile = {
+                        ...state.staffProfile,
+                        depart: document.getElementById('department-select').value,
+                        shift: document.querySelector('input[name="shift-type"]:checked').value,
+                    };
+                    await updateDoc(doc(db, "staff_list", "staffs"), {
+                        [emailToKey(state.currentUser.email)]: newProfile
+                    });
+                    state.staffProfile = newProfile;
+                    state.cachedData.delete("staff_list/staffs");
+                    elements.settingsModal.classList.add('hidden');
+                    showToast('Cập nhật thành công!');
+                } catch (error) {
+                    showToast('Cập nhật thất bại', 'error');
+                }
+                hideLoader();
+                return;
+            }
+
+            // Food Selection
+            if (target.classList.contains('food-option') || target.closest('.food-option')) {
+                const option = target.classList.contains('food-option') ? target : target.closest('.food-option');
+                const dayKey = option.dataset.dayKey;
+                const dish = option.dataset.dish;
+                
+                state.orderSelection[dayKey] = dish;
+                
+                // Re-render to update UI
+                const menu = await getDocument(getWeekString(new Date()), "menu");
+                renderDayOptions(dayKey, menu);
+                return;
+            }
+
+            // Submit Order
+            if (target.id === 'submit-order-btn') {
+                showLoader();
+                try {
+                    const today = new Date();
+                    const dayOfWeek = today.getDay();
+                    const targetWeek = (dayOfWeek >= 4 || dayOfWeek === 0)
+                        ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000))
+                        : getWeekString(today);
+
+                    const userEmailKey = emailToKey(state.currentUser.email);
+                    
+                    for (const dayKey in state.orderSelection) {
+                        const dayDocRef = doc(db, targetWeek, dayKey);
+                        const updatePayload = {
+                            [userEmailKey]: {
+                                name: state.staffProfile.name,
+                                email: state.currentUser.email,
+                                food: state.orderSelection[dayKey],
+                                status: 'not',
+                                shift: state.staffProfile.shift,
+                                depart: state.staffProfile.depart,
+                            }
+                        };
+                        await setDoc(dayDocRef, updatePayload, { merge: true });
+                        state.cachedData.delete(`${targetWeek}/${dayKey}`);
+                    }
+
+                    showToast('Đặt món thành công!');
+                    state.orderSelection = { mon: null, tue: null, wed: null, thu: null, fri: null };
+                    
+                    // Switch to today tab
+                    state.currentTab = 'today';
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.toggle('active', item.dataset.tab === 'today');
+                    });
+                    await render();
+                } catch (error) {
+                    console.error('Order submission error:', error);
+                    showToast('Đặt món thất bại', 'error');
+                }
+                hideLoader();
+                return;
+            }
+
+            // Admin: Reopen Order
+            if (target.classList.contains('reopen-order-btn') || target.closest('.reopen-order-btn')) {
+                const btn = target.classList.contains('reopen-order-btn') ? target : target.closest('.reopen-order-btn');
+                state.reopenTarget = { key: btn.dataset.key, name: btn.dataset.name };
                 document.getElementById('reopen-order-modal-title').textContent = `Mở lại đặt món cho ${state.reopenTarget.name}?`;
-                reopenOrderModal.classList.remove('hidden');
+                elements.reopenOrderModal.classList.remove('hidden');
+                return;
             }
-            if(target.id === 'close-reopen-order-modal-btn' || target === reopenOrderModal) { reopenOrderModal.classList.add('hidden'); }
+
+            if (target.id === 'close-reopen-order-modal-btn' || (target === elements.reopenOrderModal && e.target === elements.reopenOrderModal)) {
+                elements.reopenOrderModal.classList.add('hidden');
+                return;
+            }
+
             if (target.id === 'confirm-reopen-order-btn') {
                 showLoader();
                 try {
                     const weekString = getWeekString(new Date());
-                    for (const day of ['mon', 'tue', 'wed', 'thu', 'fri']) {
+                    const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
+                    
+                    for (const day of days) {
                         const docRef = doc(db, weekString, day);
                         await updateDoc(docRef, { [state.reopenTarget.key]: deleteField() });
                         state.cachedData.delete(`${weekString}/${day}`);
                     }
-                    showToast(`Đã mở lại đặt món cho ${state.reopenTarget.name}.`);
+                    
+                    showToast(`Đã mở lại đặt món cho ${state.reopenTarget.name}`);
+                    elements.reopenOrderModal.classList.add('hidden');
                     await renderAdmin();
-                } catch(error) { showToast('Có lỗi xảy ra', true); console.error(error); }
-                reopenOrderModal.classList.add('hidden');
-                hideLoader();
-            }
-            if (target.closest('#export-stats-btn')) { exportStatsToExcel(); }
-            if (target.closest('#add-personnel-btn')) {
-                document.getElementById('personnel-modal-title').textContent = "Thêm Nhân viên";
-                document.getElementById('personnel-original-email-key').value = "";
-                document.getElementById('personnel-name-input').value = "";
-                document.getElementById('personnel-email-input').value = "";
-                document.getElementById('personnel-email-input').disabled = false;
-                const departsData = await getDocument('staff_list', 'departs');
-                document.getElementById('personnel-depart-select').innerHTML = (departsData.list || []).map(d => `<option value="${d}">${d}</option>`).join('');
-                personnelModal.classList.remove('hidden');
-            }
-            if (target.id === 'save-personnel-btn') {
-                showLoader();
-                try {
-                    const originalKey = document.getElementById('personnel-original-email-key').value;
-                    const email = document.getElementById('personnel-email-input').value.trim();
-                    const name = document.getElementById('personnel-name-input').value.trim();
-                    const depart = document.getElementById('personnel-depart-select').value;
-                    if (!name || !email || !depart) throw new Error("Vui lòng điền đủ thông tin.");
-                    const emailKey = emailToKey(email);
-                    const staffRef = doc(db, "staff_list", "staffs");
-                    let updateData = { [`${emailKey}`]: { name, email, depart, lan: 'vi' } };
-                    if (originalKey && originalKey !== emailKey) { updateData[originalKey] = deleteField(); }
-                    await setDoc(staffRef, updateData, { merge: true });
-                    state.cachedData.delete("staff_list/staffs");
-                    personnelModal.classList.add('hidden');
-                    showToast("Lưu thành công!");
-                    await renderAdminPersonnel();
-                } catch (error) { showToast(error.message, true); }
-                hideLoader();
-            }
-            const deleteBtn = target.closest('.delete-personnel-btn');
-            if (deleteBtn) {
-                const key = deleteBtn.dataset.key; const name = deleteBtn.dataset.name;
-                if (confirm(`Bạn có chắc chắn muốn xóa nhân viên "${name}" không?`)) {
-                    showLoader();
-                    try {
-                        await updateDoc(doc(db, "staff_list", "staffs"), { [key]: deleteField() });
-                        state.cachedData.delete("staff_list/staffs");
-                        showToast("Xóa thành công!");
-                        await renderAdminPersonnel();
-                    } catch (error) { showToast("Xóa thất bại.", true); }
-                    hideLoader();
+                } catch (error) {
+                    showToast('Có lỗi xảy ra', 'error');
+                    console.error(error);
                 }
+                hideLoader();
+                return;
             }
-            if (target.id === 'close-personnel-modal-btn' || target === personnelModal) { personnelModal.classList.add('hidden'); }
-            if (target.closest('#export-personnel-btn')) {
-                const allStaff = await getDocument("staff_list", "staffs");
-                if (allStaff) {
-                    const dataToExport = Object.values(allStaff).map(p => ({'Tên': p.name, 'Email': p.email, 'Phòng ban': p.depart, 'Ngôn ngữ': p.lan }));
-                    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-                    const workbook = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sách Nhân sự");
-                    XLSX.writeFile(workbook, "DanhSachNhanSu.xlsx");
-                }
-            }
-            const addDishBtn = target.closest('.add-dish-btn');
-            if (addDishBtn) {
-                const day = addDishBtn.dataset.day;
-                const container = document.getElementById(`dish-list-${day}`);
-                const newGroup = document.createElement('div');
-                newGroup.className = 'menu-dish-input-group';
-                newGroup.innerHTML = `<input type="text" class="menu-dish-input" data-day="${day}" placeholder="Món mới|New Dish"><button class="icon-btn remove-dish-btn"><i class="fas fa-minus"></i></button>`;
-                container.appendChild(newGroup);
-            }
-            const removeDishBtn = target.closest('.remove-dish-btn');
-            if (removeDishBtn) { removeDishBtn.parentElement.remove(); }
+
+            // Admin: Save Menu
             if (target.id === 'save-menu-btn') {
                 showLoader();
                 try {
-                    const week = document.querySelector('input[value*="_"]').value;
+                    const today = new Date();
+                    const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+                    const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
                     const menuData = {};
-                    ['mon', 'tue', 'wed', 'thu', 'fri'].forEach(day => {
-                        const dishes = [...document.querySelectorAll(`.menu-dish-input[data-day="${day}"]`)].map(input => input.value.trim()).filter(dish => dish);
-                        menuData[day] = dishes.join(', ');
+                    
+                    days.forEach(day => {
+                        menuData[day] = document.getElementById(`menu-input-${day}`).value;
                     });
-                    await setDoc(doc(db, week, "menu"), menuData);
-                    state.cachedData.set(`${week}/menu`, menuData);
-                    showToast("Lưu thực đơn thành công!");
-                } catch (error) { console.error("Save menu error:", error); showToast("Lưu thất bại", true); }
+                    
+                    await setDoc(doc(db, nextWeek, "menu"), menuData);
+                    state.cachedData.delete(`${nextWeek}/menu`);
+                    showToast('Lưu thực đơn thành công!');
+                } catch (error) {
+                    showToast('Lưu thực đơn thất bại', 'error');
+                    console.error(error);
+                }
                 hideLoader();
+                return;
             }
-            const dishOption = target.closest('.dish-option');
-            if (dishOption) {
-                const dayKey = dishOption.dataset.dayKey; state.orderSelection[dayKey] = dishOption.dataset.dish;
-                dishOption.parentElement.querySelectorAll('.dish-option').forEach(opt => opt.classList.remove('selected'));
-                dishOption.classList.add('selected');
-                document.getElementById('submit-order-btn').disabled = Object.values(state.orderSelection).some(dish => dish === null);
+
+            // Admin: Add Personnel
+            if (target.id === 'add-personnel-btn' || target.closest('#add-personnel-btn')) {
+                document.getElementById('personnel-modal-title').textContent = 'Thêm nhân viên';
+                document.getElementById('personnel-original-email-key').value = '';
+                document.getElementById('personnel-name-input').value = '';
+                document.getElementById('personnel-email-input').value = '';
+                
+                const departsData = await getDocument('staff_list', 'departs');
+                const departSelect = document.getElementById('personnel-depart-select');
+                if (departsData) {
+                    departSelect.innerHTML = (departsData.list || [])
+                        .map(d => `<option value="${d}">${d}</option>`)
+                        .join('');
+                }
+                
+                elements.personnelModal.classList.remove('hidden');
+                return;
             }
-            if (target.id === 'submit-order-btn') {
+
+            // Admin: Edit Personnel
+            if (target.classList.contains('edit-personnel-btn') || target.closest('.edit-personnel-btn')) {
+                const btn = target.classList.contains('edit-personnel-btn') ? target : target.closest('.edit-personnel-btn');
+                const key = btn.dataset.key;
+                const allStaff = await getDocument("staff_list", "staffs", true);
+                const profile = allStaff[key];
+                
+                document.getElementById('personnel-modal-title').textContent = 'Sửa thông tin';
+                document.getElementById('personnel-original-email-key').value = key;
+                document.getElementById('personnel-name-input').value = profile.name;
+                document.getElementById('personnel-email-input').value = profile.email;
+                
+                const departsData = await getDocument('staff_list', 'departs');
+                const departSelect = document.getElementById('personnel-depart-select');
+                if (departsData) {
+                    departSelect.innerHTML = (departsData.list || [])
+                        .map(d => `<option value="${d}" ${d === profile.depart ? 'selected' : ''}>${d}</option>`)
+                        .join('');
+                }
+                
+                elements.personnelModal.classList.remove('hidden');
+                return;
+            }
+
+            // Admin: Delete Personnel
+            if (target.classList.contains('delete-personnel-btn') || target.closest('.delete-personnel-btn')) {
+                const btn = target.classList.contains('delete-personnel-btn') ? target : target.closest('.delete-personnel-btn');
+                state.deleteTarget = { key: btn.dataset.key, name: btn.dataset.name };
+                document.getElementById('delete-personnel-text').textContent = `Bạn có chắc muốn xóa nhân viên "${state.deleteTarget.name}"? Hành động này không thể hoàn tác.`;
+                elements.deletePersonnelModal.classList.remove('hidden');
+                return;
+            }
+
+            // Personnel Modal
+            if (target.id === 'close-personnel-modal-btn' || (target === elements.personnelModal && e.target === elements.personnelModal)) {
+                elements.personnelModal.classList.add('hidden');
+                return;
+            }
+
+            if (target.id === 'save-personnel-btn') {
                 showLoader();
                 try {
-                    state.orderSelection.shift = document.querySelector('input[name="order-shift"]:checked').value;
-                    const today = new Date();
-                    const targetWeek = (today.getDay() >= 4 || today.getDay() === 0) ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) : getWeekString(today);
-                    for (const dayKey in state.orderSelection) {
-                        if(dayKey === 'shift') continue;
-                        const food = state.orderSelection[dayKey];
-                        if(food) { // Chỉ ghi những ngày có chọn món
-                            await setDoc(doc(db, targetWeek, dayKey), {
-                                [emailToKey(state.currentUser.email)]: { name: state.staffProfile.name, food, status: 'no', shift: state.orderSelection.shift, depart: state.staffProfile.depart }
-                            }, { merge: true });
-                            state.cachedData.delete(`${targetWeek}/${dayKey}`);
-                        }
+                    const name = document.getElementById('personnel-name-input').value.trim();
+                    const email = document.getElementById('personnel-email-input').value.trim();
+                    const depart = document.getElementById('personnel-depart-select').value;
+                    const originalKey = document.getElementById('personnel-original-email-key').value;
+                    
+                    if (!name || !email) {
+                        showToast('Vui lòng điền đầy đủ thông tin', 'error');
+                        hideLoader();
+                        return;
                     }
-                    showToast('Đặt món thành công!');
-                    state.orderSelection = { shift: 'M', mon: null, tue: null, wed: null, thu: null, fri: null };
-                    document.querySelector('.tab-link[data-tab="today"]').click();
-                } catch (error) { showToast('Đặt món thất bại.', true); }
-                hideLoader();
-            }
-        });
-        
-        async function exportStatsToExcel() {
-            let data = [], filename = 'ThongKe.xlsx';
-            if (state.statsMode === 'day') {
-                const date = document.getElementById('stats-date-picker').value;
-                filename = `ThongKe_Ngay_${date}.xlsx`;
-                const week = getWeekString(new Date(date));
-                const day = getDayKey(new Date(date));
-                const dayData = await getDocument(week, day);
-                if(dayData) {
-                    for(const order of Object.values(dayData)) {
-                        data.push({ 'Ca': order.shift === 'M' ? 'Sáng' : 'Chiều', 'Món ăn': parseDish(order.food), 'Nhân viên': order.name, 'Trạng thái': (order.status==='eaten' || order.status==='give') ? 'Đã ăn' : 'Chưa ăn' });
+                    
+                    const newKey = emailToKey(email);
+                    const staffRef = doc(db, "staff_list", "staffs");
+                    const allStaff = await getDocument("staff_list", "staffs", true);
+                    
+                    // If editing and email changed, delete old entry
+                    if (originalKey && originalKey !== newKey) {
+                        delete allStaff[originalKey];
                     }
+                    
+                    allStaff[newKey] = {
+                        name,
+                        email,
+                        depart,
+                        shift: allStaff[newKey]?.shift || 'M',
+                        lan: allStaff[newKey]?.lan || 'vi'
+                    };
+                    
+                    await setDoc(staffRef, allStaff);
+                    state.cachedData.delete("staff_list/staffs");
+                    
+                    elements.personnelModal.classList.add('hidden');
+                    showToast(originalKey ? 'Cập nhật thành công!' : 'Thêm nhân viên thành công!');
+                    await renderAdminPersonnel();
+                } catch (error) {
+                    showToast('Có lỗi xảy ra', 'error');
+                    console.error(error);
                 }
-            } else if (state.statsMode === 'week') {
-                const date = new Date(document.getElementById('stats-date-picker').value);
-                const week = getWeekString(date);
-                filename = `ThongKe_Tuan_${week}.xlsx`;
-                const dayPromises = ['mon', 'tue', 'wed', 'thu', 'fri'].map(day => getDocument(week, day));
-                const weekData = await Promise.all(dayPromises);
-                const stats = {};
-                weekData.forEach((dayData, index) => {
-                    if(!dayData) return;
-                    for(const order of Object.values(dayData)) {
-                        if(!stats[order.name]) stats[order.name] = { 'Tên': order.name, 'Phòng ban': order.depart };
-                        stats[order.name][`Thứ ${index+2}`] = parseDish(order.food);
-                    }
-                });
-                data = Object.values(stats);
+                hideLoader();
+                return;
             }
-            if(data.length > 0) {
+
+            // Delete Personnel Modal
+            if (target.id === 'close-delete-personnel-modal-btn' || target.id === 'cancel-delete-personnel-btn' || (target === elements.deletePersonnelModal && e.target === elements.deletePersonnelModal)) {
+                elements.deletePersonnelModal.classList.add('hidden');
+                return;
+            }
+
+            if (target.id === 'confirm-delete-personnel-btn') {
+                showLoader();
+                try {
+                    const staffRef = doc(db, "staff_list", "staffs");
+                    await updateDoc(staffRef, { [state.deleteTarget.key]: deleteField() });
+                    state.cachedData.delete("staff_list/staffs");
+                    
+                    elements.deletePersonnelModal.classList.add('hidden');
+                    showToast('Đã xóa nhân viên');
+                    await renderAdminPersonnel();
+                } catch (error) {
+                    showToast('Có lỗi xảy ra', 'error');
+                    console.error(error);
+                }
+                hideLoader();
+                return;
+            }
+
+            // Export Personnel
+            if (target.id === 'export-personnel-btn' || target.closest('#export-personnel-btn')) {
+                const allStaff = await getDocument("staff_list", "staffs", true);
+                if (!allStaff) return;
+                
+                const data = Object.entries(allStaff).map(([key, profile]) => ({
+                    'Tên': profile.name,
+                    'Email': profile.email,
+                    'Phòng ban': profile.depart,
+                    'Ca': profile.shift === 'M' ? 'Sáng' : 'Chiều',
+                    'Ngôn ngữ': profile.lan
+                }));
+                
                 const ws = XLSX.utils.json_to_sheet(data);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'ThongKe');
-                XLSX.writeFile(wb, filename);
-            } else { showToast('Không có dữ liệu để xuất', true); }
+                XLSX.utils.book_append_sheet(wb, ws, "Nhân sự");
+                XLSX.writeFile(wb, `nhan-su-${new Date().toISOString().split('T')[0]}.xlsx`);
+                showToast('Đã tải về file Excel');
+                return;
+            }
+
+            // Export Stats
+            if (target.id === 'export-stats-btn') {
+                showLoader();
+                try {
+                    const dayKey = getDayKey(state.statsViewDate);
+                    const weekString = getWeekString(state.statsViewDate);
+                    const dayData = await getDocument(weekString, dayKey);
+                    
+                    if (!dayData) {
+                        showToast('Không có dữ liệu để xuất', 'error');
+                        hideLoader();
+                        return;
+                    }
+                    
+                    const data = Object.entries(dayData).map(([key, order]) => ({
+                        'Tên': order.name,
+                        'Email': order.email,
+                        'Món ăn': parseDish(order.food),
+                        'Ca': order.shift === 'M' ? 'Sáng' : 'Chiều',
+                        'Phòng ban': order.depart,
+                        'Trạng thái': order.status === 'eaten' ? 'Đã ăn' : 'Chưa ăn'
+                    }));
+                    
+                    const ws = XLSX.utils.json_to_sheet(data);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Thống kê");
+                    XLSX.writeFile(wb, `thong-ke-${weekString}-${dayKey}.xlsx`);
+                    showToast('Đã tải về file Excel');
+                } catch (error) {
+                    showToast('Xuất file thất bại', 'error');
+                    console.error(error);
+                }
+                hideLoader();
+                return;
+            }
+        });
+
+        // Check Order Notification
+        async function checkOrderNotification() {
+            if (!elements.tabBar.querySelector('.nav-item[data-tab="order"]') || !state.currentUser) return;
+            
+            const orderTab = elements.tabBar.querySelector('.nav-item[data-tab="order"]');
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            
+            if (dayOfWeek >= 4 || dayOfWeek === 0) {
+                const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+                const nextWeekOrders = await getDocument(nextWeek, 'mon');
+                orderTab.classList.toggle('needs-attention', !nextWeekOrders || !nextWeekOrders[emailToKey(state.currentUser.email)]);
+            } else {
+                orderTab.classList.remove('needs-attention');
+            }
         }
 
+        // Main App Initialization
         async function main() {
             showLoader();
             try {
                 await setPersistence(auth, browserLocalPersistence);
+                
                 onAuthStateChanged(auth, async (user) => {
                     if (user && user.uid !== state.currentUser?.uid) {
                         try {
-                            state.currentUser = user; state.authReady = true;
-                            await syncUserProfile(); await checkOrderNotification();
-                            updateUIForUser(user); await render();
+                            state.currentUser = user;
+                            state.authReady = true;
+                            await syncUserProfile();
+                            await checkOrderNotification();
+                            updateUIForUser(user);
+                            await render();
                             showToast(`Chào mừng, ${state.staffProfile.name}!`);
-                        } catch(authError) {
-                            showToast(authError.message, true);
-                            signOut(auth);
+                        } catch (authError) {
+                            showToast(authError.message, 'error');
+                            await signOut(auth);
                         }
                     } else if (!user) {
-                        state.currentUser = null; state.isAdmin = false; state.authReady = true;
+                        state.currentUser = null;
+                        state.isAdmin = false;
+                        state.authReady = true;
                         updateUIForUser(null);
                     }
                     hideLoader();
                 });
-            } catch (error) { console.error('App init error:', error); hideLoader(); showToast('Không thể khởi tạo ứng dụng', true); }
+            } catch (error) {
+                console.error('App init error:', error);
+                hideLoader();
+                showToast('Không thể khởi tạo ứng dụng', 'error');
+            }
         }
-        
-        async function checkOrderNotification() {
-            if (!tabBar.querySelector('.tab-link[data-tab="order"]') || !state.currentUser) return;
-            const orderTab = tabBar.querySelector('.tab-link[data-tab="order"]');
-            const today = new Date();
-            if (today.getDay() >= 4 || today.getDay() === 0) {
-                const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
-                const nextWeekOrders = await getDocument(nextWeek, 'mon');
-                orderTab.classList.toggle('needs-attention', !nextWeekOrders || !nextWeekOrders[emailToKey(state.currentUser.email)]);
-            } else { orderTab.classList.remove('needs-attention'); }
-        }
+
         main();
     </script>
 </body>
