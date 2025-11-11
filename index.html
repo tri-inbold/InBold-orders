@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Toàn bộ CSS được giữ nguyên */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         :root { --primary-gradient: linear-gradient(90deg, #8E2DE2, #4A00E0); --secondary-color: #6c5ce7; --background-color: #12101e; --card-bg-color: rgba(29, 25, 46, 0.7); --text-color: #f0f0f0; --text-muted-color: #a0a0b0; --border-color: rgba(255, 255, 255, 0.1); --success-color: #00b894; --error-color: #ff6b6b; --border-radius: 16px; --font-family: 'Poppins', sans-serif; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -158,7 +157,7 @@
 
         const state = {
             currentUser: null, staffProfile: null, isAdmin: false, currentTab: 'today', authReady: false,
-            adminSubTab: 'support', // Mặc định vào tab Hỗ trợ
+            adminSubTab: 'support',
             menuFilterMode: 'auto', 
             orderSelection: { mon: null, tue: null, wed: null, thu: null, fri: null },
             reopenTarget: { key: null, name: null },
@@ -171,7 +170,7 @@
             const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             return `${d.getFullYear()}_${weekNo}`;
         };
-        const getDayKey = () => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
+        const getDayKey = (date = new Date()) => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()];
         const showLoader = () => loader.classList.remove('hidden');
         const hideLoader = () => loader.classList.add('hidden');
         const parseDish = (dishString) => {
@@ -275,12 +274,10 @@
             const menu = await getDocument(targetWeek, "menu");
             if (!menu) { mainContent.innerHTML = `<div class="card glass"><p>Thực đơn cho tuần này chưa được cập nhật.</p></div>`; return; }
             const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6"};
-            mainContent.innerHTML = `<div class="card glass">
-                <h2>Đặt món cho Tuần ${targetWeek.split('_')[1]}</h2>
+            mainContent.innerHTML = `<div class="card glass"><h2>Đặt món cho Tuần ${targetWeek.split('_')[1]}</h2>
                 <div class="day-tabs">${Object.keys(days).map((key, i) => `<button class="day-tab ${i === 0 ? 'active' : ''}" data-day="${key}">${days[key]}</button>`).join('')}</div>
                 <div id="order-form-content"></div>
-                <button id="submit-order-btn" class="btn-primary" disabled>Hoàn tất đặt món</button>
-            </div>`;
+                <button id="submit-order-btn" class="btn-primary" disabled>Hoàn tất đặt món</button></div>`;
             renderDayOptions(Object.keys(days)[0], menu);
         }
         function renderDayOptions(dayKey, menu) {
@@ -358,13 +355,12 @@
             const user = state.currentUser;
             const userEmailKey = emailToKey(user.email);
             const staffData = await getDocument("staff_list", "staffs", true);
-            let allStaff = staffData || {};
             
-            if (!allStaff[userEmailKey]) { // CHẶN USER LẠ
+            if (!staffData || !staffData[userEmailKey]) {
                 await signOut(auth);
-                throw new Error("Tài khoản của bạn không có trong danh sách được phép. Vui lòng liên hệ quản trị viên.");
+                throw new Error("Tài khoản của bạn không có trong danh sách được phép.");
             }
-            state.staffProfile = allStaff[userEmailKey];
+            state.staffProfile = staffData[userEmailKey];
             state.isAdmin = ADMIN_EMAILS.includes(user.email);
         }
         function updateUIForUser(user) {
@@ -391,7 +387,7 @@
         document.body.addEventListener('click', async (e) => {
             const target = e.target;
             if (!state.currentUser && !target.closest('#login-btn')) return;
-            if (target.closest('#login-btn')) { showLoader(); signInWithPopup(auth, provider).catch(err => { console.error('Login error:', err); showToast('Đăng nhập thất bại', true); hideLoader(); }); }
+            if (target.closest('#login-btn')) { showLoader(); signInWithPopup(auth, provider).catch(err => { console.error('Login error:', err); showToast('Đăng nhập thất bại. Tài khoản của bạn có thể không được phép.', true); hideLoader(); }); }
             if (target.closest('#logout-btn')) { signOut(auth); }
             const tabButton = target.closest('.tab-link');
             if (tabButton) { if (tabButton.dataset.tab === state.currentTab) return; document.querySelector('.tab-link.active')?.classList.remove('active'); tabButton.classList.add('active'); state.currentTab = tabButton.dataset.tab; await render(); }
@@ -406,6 +402,25 @@
                     langToggleBtn.textContent = newLang.toUpperCase();
                     showToast(`Switched to ${newLang.toUpperCase()}`); await render();
                 } catch (error) { showToast('Language switch failed', true); }
+                hideLoader();
+            }
+            if (target.closest('#user-name-btn')) {
+                const profile = state.staffProfile;
+                const departsData = await getDocument('staff_list', 'departs');
+                const departSelect = document.getElementById('department-select');
+                if (departsData) { departSelect.innerHTML = (departsData.list || []).map(d => `<option value="${d}" ${d === profile.depart ? 'selected' : ''}>${d}</option>`).join('') + `<option value="${departsData.guest || 'Khách'}" ${departsData.guest === profile.depart ? 'selected' : ''}>${departsData.guest || 'Khách'}</option>`; }
+                document.querySelector(`input[name="shift-type"][value="${profile.shift}"]`).checked = true;
+                settingsModal.classList.remove('hidden');
+            }
+            if (target.id === 'close-settings-btn' || target === settingsModal) { settingsModal.classList.add('hidden'); }
+            if (target.id === 'save-settings-btn') {
+                showLoader();
+                try {
+                    const newProfile = { ...state.staffProfile, depart: document.getElementById('department-select').value, shift: document.querySelector('input[name="shift-type"]:checked').value, };
+                    await updateDoc(doc(db, "staff_list", "staffs"), { [emailToKey(state.currentUser.email)]: newProfile });
+                    state.staffProfile = newProfile; state.cachedData.delete("staff_list/staffs");
+                    settingsModal.classList.add('hidden'); showToast('Cập nhật thành công!');
+                } catch (error) { showToast('Cập nhật thất bại.', true); }
                 hideLoader();
             }
             const reopenBtn = target.closest('.reopen-order-btn');
@@ -431,6 +446,7 @@
                 reopenOrderModal.classList.add('hidden');
                 hideLoader();
             }
+            // Các event listeners khác sẽ được thêm vào đây
         });
         
         async function main() {
