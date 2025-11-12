@@ -1,1 +1,1 @@
-https://tri-inbold.github.io/InBold-menu/othes/beta.html
+https://tri-inbold.github.io/InBold-menu/others/beta.html
