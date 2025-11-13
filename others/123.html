@@ -753,6 +753,19 @@
     </div>
     
     <script type="module">
+        // ===================================================================================
+        // LUỒNG LOGIC CỦA SCRIPT:
+        // 1. KHỞI TẠO: Thiết lập Firebase, các đối tượng database/auth.
+        // 2. HẰNG SỐ & TRẠNG THÁI TOÀN CỤC: Các biến và cài đặt chung cho ứng dụng.
+        // 3. HÀM TIỆN ÍCH & HỖ TRỢ: Các hàm có thể tái sử dụng (định dạng ngày, loader, cache...).
+        // 4. LOGIC HIỂN THỊ GIAO DIỆN (RENDERING): Các hàm tạo HTML cho mỗi tab/chức năng.
+        // 5. LOGIC CỐT LÕI CỦA ỨNG DỤNG: Đồng bộ hồ sơ người dùng, cập nhật UI theo trạng thái đăng nhập.
+        // 6. XỬ LÝ SỰ KIỆN (EVENT HANDLERS): Listener chính xử lý mọi tương tác của người dùng.
+        // 7. KHỞI CHẠY ỨNG DỤNG: Hàm main() để bắt đầu toàn bộ ứng dụng.
+        // ===================================================================================
+
+        // 1. KHỞI TẠO
+        // -----------------------------------------------------------------------------------
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -771,6 +784,8 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
         
+        // 2. HẰNG SỐ & TRẠNG THÁI TOÀN CỤC
+        // -----------------------------------------------------------------------------------
         const ADMIN_EMAILS = ['tri.vu.trong@inbold.com', 'truc.tran@inbold.com'];
         const FOOD_ICONS = ['🍜', '🍲', '🥘', '🍛', '🍝', '🥗', '🍱', '🍣', '🥙', '🌮'];
         
@@ -788,7 +803,11 @@
             deleteTarget: null,
         };
 
-        // Utility Functions
+        const CACHE_KEY = 'inbold_menu_cache';
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+        // 3. HÀM TIỆN ÍCH & HỖ TRỢ
+        // -----------------------------------------------------------------------------------
         const getWeekString = (date) => {
             const d = new Date(date);
             d.setHours(0, 0, 0, 0);
@@ -805,11 +824,8 @@
         
         const getFirstName = (fullName) => {
             const parts = fullName.trim().split(' ');
-            // Check if Vietnamese (multi-word name)
-            if (parts.length > 1) {
-                return parts[parts.length - 1]; // Last word for Vietnamese
-            }
-            return parts[0]; // First word for English
+            if (parts.length > 1) return parts[parts.length - 1]; // Vietnamese name
+            return parts[0]; // English name
         };
 
         const parseDish = (dishString) => {
@@ -828,27 +844,8 @@
 
         const getFoodIcon = (index) => FOOD_ICONS[index % FOOD_ICONS.length];
 
-        async function getDocument(collection, documentId, forceRefresh = false) {
-            const cacheKey = `${collection}/${documentId}`;
-            if (!forceRefresh && state.cachedData.has(cacheKey)) {
-                return state.cachedData.get(cacheKey);
-            }
-            const docRef = doc(db, collection, documentId);
-            const docSnap = await getDoc(docRef);
-            const data = docSnap.exists() ? docSnap.data() : null;
-            state.cachedData.set(cacheKey, data);
-            return data;
-        }
-
-        // Cache Management
-        const CACHE_KEY = 'inbold_menu_cache';
-        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
         function saveToCache(key, data) {
-            const cache = {
-                data,
-                timestamp: Date.now()
-            };
+            const cache = { data, timestamp: Date.now() };
             localStorage.setItem(`${CACHE_KEY}_${key}`, JSON.stringify(cache));
         }
 
@@ -864,6 +861,20 @@
             return data;
         }
 
+        async function getDocument(collection, documentId, forceRefresh = false) {
+            const cacheKey = `${collection}/${documentId}`;
+            if (!forceRefresh && state.cachedData.has(cacheKey)) {
+                return state.cachedData.get(cacheKey);
+            }
+            const docRef = doc(db, collection, documentId);
+            const docSnap = await getDoc(docRef);
+            const data = docSnap.exists() ? docSnap.data() : null;
+            state.cachedData.set(cacheKey, data);
+            return data;
+        }
+
+        // 4. LOGIC HIỂN THỊ GIAO DIỆN (RENDERING)
+        // -----------------------------------------------------------------------------------
         async function render() {
             if (!state.authReady || !state.staffProfile) {
                 hideLoader();
@@ -873,29 +884,16 @@
             showLoader();
             try {
                 switch (state.currentTab) {
-                    case 'today':
-                        await renderToday();
-                        break;
-                    case 'menu':
-                        await renderMenu();
-                        break;
-                    case 'order':
-                        await renderOrder();
-                        break;
-                    case 'profile':
-                        await renderProfile();
-                        break;
-                    case 'admin':
-                        await renderAdmin();
-                        break;
+                    case 'today': await renderToday(); break;
+                    case 'menu': await renderMenu(); break;
+                    case 'order': await renderOrder(); break;
+                    case 'profile': await renderProfile(); break;
+                    case 'admin': await renderAdmin(); break;
                 }
             } catch (error) {
                 console.error('Render error:', error);
                 document.getElementById('main-content').innerHTML = `
-                    <div class="card">
-                        <p style="color: var(--error); text-align: center;">Có lỗi xảy ra khi tải dữ liệu</p>
-                    </div>
-                `;
+                    <div class="card"><p style="color: var(--error); text-align: center;">Có lỗi xảy ra khi tải dữ liệu</p></div>`;
             }
             hideLoader();
         }
@@ -913,12 +911,10 @@
                             <div class="hero-title">Cuối tuần vui vẻ!</div>
                             <div class="hero-subtitle">Hôm nay không phục vụ bữa ăn</div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
-            // Try cache first
             const weekString = getWeekString(new Date());
             const cacheKey = `today_${weekString}_${dayKey}_${state.currentUser.email}`;
             let cachedData = getFromCache(cacheKey);
@@ -931,16 +927,14 @@
             }
 
             if (cachedData && cachedData.food) {
-                const dishName = parseDish(cachedData.food);
                 mainContent.innerHTML = `
                     <div class="card hero-card">
                         <div class="hero-content">
                             <div class="hero-greeting">Chào ${firstName} 👋</div>
-                            <div class="hero-title">${dishName}</div>
+                            <div class="hero-title">${parseDish(cachedData.food)}</div>
                             <div class="hero-subtitle">Hôm nay bạn ăn món này</div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             } else {
                 mainContent.innerHTML = `
                     <div class="card hero-card">
@@ -949,8 +943,7 @@
                             <div class="hero-title">Chưa có món</div>
                             <div class="hero-subtitle">Bạn chưa đặt món cho hôm nay</div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }
         }
 
@@ -960,22 +953,17 @@
             const weekString = getWeekString(new Date());
             const dayData = await getDocument(weekString, dayKey, true);
             
-            // Check if user has ordered this week
             const userEmailKey = emailToKey(state.currentUser.email);
             const monData = await getDocument(weekString, 'mon');
             const hasOrdered = monData && monData[userEmailKey];
 
-            let content = `
+            mainContent.innerHTML = `
                 <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Danh sách hôm nay</h2>
-                    </div>
+                    <div class="card-header"><h2 class="card-title">Danh sách hôm nay</h2></div>
                     ${!hasOrdered ? `
                         <div style="margin-bottom: 1rem; padding: 12px; background: rgba(102, 126, 234, 0.08); border-radius: var(--radius-sm); text-align: center;">
                             <p style="margin-bottom: 8px; color: var(--text-muted); font-size: 13px;">Bạn chưa đặt món tuần này</p>
-                            <a href="mailto:truc.tran@inbold.com" class="btn btn-primary" style="text-decoration: none;">
-                                <i class="fas fa-envelope"></i> Người hỗ trợ
-                            </a>
+                            <a href="mailto:truc.tran@inbold.com" class="btn btn-primary" style="text-decoration: none;"><i class="fas fa-envelope"></i> Người hỗ trợ</a>
                         </div>
                     ` : ''}
                     <div class="search-wrapper">
@@ -983,10 +971,7 @@
                         <input type="text" id="search-staff" class="search-input" placeholder="Tìm kiếm nhân viên...">
                     </div>
                     <div id="staff-list-container"></div>
-                </div>
-            `;
-
-            mainContent.innerHTML = content;
+                </div>`;
 
             if (dayData) {
                 updateStaffListView(dayData);
@@ -994,9 +979,7 @@
                     updateStaffListView(dayData, e.target.value);
                 });
             } else {
-                document.getElementById('staff-list-container').innerHTML = `
-                    <p class="text-center" style="color: var(--text-muted); padding: 2rem;">Chưa có dữ liệu cho hôm nay</p>
-                `;
+                document.getElementById('staff-list-container').innerHTML = `<p class="text-center" style="color: var(--text-muted); padding: 2rem;">Chưa có dữ liệu cho hôm nay</p>`;
             }
         }
 
@@ -1011,35 +994,18 @@
             const chieu = staffOrders.filter(o => o.shift === 'E');
 
             let html = '<ul class="staff-list">';
-            
             if (sang.length > 0) {
                 html += '<h3 style="color: var(--primary); padding: 1rem 0.5rem 0.5rem; font-size: 16px;">☀️ Ca sáng</h3>';
                 sang.forEach(order => {
-                    html += `
-                        <li class="staff-item">
-                            <div class="staff-details">
-                                <div class="staff-name">${order.name}</div>
-                                <div class="staff-dish">${parseDish(order.food)}</div>
-                            </div>
-                        </li>
-                    `;
+                    html += `<li class="staff-item"><div class="staff-details"><div class="staff-name">${order.name}</div><div class="staff-dish">${parseDish(order.food)}</div></div></li>`;
                 });
             }
-            
             if (chieu.length > 0) {
                 html += '<h3 style="color: var(--primary); padding: 1rem 0.5rem 0.5rem; font-size: 16px;">🌙 Ca chiều</h3>';
                 chieu.forEach(order => {
-                    html += `
-                        <li class="staff-item">
-                            <div class="staff-details">
-                                <div class="staff-name">${order.name}</div>
-                                <div class="staff-dish">${parseDish(order.food)}</div>
-                            </div>
-                        </li>
-                    `;
+                    html += `<li class="staff-item"><div class="staff-details"><div class="staff-name">${order.name}</div><div class="staff-dish">${parseDish(order.food)}</div></div></li>`;
                 });
             }
-            
             html += '</ul>';
             container.innerHTML = html || `<p class="text-center" style="color: var(--text-muted); padding: 2rem;">Không tìm thấy kết quả</p>`;
         }
@@ -1054,7 +1020,6 @@
 
             const userEmailKey = emailToKey(state.currentUser.email);
             
-            // Try cache first
             const cacheKey = `order_${targetWeek}_${state.currentUser.email}`;
             let cachedOrder = getFromCache(cacheKey);
             
@@ -1070,166 +1035,99 @@
                 const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
                 let summaryHTML = `
                     <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Đã đặt món tuần ${targetWeek.split('_')[1]}</h2>
-                        </div>
-                        <ul class="staff-list">
-                `;
-
+                        <div class="card-header"><h2 class="card-title">Đã đặt món tuần ${targetWeek.split('_')[1]}</h2></div>
+                        <ul class="staff-list">`;
                 for (const [key, name] of Object.entries(days)) {
                     const dayData = await getDocument(targetWeek, key);
                     const dish = dayData?.[userEmailKey]?.food;
-                    summaryHTML += `
-                        <li class="staff-item">
-                            <div class="staff-details">
-                                <div class="staff-name">${name}</div>
-                                <div class="staff-dish">${parseDish(dish) || 'Chưa đặt'}</div>
-                            </div>
-                        </li>
-                    `;
+                    summaryHTML += `<li class="staff-item"><div class="staff-details"><div class="staff-name">${name}</div><div class="staff-dish">${parseDish(dish) || 'Chưa đặt'}</div></div></li>`;
                 }
-
                 mainContent.innerHTML = summaryHTML + `</ul></div>`;
                 return;
             }
 
-            // Show order form
             const menu = await getDocument(targetWeek, "menu");
             if (!menu) {
                 mainContent.innerHTML = `
-                    <div class="card">
-                        <div class="text-center">
-                            <i class="fas fa-calendar-times" style="font-size: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
-                            <p style="color: var(--text-muted);">Thực đơn cho tuần này chưa được cập nhật</p>
-                        </div>
-                    </div>
-                `;
+                    <div class="card"><div class="text-center">
+                        <i class="fas fa-calendar-times" style="font-size: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <p style="color: var(--text-muted);">Thực đơn cho tuần này chưa được cập nhật</p>
+                    </div></div>`;
                 return;
             }
 
             const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
-            
             mainContent.innerHTML = `
                 <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Đặt món tuần ${targetWeek.split('_')[1]}</h2>
-                    </div>
+                    <div class="card-header"><h2 class="card-title">Đặt món tuần ${targetWeek.split('_')[1]}</h2></div>
                     <div class="form-group">
                         <label class="form-label">Ca làm việc của bạn trong tuần này</label>
                         <div class="shift-toggle">
-                            <input type="radio" id="order-shift-m" name="order-shift" value="M" checked>
-                            <label for="order-shift-m">Ca sáng</label>
-                            <input type="radio" id="order-shift-e" name="order-shift" value="E">
-                            <label for="order-shift-e">Ca chiều</label>
+                            <input type="radio" id="order-shift-m" name="order-shift" value="M" checked><label for="order-shift-m">Ca sáng</label>
+                            <input type="radio" id="order-shift-e" name="order-shift" value="E"><label for="order-shift-e">Ca chiều</label>
                         </div>
                     </div>
                     <div id="order-options" class="food-options"></div>
                     <button id="submit-order-btn" class="btn btn-primary btn-block" disabled>
-                        <i class="fas fa-check-circle"></i>
-                        Hoàn tất đặt món
+                        <i class="fas fa-check-circle"></i> Hoàn tất đặt món
                     </button>
-                </div>
-            `;
-
+                </div>`;
             renderOrderOptions(menu, days);
         }
 
         function renderOrderOptions(menu, days) {
             const container = document.getElementById('order-options');
             let html = '';
-            
             Object.entries(days).forEach(([key, name]) => {
                 const dishes = menu[key]?.split(',').map(d => d.trim()).filter(d => d) || [];
-                dishes.forEach((dish, index) => {
+                dishes.forEach((dish) => {
                     const isSelected = state.orderSelection[key] === dish;
-                    html += `
-                        <div class="food-option ${isSelected ? 'selected' : ''}" data-day="${key}" data-dish="${dish}">
-                            <div class="food-day">${name}</div>
-                            <div class="food-name">${parseDish(dish)}</div>
-                        </div>
-                    `;
+                    html += `<div class="food-option ${isSelected ? 'selected' : ''}" data-day="${key}" data-dish="${dish}"><div class="food-day">${name}</div><div class="food-name">${parseDish(dish)}</div></div>`;
                 });
             });
-            
             container.innerHTML = html;
-            
-            // Check if all days selected
             const allSelected = Object.keys(days).every(day => state.orderSelection[day]);
             document.getElementById('submit-order-btn').disabled = !allSelected;
         }
 
         async function renderProfile() {
-            const mainContent = document.getElementById('main-content');
-            mainContent.innerHTML = `
+            document.getElementById('main-content').innerHTML = `
                 <div class="card">
                     <div class="profile-section">
                         <img src="${state.currentUser.photoURL}" alt="avatar" class="profile-avatar">
                         <div class="profile-name">${state.staffProfile.name}</div>
                         <div class="profile-email">${state.currentUser.email}</div>
                         <div class="profile-depart">${state.staffProfile.depart || 'Chưa cập nhật'}</div>
-                        
                         <div class="profile-actions">
-                            <button id="profile-lang-btn" class="btn btn-secondary btn-block">
-                                <i class="fas fa-language"></i>
-                                Ngôn ngữ: ${(state.staffProfile.lan || 'vi').toUpperCase()}
-                            </button>
-                            <button id="profile-settings-btn" class="btn btn-secondary btn-block">
-                                <i class="fas fa-cog"></i>
-                                Cài đặt
-                            </button>
-                            <a href="mailto:truc.tran@inbold.com" class="btn btn-secondary btn-block" style="text-decoration: none;">
-                                <i class="fas fa-headset"></i>
-                                Hỗ trợ
-                            </a>
-                            <button id="profile-logout-btn" class="btn btn-danger btn-block">
-                                <i class="fas fa-sign-out-alt"></i>
-                                Đăng xuất
-                            </button>
+                            <button id="profile-lang-btn" class="btn btn-secondary btn-block"><i class="fas fa-language"></i> Ngôn ngữ: ${(state.staffProfile.lan || 'vi').toUpperCase()}</button>
+                            <button id="profile-settings-btn" class="btn btn-secondary btn-block"><i class="fas fa-cog"></i> Cài đặt</button>
+                            <a href="mailto:truc.tran@inbold.com" class="btn btn-secondary btn-block" style="text-decoration: none;"><i class="fas fa-headset"></i> Hỗ trợ</a>
+                            <button id="profile-logout-btn" class="btn btn-danger btn-block"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         async function renderAdmin() {
-            const mainContent = document.getElementById('main-content');
-            mainContent.innerHTML = `
+            document.getElementById('main-content').innerHTML = `
                 <div class="card">
                     <div class="tabs">
-                        <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support">
-                            <i class="fas fa-headset"></i> Hỗ trợ
-                        </button>
-                        <button class="tab-btn ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats">
-                            <i class="fas fa-chart-bar"></i> Thống kê
-                        </button>
-                        <button class="tab-btn ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu">
-                            <i class="fas fa-utensils"></i> Thực đơn
-                        </button>
-                        <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel">
-                            <i class="fas fa-users"></i> Nhân sự
-                        </button>
+                        <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support"><i class="fas fa-headset"></i> Hỗ trợ</button>
+                        <button class="tab-btn ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats"><i class="fas fa-chart-bar"></i> Thống kê</button>
+                        <button class="tab-btn ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu"><i class="fas fa-utensils"></i> Thực đơn</button>
+                        <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel"><i class="fas fa-users"></i> Nhân sự</button>
                     </div>
                     <div id="admin-content"></div>
-                </div>
-            `;
-            
+                </div>`;
             await renderAdminSubTab();
         }
 
         async function renderAdminSubTab() {
             switch (state.adminSubTab) {
-                case 'support':
-                    await renderAdminSupport();
-                    break;
-                case 'stats':
-                    await renderAdminStats();
-                    break;
-                case 'menu':
-                    await renderAdminMenu();
-                    break;
-                case 'personnel':
-                    await renderAdminPersonnel();
-                    break;
+                case 'support': await renderAdminSupport(); break;
+                case 'stats': await renderAdminStats(); break;
+                case 'menu': await renderAdminMenu(); break;
+                case 'personnel': await renderAdminPersonnel(); break;
             }
         }
 
@@ -1249,15 +1147,11 @@
                     }
                 }
             }
-
             notOrderedList.sort((a, b) => a.profile.name.localeCompare(b.profile.name));
 
             document.getElementById('admin-content').innerHTML = `
                 <div class="mt-2">
-                    <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 16px;">
-                        <i class="fas fa-exclamation-circle"></i> 
-                        Nhân viên chưa đặt món tuần này
-                    </h3>
+                    <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 16px;"><i class="fas fa-exclamation-circle"></i> Nhân viên chưa đặt món tuần này</h3>
                     ${notOrderedList.length > 0 ? `
                         <ul class="staff-list">
                             ${notOrderedList.map(item => `
@@ -1266,84 +1160,54 @@
                                         <div class="staff-name">${item.profile.name}</div>
                                         <div class="staff-dish">${item.profile.email}</div>
                                     </div>
-                                    <button class="btn btn-secondary reopen-order-btn" data-key="${item.key}" data-name="${item.profile.name}">
-                                        <i class="fas fa-redo"></i>
-                                    </button>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    ` : `
-                        <p class="text-center" style="color: var(--text-muted); padding: 2rem;">
-                            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 1rem; display: block;"></i>
-                            Mọi người đã đặt món đủ!
-                        </p>
-                    `}
-                    
-                    <h3 style="color: var(--primary); margin: 2rem 0 1rem; font-size: 16px;">
-                        <i class="fas fa-user-plus"></i> 
-                        Đặt món cho khách
-                    </h3>
-                    <button id="add-guest-order-btn" class="btn btn-primary btn-block">
-                        <i class="fas fa-plus"></i>
-                        Thêm đặt món cho khách
-                    </button>
-                </div>
-            `;
+                                    <button class="btn btn-secondary reopen-order-btn" data-key="${item.key}" data-name="${item.profile.name}"><i class="fas fa-redo"></i></button>
+                                </li>`).join('')}
+                        </ul>` : 
+                        `<p class="text-center" style="color: var(--text-muted); padding: 2rem;"><i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 1rem; display: block;"></i> Mọi người đã đặt món đủ!</p>`
+                    }
+                    <h3 style="color: var(--primary); margin: 2rem 0 1rem; font-size: 16px;"><i class="fas fa-user-plus"></i> Đặt món cho khách</h3>
+                    <button id="add-guest-order-btn" class="btn btn-primary btn-block"><i class="fas fa-plus"></i> Thêm đặt món cho khách</button>
+                </div>`;
         }
 
         async function renderAdminStats() {
-            const content = document.getElementById('admin-content');
-            
-            content.innerHTML = `
+            document.getElementById('admin-content').innerHTML = `
                 <div class="mt-2">
                     <div class="card-header" style="margin-bottom: 1rem; padding: 0;">
                         <h3 style="color: var(--primary); font-size: 16px;">Thống kê</h3>
-                        <button id="export-stats-btn" class="icon-btn">
-                            <i class="fas fa-file-excel"></i>
-                        </button>
+                        <button id="export-stats-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button>
                     </div>
                     <div class="tabs">
                         <button class="tab-btn ${state.statsViewMode === 'day' ? 'active' : ''}" data-mode="day">Ngày</button>
                         <button class="tab-btn ${state.statsViewMode === 'week' ? 'active' : ''}" data-mode="week">Tuần</button>
                         <button class="tab-btn ${state.statsViewMode === 'month' ? 'active' : ''}" data-mode="month">Tháng</button>
                     </div>
-                    <div class="form-group">
-                        <input type="date" id="stats-date-picker" class="form-input" value="${state.statsViewDate}">
-                    </div>
+                    <div class="form-group"><input type="date" id="stats-date-picker" class="form-input" value="${state.statsViewDate}"></div>
                     <div id="stats-table-container"></div>
-                </div>
-            `;
+                </div>`;
 
             document.getElementById('stats-date-picker').addEventListener('change', (e) => {
                 state.statsViewDate = e.target.value;
                 renderStatsTable();
             });
-
             await renderStatsTable();
         }
 
         async function renderStatsTable() {
             const container = document.getElementById('stats-table-container');
             const date = new Date(state.statsViewDate);
-            
-            if (state.statsViewMode === 'day') {
-                await renderDayStats(container, date);
-            } else if (state.statsViewMode === 'week') {
-                await renderWeekStats(container, date);
-            } else {
-                container.innerHTML = '<p class="text-center" style="color: var(--text-muted);">Chức năng đang được xây dựng</p>';
-            }
+            if (state.statsViewMode === 'day') await renderDayStats(container, date);
+            else if (state.statsViewMode === 'week') await renderWeekStats(container, date);
+            else container.innerHTML = '<p class="text-center" style="color: var(--text-muted);">Chức năng đang được xây dựng</p>';
         }
 
         async function renderDayStats(container, date) {
             const week = getWeekString(date);
             const day = getDayKey(date);
-            
             if (['sun', 'sat'].includes(day)) {
                 container.innerHTML = '<p class="text-center" style="color: var(--text-muted);">Không có dữ liệu cho cuối tuần</p>';
                 return;
             }
-            
             const data = await getDocument(week, day);
             if (!data) {
                 container.innerHTML = '<p class="text-center" style="color: var(--text-muted);">Không có dữ liệu</p>';
@@ -1352,52 +1216,28 @@
             
             const stats = {};
             Object.values(data).forEach(order => {
-                const dish = parseDish(order.food);
-                const shift = order.shift;
-                const key = `${shift}_${dish}`;
-                
-                if (!stats[key]) {
-                    stats[key] = { dish, shift, ordered: 0, eaten: 0, notEaten: 0 };
-                }
+                const key = `${order.shift}_${parseDish(order.food)}`;
+                if (!stats[key]) stats[key] = { dish: parseDish(order.food), shift: order.shift, ordered: 0, eaten: 0, notEaten: 0 };
                 stats[key].ordered++;
-                if (order.status === 'eaten') {
-                    stats[key].eaten++;
-                } else {
-                    stats[key].notEaten++;
-                }
+                if (order.status === 'eaten') stats[key].eaten++; else stats[key].notEaten++;
             });
             
             const sang = Object.values(stats).filter(s => s.shift === 'M');
             const chieu = Object.values(stats).filter(s => s.shift === 'E');
             
             let html = '<div class="table-wrapper"><table><thead><tr><th>Món ăn</th><th>Đã đặt</th><th>Đã ăn</th><th>Chưa ăn</th></tr></thead><tbody>';
-            
             if (sang.length > 0) {
                 html += '<tr style="background: rgba(102, 126, 234, 0.08);"><td colspan="4"><strong>☀️ Ca sáng</strong></td></tr>';
-                sang.forEach(s => {
-                    html += `<tr><td>${s.dish}</td><td>${s.ordered}</td><td>${s.eaten}</td><td>${s.notEaten}</td></tr>`;
-                });
-                const totals = sang.reduce((acc, s) => ({
-                    ordered: acc.ordered + s.ordered,
-                    eaten: acc.eaten + s.eaten,
-                    notEaten: acc.notEaten + s.notEaten
-                }), { ordered: 0, eaten: 0, notEaten: 0 });
+                sang.forEach(s => { html += `<tr><td>${s.dish}</td><td>${s.ordered}</td><td>${s.eaten}</td><td>${s.notEaten}</td></tr>`; });
+                const totals = sang.reduce((acc, s) => ({ ordered: acc.ordered + s.ordered, eaten: acc.eaten + s.eaten, notEaten: acc.notEaten + s.notEaten }), { ordered: 0, eaten: 0, notEaten: 0 });
                 html += `<tr style="font-weight: 600;"><td>Tổng</td><td>${totals.ordered}</td><td>${totals.eaten}</td><td>${totals.notEaten}</td></tr>`;
             }
-            
             if (chieu.length > 0) {
                 html += '<tr style="background: rgba(102, 126, 234, 0.08);"><td colspan="4"><strong>🌙 Ca chiều</strong></td></tr>';
-                chieu.forEach(s => {
-                    html += `<tr><td>${s.dish}</td><td>${s.ordered}</td><td>${s.eaten}</td><td>${s.notEaten}</td></tr>`;
-                });
-                const totals = chieu.reduce((acc, s) => ({
-                    ordered: acc.ordered + s.ordered,
-                    eaten: acc.eaten + s.eaten,
-                    notEaten: acc.notEaten + s.notEaten
-                }), { ordered: 0, eaten: 0, notEaten: 0 });
+                chieu.forEach(s => { html += `<tr><td>${s.dish}</td><td>${s.ordered}</td><td>${s.eaten}</td><td>${s.notEaten}</td></tr>`; });
+                const totals = chieu.reduce((acc, s) => ({ ordered: acc.ordered + s.ordered, eaten: acc.eaten + s.eaten, notEaten: acc.notEaten + s.notEaten }), { ordered: 0, eaten: 0, notEaten: 0 });
                 html += `<tr style="font-weight: 600;"><td>Tổng</td><td>${totals.ordered}</td><td>${totals.eaten}</td><td>${totals.notEaten}</td></tr>`;
             }
-            
             html += '</tbody></table></div>';
             container.innerHTML = html;
         }
@@ -1407,27 +1247,14 @@
             const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
             const weekData = await Promise.all(days.map(day => getDocument(week, day)));
             
-            const departs = await getDocument('staff_list', 'departs');
-            const departList = departs?.list || [];
-            
             const stats = {};
             weekData.forEach(dayData => {
                 if (!dayData) return;
                 Object.values(dayData).forEach(order => {
-                    const dish = parseDish(order.food);
-                    const shift = order.shift;
-                    const depart = order.depart || 'Khác';
-                    const key = `${shift}_${dish}_${depart}`;
-                    
-                    if (!stats[key]) {
-                        stats[key] = { dish, shift, depart, ordered: 0, eaten: 0, notEaten: 0 };
-                    }
+                    const key = `${order.shift}_${parseDish(order.food)}_${order.depart || 'Khác'}`;
+                    if (!stats[key]) stats[key] = { dish: parseDish(order.food), shift: order.shift, depart: order.depart || 'Khác', ordered: 0, eaten: 0, notEaten: 0 };
                     stats[key].ordered++;
-                    if (order.status === 'eaten') {
-                        stats[key].eaten++;
-                    } else {
-                        stats[key].notEaten++;
-                    }
+                    if (order.status === 'eaten') stats[key].eaten++; else stats[key].notEaten++;
                 });
             });
             
@@ -1435,33 +1262,18 @@
             const chieu = Object.values(stats).filter(s => s.shift === 'E');
             
             let html = '<div class="table-wrapper"><table><thead><tr><th>Món ăn</th><th>Phòng ban</th><th>Đã đặt</th><th>Đã ăn</th><th>Chưa ăn</th></tr></thead><tbody>';
-            
             if (sang.length > 0) {
                 html += '<tr style="background: rgba(102, 126, 234, 0.08);"><td colspan="5"><strong>☀️ Ca sáng</strong></td></tr>';
-                sang.forEach(s => {
-                    html += `<tr><td>${s.dish}</td><td>${s.depart}</td><td>${s.ordered}</td><td>${s.eaten}</td><td>${s.notEaten}</td></tr>`;
-                });
-                const totals = sang.reduce((acc, s) => ({
-                    ordered: acc.ordered + s.ordered,
-                    eaten: acc.eaten + s.eaten,
-                    notEaten: acc.notEaten + s.notEaten
-                }), { ordered: 0, eaten: 0, notEaten: 0 });
+                sang.forEach(s => { html += `<tr><td>${s.dish}</td><td>${s.depart}</td><td>${s.ordered}</td><td>${s.eaten}</td><td>${s.notEaten}</td></tr>`; });
+                const totals = sang.reduce((acc, s) => ({ ordered: acc.ordered + s.ordered, eaten: acc.eaten + s.eaten, notEaten: acc.notEaten + s.notEaten }), { ordered: 0, eaten: 0, notEaten: 0 });
                 html += `<tr style="font-weight: 600;"><td colspan="2">Tổng</td><td>${totals.ordered}</td><td>${totals.eaten}</td><td>${totals.notEaten}</td></tr>`;
             }
-            
             if (chieu.length > 0) {
                 html += '<tr style="background: rgba(102, 126, 234, 0.08);"><td colspan="5"><strong>🌙 Ca chiều</strong></td></tr>';
-                chieu.forEach(s => {
-                    html += `<tr><td>${s.dish}</td><td>${s.depart}</td><td>${s.ordered}</td><td>${s.eaten}</td><td>${s.notEaten}</td></tr>`;
-                });
-                const totals = chieu.reduce((acc, s) => ({
-                    ordered: acc.ordered + s.ordered,
-                    eaten: acc.eaten + s.eaten,
-                    notEaten: acc.notEaten + s.notEaten
-                }), { ordered: 0, eaten: 0, notEaten: 0 });
+                chieu.forEach(s => { html += `<tr><td>${s.dish}</td><td>${s.depart}</td><td>${s.ordered}</td><td>${s.eaten}</td><td>${s.notEaten}</td></tr>`; });
+                const totals = chieu.reduce((acc, s) => ({ ordered: acc.ordered + s.ordered, eaten: acc.eaten + s.eaten, notEaten: acc.notEaten + s.notEaten }), { ordered: 0, eaten: 0, notEaten: 0 });
                 html += `<tr style="font-weight: 600;"><td colspan="2">Tổng</td><td>${totals.ordered}</td><td>${totals.eaten}</td><td>${totals.notEaten}</td></tr>`;
             }
-            
             html += '</tbody></table></div>';
             container.innerHTML = html;
         }
@@ -1473,66 +1285,44 @@
             const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
             const isEditable = dayOfWeek >= 1 && dayOfWeek <= 4;
             
-            const thisWeekMenu = await getDocument(thisWeek, "menu") || {};
-            const nextWeekMenu = await getDocument(nextWeek, "menu") || {};
+            const [thisWeekMenu, nextWeekMenu] = await Promise.all([getDocument(thisWeek, "menu"), getDocument(nextWeek, "menu")]);
             const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
 
             let html = `
                 <div class="mt-2">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3 style="color: var(--primary); font-size: 16px;">Thực đơn tuần này (${thisWeek})</h3>
-                    </div>
-            `;
-            
+                    <h3 style="color: var(--primary); font-size: 16px; margin-bottom: 1rem;">Thực đơn tuần này (${thisWeek})</h3>`;
             Object.entries(days).forEach(([key, name]) => {
-                const dishes = thisWeekMenu[key]?.split(',').map(d => d.trim()).filter(d => d) || [];
+                const dishes = thisWeekMenu?.[key]?.split(',').map(d => d.trim()).filter(d => d) || [];
                 html += `<div class="form-group"><label class="form-label">${name}</label><div class="menu-items">`;
-                dishes.forEach(dish => {
-                    html += `<div class="menu-item"><input type="text" value="${dish}" disabled></div>`;
-                });
+                dishes.forEach(dish => { html += `<div class="menu-item"><input type="text" value="${dish}" disabled></div>`; });
                 html += `</div></div>`;
             });
             
             html += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem;">
-                        <h3 style="color: var(--primary); font-size: 16px;">Thực đơn tuần sau (${nextWeek})</h3>
-                        <div style="display: flex; gap: 8px;">
-                            <button id="import-menu-btn" class="icon-btn" ${!isEditable ? 'disabled' : ''}>
-                                <i class="fas fa-file-import"></i>
-                            </button>
-                            <button id="export-menu-btn" class="icon-btn">
-                                <i class="fas fa-file-export"></i>
-                            </button>
-                        </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem;">
+                    <h3 style="color: var(--primary); font-size: 16px;">Thực đơn tuần sau (${nextWeek})</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="import-menu-btn" class="icon-btn" ${!isEditable ? 'disabled' : ''}><i class="fas fa-file-import"></i></button>
+                        <button id="export-menu-btn" class="icon-btn"><i class="fas fa-file-export"></i></button>
                     </div>
-                    <input type="file" id="menu-file-input" accept=".xlsx" style="display: none;">
-            `;
+                </div>
+                <input type="file" id="menu-file-input" accept=".xlsx" style="display: none;">`;
             
             Object.entries(days).forEach(([key, name]) => {
-                const dishes = nextWeekMenu[key]?.split(',').map(d => d.trim()).filter(d => d) || [''];
+                const dishes = nextWeekMenu?.[key]?.split(',').map(d => d.trim()).filter(d => d) || [''];
                 html += `<div class="form-group"><label class="form-label">${name}</label><div class="menu-items" id="menu-${key}">`;
                 dishes.forEach(dish => {
-                    html += `
-                        <div class="menu-item">
-                            <input type="text" class="menu-dish-input" data-day="${key}" value="${dish}" ${!isEditable ? 'disabled' : ''} placeholder="Món ăn|Dish name">
-                            <button class="icon-btn remove-dish-btn" ${!isEditable ? 'disabled' : ''}>
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    `;
+                    html += `<div class="menu-item">
+                        <input type="text" class="menu-dish-input" data-day="${key}" value="${dish}" ${!isEditable ? 'disabled' : ''} placeholder="Món ăn|Dish name">
+                        <button class="icon-btn remove-dish-btn" ${!isEditable ? 'disabled' : ''}><i class="fas fa-minus"></i></button>
+                    </div>`;
                 });
-                html += `</div><button class="btn btn-secondary add-dish-btn" data-day="${key}" style="width: auto; margin-top: 0.5rem;" ${!isEditable ? 'disabled' : ''}>
-                    <i class="fas fa-plus"></i> Thêm món
-                </button></div>`;
+                html += `</div><button class="btn btn-secondary add-dish-btn" data-day="${key}" style="width: auto; margin-top: 0.5rem;" ${!isEditable ? 'disabled' : ''}><i class="fas fa-plus"></i> Thêm món</button></div>`;
             });
             
-            html += `
-                    <button id="save-menu-btn" class="btn ${isEditable ? 'btn-primary' : 'btn-secondary'} btn-block" ${!isEditable ? 'disabled' : ''}>
-                        <i class="fas ${isEditable ? 'fa-save' : 'fa-lock'}"></i>
-                        ${isEditable ? 'Lưu Thực đơn' : 'Đã khóa chỉnh sửa'}
-                    </button>
-                </div>
-            `;
+            html += `<button id="save-menu-btn" class="btn ${isEditable ? 'btn-primary' : 'btn-secondary'} btn-block" ${!isEditable ? 'disabled' : ''}>
+                        <i class="fas ${isEditable ? 'fa-save' : 'fa-lock'}"></i> ${isEditable ? 'Lưu Thực đơn' : 'Đã khóa chỉnh sửa'}
+                    </button></div>`;
             
             document.getElementById('admin-content').innerHTML = html;
         }
@@ -1540,29 +1330,20 @@
         async function renderAdminPersonnel() {
             const allStaff = await getDocument("staff_list", "staffs", true);
             let tableRows = '';
-
             if (allStaff) {
-                const sorted = Object.entries(allStaff)
+                tableRows = Object.entries(allStaff)
                     .filter(([key]) => !key.startsWith('guest_'))
-                    .sort((a, b) => a[1].name.localeCompare(b[1].name));
-                
-                tableRows = sorted.map(([key, profile]) => `
-                    <tr>
-                        <td>${profile.name}</td>
-                        <td class="hide-mobile">${profile.email}</td>
-                        <td class="hide-mobile">${profile.depart || '-'}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="icon-btn edit-personnel-btn" data-key="${key}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${profile.name}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
+                    .sort((a, b) => a[1].name.localeCompare(b[1].name))
+                    .map(([key, profile]) => `
+                        <tr>
+                            <td>${profile.name}</td>
+                            <td class="hide-mobile">${profile.email}</td>
+                            <td class="hide-mobile">${profile.depart || '-'}</td>
+                            <td><div class="action-buttons">
+                                <button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button>
+                                <button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${profile.name}"><i class="fas fa-trash"></i></button>
+                            </div></td>
+                        </tr>`).join('');
             }
 
             document.getElementById('admin-content').innerHTML = `
@@ -1570,33 +1351,43 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3 style="color: var(--primary); font-size: 16px;">Quản lý nhân sự</h3>
                         <div style="display: flex; gap: 8px;">
-                            <button id="add-personnel-btn" class="icon-btn">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <button id="export-personnel-btn" class="icon-btn">
-                                <i class="fas fa-file-excel"></i>
-                            </button>
+                            <button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button>
+                            <button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button>
                         </div>
                     </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tên</th>
-                                    <th class="hide-mobile">Email</th>
-                                    <th class="hide-mobile">Phòng ban</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableRows || '<tr><td colspan="4" class="text-center">Chưa có dữ liệu</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+                    <div class="table-wrapper"><table><thead><tr>
+                        <th>Tên</th><th class="hide-mobile">Email</th><th class="hide-mobile">Phòng ban</th><th>Thao tác</th>
+                    </tr></thead><tbody>
+                        ${tableRows || '<tr><td colspan="4" class="text-center">Chưa có dữ liệu</td></tr>'}
+                    </tbody></table></div>
+                </div>`;
         }
 
+        function renderGuestDaysMenu(menu) {
+            const container = document.getElementById('guest-days-container');
+            if (!menu) {
+                container.innerHTML = '<p class="text-center" style="color: var(--text-muted);">Chưa có thực đơn</p>';
+                return;
+            }
+            
+            const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
+            let html = '';
+            Object.entries(days).forEach(([key, name]) => {
+                const dishes = menu[key]?.split(',').map(d => d.trim()).filter(d => d) || [];
+                html += `
+                    <div class="form-group">
+                        <label class="form-label"><input type="checkbox" name="guest-day-${key}" style="margin-right: 8px;">${name}</label>
+                        <select name="guest-dish-${key}" class="form-select">
+                            <option value="">-- Chọn món --</option>
+                            ${dishes.map(dish => `<option value="${dish}">${parseDish(dish)}</option>`).join('')}
+                        </select>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // 5. LOGIC CỐT LÕI CỦA ỨNG DỤNG
+        // -----------------------------------------------------------------------------------
         async function syncUserProfile() {
             const user = state.currentUser;
             const userEmailKey = emailToKey(user.email);
@@ -1613,39 +1404,15 @@
 
         function updateUIForUser(user) {
             const tabBar = document.getElementById('tab-bar');
-            
             if (user && state.staffProfile) {
                 let tabBarHTML = `
-                    <button class="nav-item active" data-tab="today">
-                        <i class="fas fa-home"></i>
-                        <span>Hôm Nay</span>
-                    </button>
-                    <button class="nav-item" data-tab="menu">
-                        <i class="fas fa-list"></i>
-                        <span>Thực đơn</span>
-                    </button>
-                    <button class="nav-item" data-tab="order">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Đặt Món</span>
-                    </button>
-                `;
-
+                    <button class="nav-item active" data-tab="today"><i class="fas fa-home"></i><span>Hôm Nay</span></button>
+                    <button class="nav-item" data-tab="menu"><i class="fas fa-list"></i><span>Thực đơn</span></button>
+                    <button class="nav-item" data-tab="order"><i class="fas fa-shopping-cart"></i><span>Đặt Món</span></button>`;
                 if (state.isAdmin) {
-                    tabBarHTML += `
-                        <button class="nav-item" data-tab="admin">
-                            <i class="fas fa-crown"></i>
-                            <span>Admin</span>
-                        </button>
-                    `;
+                    tabBarHTML += `<button class="nav-item" data-tab="admin"><i class="fas fa-crown"></i><span>Admin</span></button>`;
                 }
-
-                tabBarHTML += `
-                    <button class="nav-item" data-tab="profile">
-                        <img src="${user.photoURL}" alt="avatar">
-                        <span>Tài khoản</span>
-                    </button>
-                `;
-
+                tabBarHTML += `<button class="nav-item" data-tab="profile"><img src="${user.photoURL}" alt="avatar"><span>Tài khoản</span></button>`;
                 tabBar.innerHTML = tabBarHTML;
                 tabBar.classList.remove('hidden');
             } else {
@@ -1655,17 +1422,31 @@
                         <div class="hero-content">
                             <div class="hero-title">Chào mừng! 👋</div>
                             <div class="hero-subtitle" style="margin-bottom: 2rem;">Vui lòng đăng nhập bằng tài khoản công ty</div>
-                            <button id="login-btn" class="btn btn-primary">
-                                <i class="fab fa-google"></i>
-                                Đăng nhập bằng Google
-                            </button>
+                            <button id="login-btn" class="btn btn-primary"><i class="fab fa-google"></i> Đăng nhập bằng Google</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }
         }
 
-        // Event Handlers
+        async function checkOrderNotification() {
+            const orderTab = document.querySelector('#tab-bar .nav-item[data-tab="order"]');
+            if (!orderTab || !state.currentUser) return;
+            
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            
+            if (dayOfWeek >= 4 || dayOfWeek === 0) { // From Thursday to Sunday
+                const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+                const nextWeekOrders = await getDocument(nextWeek, 'mon');
+                const userHasOrdered = nextWeekOrders && nextWeekOrders[emailToKey(state.currentUser.email)];
+                orderTab.classList.toggle('needs-attention', !userHasOrdered);
+            } else {
+                orderTab.classList.remove('needs-attention');
+            }
+        }
+
+        // 6. XỬ LÝ SỰ KIỆN (EVENT HANDLERS)
+        // -----------------------------------------------------------------------------------
         document.body.addEventListener('click', async (e) => {
             const target = e.target.closest('button, a, .food-option');
             if (!target) return;
@@ -1673,13 +1454,8 @@
             // Login
             if (target.id === 'login-btn') {
                 showLoader();
-                try {
-                    await signInWithPopup(auth, provider);
-                } catch (err) {
-                    console.error('Login error:', err);
-                    showToast('Đăng nhập thất bại', 'error');
-                    hideLoader();
-                }
+                try { await signInWithPopup(auth, provider); } 
+                catch (err) { console.error('Login error:', err); showToast('Đăng nhập thất bại', 'error'); hideLoader(); }
                 return;
             }
 
@@ -1687,7 +1463,6 @@
             if (target.classList.contains('nav-item')) {
                 const tab = target.dataset.tab;
                 if (tab === state.currentTab) return;
-                
                 document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
                 target.classList.add('active');
                 state.currentTab = tab;
@@ -1696,76 +1471,40 @@
             }
 
             // Profile actions
-            if (target.id === 'profile-logout-btn') {
-                if (confirm('Bạn có chắc muốn đăng xuất?')) {
-                    await signOut(auth);
-                }
-                return;
-            }
-
+            if (target.id === 'profile-logout-btn') { if (confirm('Bạn có chắc muốn đăng xuất?')) await signOut(auth); return; }
             if (target.id === 'profile-lang-btn') {
                 showLoader();
                 try {
                     const newLang = state.staffProfile.lan === 'vi' ? 'en' : 'vi';
-                    await updateDoc(doc(db, "staff_list", "staffs"), {
-                        [`${emailToKey(state.currentUser.email)}.lan`]: newLang
-                    });
-                    state.staffProfile.lan = newLang;
-                    state.cachedData.delete("staff_list/staffs");
-                    showToast(`Đã chuyển sang ${newLang.toUpperCase()}`);
-                    await render();
-                } catch (error) {
-                    showToast('Đổi ngôn ngữ thất bại', 'error');
-                }
-                hideLoader();
-                return;
+                    await updateDoc(doc(db, "staff_list", "staffs"), { [`${emailToKey(state.currentUser.email)}.lan`]: newLang });
+                    state.staffProfile.lan = newLang; state.cachedData.delete("staff_list/staffs");
+                    showToast(`Đã chuyển sang ${newLang.toUpperCase()}`); await render();
+                } catch (error) { showToast('Đổi ngôn ngữ thất bại', 'error'); }
+                hideLoader(); return;
             }
-
             if (target.id === 'profile-settings-btn') {
                 const departsData = await getDocument('staff_list', 'departs');
-                const departSelect = document.getElementById('department-select');
-                if (departsData) {
-                    departSelect.innerHTML = (departsData.list || [])
-                        .map(d => `<option value="${d}" ${d === state.staffProfile.depart ? 'selected' : ''}>${d}</option>`)
-                        .join('');
-                }
-                document.getElementById('settings-modal').classList.remove('hidden');
-                return;
+                if (departsData) document.getElementById('department-select').innerHTML = (departsData.list || []).map(d => `<option value="${d}" ${d === state.staffProfile.depart ? 'selected' : ''}>${d}</option>`).join('');
+                document.getElementById('settings-modal').classList.remove('hidden'); return;
             }
-
             if (target.id === 'save-settings-btn') {
                 showLoader();
                 try {
                     const newDepart = document.getElementById('department-select').value;
-                    await updateDoc(doc(db, "staff_list", "staffs"), {
-                        [`${emailToKey(state.currentUser.email)}.depart`]: newDepart
-                    });
-                    state.staffProfile.depart = newDepart;
-                    state.cachedData.delete("staff_list/staffs");
-                    document.getElementById('settings-modal').classList.add('hidden');
-                    showToast('Cập nhật thành công!');
-                } catch (error) {
-                    showToast('Cập nhật thất bại', 'error');
-                }
-                hideLoader();
-                return;
+                    await updateDoc(doc(db, "staff_list", "staffs"), { [`${emailToKey(state.currentUser.email)}.depart`]: newDepart });
+                    state.staffProfile.depart = newDepart; state.cachedData.delete("staff_list/staffs");
+                    document.getElementById('settings-modal').classList.add('hidden'); showToast('Cập nhật thành công!');
+                } catch (error) { showToast('Cập nhật thất bại', 'error'); }
+                hideLoader(); return;
             }
 
-            // Food selection in order tab
+            // Food selection
             if (target.classList.contains('food-option')) {
-                const day = target.dataset.day;
-                const dish = target.dataset.dish;
-                state.orderSelection[day] = dish;
-                
-                // Re-render options
-                const today = new Date();
-                const dayOfWeek = today.getDay();
-                const targetWeek = (dayOfWeek >= 4 || dayOfWeek === 0) 
-                    ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000))
-                    : getWeekString(today);
+                state.orderSelection[target.dataset.day] = target.dataset.dish;
+                const today = new Date(), dayOfWeek = today.getDay();
+                const targetWeek = (dayOfWeek >= 4 || dayOfWeek === 0) ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) : getWeekString(today);
                 const menu = await getDocument(targetWeek, "menu");
-                const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
-                renderOrderOptions(menu, days);
+                renderOrderOptions(menu, { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" });
                 return;
             }
 
@@ -1773,500 +1512,221 @@
             if (target.id === 'submit-order-btn') {
                 showLoader();
                 try {
-                    const today = new Date();
-                    const dayOfWeek = today.getDay();
-                    const targetWeek = (dayOfWeek >= 4 || dayOfWeek === 0)
-                        ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000))
-                        : getWeekString(today);
-                    
+                    const today = new Date(), dayOfWeek = today.getDay();
+                    const targetWeek = (dayOfWeek >= 4 || dayOfWeek === 0) ? getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) : getWeekString(today);
                     const shift = document.querySelector('input[name="order-shift"]:checked').value;
                     const userEmailKey = emailToKey(state.currentUser.email);
-                    
                     for (const [day, dish] of Object.entries(state.orderSelection)) {
-                        const dayDocRef = doc(db, targetWeek, day);
-                        await setDoc(dayDocRef, {
-                            [userEmailKey]: {
-                                name: state.staffProfile.name,
-                                email: state.currentUser.email,
-                                food: dish,
-                                status: 'not',
-                                shift: shift,
-                                depart: state.staffProfile.depart,
-                            }
-                        }, { merge: true });
+                        await setDoc(doc(db, targetWeek, day), { [userEmailKey]: { name: state.staffProfile.name, email: state.currentUser.email, food: dish, status: 'not', shift: shift, depart: state.staffProfile.depart } }, { merge: true });
                     }
-                    
-                    // Clear cache
-                    const cacheKey = `order_${targetWeek}_${state.currentUser.email}`;
-                    localStorage.removeItem(`${CACHE_KEY}_${cacheKey}`);
-                    state.orderSelection = {};
-                    
-                    showToast('Đặt món thành công!');
-                    state.currentTab = 'today';
-                    document.querySelectorAll('.nav-item').forEach(item => {
-                        item.classList.toggle('active', item.dataset.tab === 'today');
-                    });
+                    localStorage.removeItem(`${CACHE_KEY}_order_${targetWeek}_${state.currentUser.email}`);
+                    state.orderSelection = {}; showToast('Đặt món thành công!');
+                    state.currentTab = 'today'; document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.tab === 'today'));
                     await render();
-                } catch (error) {
-                    console.error('Order error:', error);
-                    showToast('Đặt món thất bại', 'error');
-                }
-                hideLoader();
-                return;
+                } catch (error) { console.error('Order error:', error); showToast('Đặt món thất bại', 'error'); }
+                hideLoader(); return;
             }
 
-            // Admin sub tabs
-            if (target.dataset.subtab) {
-                state.adminSubTab = target.dataset.subtab;
-                document.querySelectorAll('[data-subtab]').forEach(btn => btn.classList.remove('active'));
-                target.classList.add('active');
-                await renderAdminSubTab();
-                return;
-            }
-
-            // Stats mode
-            if (target.dataset.mode) {
-                state.statsViewMode = target.dataset.mode;
-                document.querySelectorAll('[data-mode]').forEach(btn => btn.classList.remove('active'));
-                target.classList.add('active');
-                await renderStatsTable();
-                return;
-            }
-
-            // Reopen order
-            if (target.classList.contains('reopen-order-btn')) {
-                const key = target.dataset.key;
-                const name = target.dataset.name;
-                
-                state.deleteTarget = { key, name, action: 'reopen' };
-                document.getElementById('delete-message').textContent = 
-                    `Xóa tất cả đặt món của "${name}" trong tuần này để họ có thể đặt lại?`;
-                document.getElementById('delete-modal').classList.remove('hidden');
-                return;
-            }
-
+            // Admin sub tabs & actions
+            if (target.dataset.subtab) { state.adminSubTab = target.dataset.subtab; await renderAdmin(); return; }
+            if (target.dataset.mode) { state.statsViewMode = target.dataset.mode; await renderAdminStats(); return; }
             if (target.id === 'confirm-delete-btn') {
                 if (state.deleteTarget.action === 'reopen') {
                     showLoader();
                     try {
                         const weekString = getWeekString(new Date());
-                        const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
-                        
-                        for (const day of days) {
-                            await updateDoc(doc(db, weekString, day), {
-                                [state.deleteTarget.key]: deleteField()
-                            });
+                        for (const day of ['mon', 'tue', 'wed', 'thu', 'fri']) {
+                            await updateDoc(doc(db, weekString, day), { [state.deleteTarget.key]: deleteField() });
                         }
-                        
-                        showToast(`Đã mở lại đặt món cho ${state.deleteTarget.name}`);
-                        await renderAdminSupport();
-                    } catch (error) {
-                        showToast('Có lỗi xảy ra', 'error');
-                    }
+                        showToast(`Đã mở lại đặt món cho ${state.deleteTarget.name}`); await renderAdminSupport();
+                    } catch (error) { showToast('Có lỗi xảy ra', 'error'); }
                     hideLoader();
                 } else if (state.deleteTarget.action === 'delete-personnel') {
                     showLoader();
                     try {
-                        await updateDoc(doc(db, "staff_list", "staffs"), {
-                            [state.deleteTarget.key]: deleteField()
-                        });
-                        state.cachedData.delete("staff_list/staffs");
-                        showToast('Đã xóa nhân viên');
-                        await renderAdminPersonnel();
-                    } catch (error) {
-                        showToast('Có lỗi xảy ra', 'error');
-                    }
+                        await updateDoc(doc(db, "staff_list", "staffs"), { [state.deleteTarget.key]: deleteField() });
+                        state.cachedData.delete("staff_list/staffs"); showToast('Đã xóa nhân viên'); await renderAdminPersonnel();
+                    } catch (error) { showToast('Có lỗi xảy ra', 'error'); }
                     hideLoader();
                 }
-                document.getElementById('delete-modal').classList.add('hidden');
-                return;
+                document.getElementById('delete-modal').classList.add('hidden'); return;
             }
 
-            // Guest order
+            // Guest order actions
             if (target.id === 'add-guest-order-btn') {
                 const today = new Date();
-                const thisWeek = getWeekString(today);
-                const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
-                
-                const thisWeekMenu = await getDocument(thisWeek, "menu");
-                const nextWeekMenu = await getDocument(nextWeek, "menu");
-                
+                const thisWeekMenu = await getDocument(getWeekString(today), "menu");
+                const nextWeekMenu = await getDocument(getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)), "menu");
                 document.getElementById('guest-days-container').innerHTML = '';
                 document.getElementById('guest-order-modal').classList.remove('hidden');
-                
-                // Listen for week change
                 document.querySelectorAll('input[name="guest-week"]').forEach(radio => {
-                    radio.addEventListener('change', () => {
-                        const week = radio.value;
-                        const menu = week === 'this' ? thisWeekMenu : nextWeekMenu;
-                        renderGuestDaysMenu(menu);
-                    });
+                    radio.onchange = () => renderGuestDaysMenu(radio.value === 'this' ? thisWeekMenu : nextWeekMenu);
                 });
-                
-                renderGuestDaysMenu(thisWeekMenu);
-                return;
+                renderGuestDaysMenu(thisWeekMenu); return;
             }
-
             if (target.id === 'save-guest-order-btn') {
                 showLoader();
                 try {
                     const name = document.getElementById('guest-name').value.trim();
                     const depart = document.getElementById('guest-depart').value.trim();
+                    if (!name || !depart) { showToast('Vui lòng điền đầy đủ thông tin', 'error'); hideLoader(); return; }
                     const shift = document.querySelector('input[name="guest-shift"]:checked').value;
                     const week = document.querySelector('input[name="guest-week"]:checked').value;
-                    
-                    if (!name || !depart) {
-                        showToast('Vui lòng điền đầy đủ thông tin', 'error');
-                        hideLoader();
-                        return;
-                    }
-                    
                     const today = new Date();
                     const targetWeek = week === 'this' ? getWeekString(today) : getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
                     const guestKey = `guest_${Date.now()}`;
-                    
-                    const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
-                    for (const day of days) {
-                        const checkbox = document.querySelector(`input[name="guest-day-${day}"]`);
-                        if (checkbox && checkbox.checked) {
+                    for (const day of ['mon', 'tue', 'wed', 'thu', 'fri']) {
+                        if (document.querySelector(`input[name="guest-day-${day}"]`)?.checked) {
                             const dish = document.querySelector(`select[name="guest-dish-${day}"]`).value;
-                            if (dish) {
-                                await setDoc(doc(db, targetWeek, day), {
-                                    [guestKey]: {
-                                        name,
-                                        email: guestKey + '@guest',
-                                        food: dish,
-                                        status: 'not',
-                                        shift,
-                                        depart,
-                                    }
-                                }, { merge: true });
-                            }
+                            if (dish) await setDoc(doc(db, targetWeek, day), { [guestKey]: { name, email: guestKey + '@guest', food: dish, status: 'not', shift, depart } }, { merge: true });
                         }
                     }
-                    
-                    document.getElementById('guest-order-modal').classList.add('hidden');
-                    showToast('Đã đặt món cho khách');
-                } catch (error) {
-                    showToast('Có lỗi xảy ra', 'error');
-                    console.error(error);
-                }
-                hideLoader();
-                return;
+                    document.getElementById('guest-order-modal').classList.add('hidden'); showToast('Đã đặt món cho khách');
+                } catch (error) { showToast('Có lỗi xảy ra', 'error'); console.error(error); }
+                hideLoader(); return;
             }
 
-            // Menu management
+            // Menu management actions
             if (target.classList.contains('add-dish-btn')) {
-                const day = target.dataset.day;
-                const container = document.getElementById(`menu-${day}`);
+                const container = document.getElementById(`menu-${target.dataset.day}`);
                 const newItem = document.createElement('div');
                 newItem.className = 'menu-item';
-                newItem.innerHTML = `
-                    <input type="text" class="menu-dish-input" data-day="${day}" placeholder="Món ăn|Dish name">
-                    <button class="icon-btn remove-dish-btn">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                `;
-                container.appendChild(newItem);
-                return;
+                newItem.innerHTML = `<input type="text" class="menu-dish-input" data-day="${target.dataset.day}" placeholder="Món ăn|Dish name"><button class="icon-btn remove-dish-btn"><i class="fas fa-minus"></i></button>`;
+                container.appendChild(newItem); return;
             }
-
-            if (target.classList.contains('remove-dish-btn')) {
-                target.closest('.menu-item').remove();
-                return;
-            }
-
+            if (target.classList.contains('remove-dish-btn')) { target.closest('.menu-item').remove(); return; }
             if (target.id === 'save-menu-btn') {
                 showLoader();
                 try {
-                    const today = new Date();
-                    const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
-                    const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
+                    const nextWeek = getWeekString(new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000));
                     const menuData = {};
-                    
-                    days.forEach(day => {
-                        const dishes = [...document.querySelectorAll(`.menu-dish-input[data-day="${day}"]`)]
-                            .map(input => input.value.trim())
-                            .filter(dish => dish);
-                        menuData[day] = dishes.join(', ');
+                    ['mon', 'tue', 'wed', 'thu', 'fri'].forEach(day => {
+                        menuData[day] = [...document.querySelectorAll(`.menu-dish-input[data-day="${day}"]`)].map(input => input.value.trim()).filter(dish => dish).join(', ');
                     });
-                    
                     await setDoc(doc(db, nextWeek, "menu"), menuData);
-                    state.cachedData.delete(`${nextWeek}/menu`);
-                    showToast('Lưu thực đơn thành công!');
-                } catch (error) {
-                    showToast('Lưu thất bại', 'error');
+                    state.cachedData.delete(`${nextWeek}/menu`); showToast('Lưu thực đơn thành công!');
+                } catch (error) { showToast('Lưu thất bại', 'error'); }
+                hideLoader(); return;
+            }
+            if (target.id === 'import-menu-btn') { document.getElementById('menu-file-input').click(); return; }
+            if (target.id === 'export-menu-btn' || target.id === 'export-stats-btn' || target.id === 'export-personnel-btn') {
+                let data, sheetName, fileName;
+                if (target.id === 'export-menu-btn') {
+                    const nextWeek = getWeekString(new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000));
+                    const menu = await getDocument(nextWeek, "menu");
+                    if (!menu) return;
+                    data = Object.entries(menu).map(([day, dishes]) => ({ 'Ngày': { mon: 'Thứ 2', tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6' }[day], 'Món ăn': dishes }));
+                    sheetName = "Thực đơn"; fileName = `menu-${nextWeek}.xlsx`;
+                } else if (target.id === 'export-stats-btn') {
+                    const table = document.querySelector('#stats-table-container table');
+                    if (table) XLSX.writeFile(XLSX.utils.book_new_append_sheet(XLSX.utils.table_to_sheet(table), "Thống kê"), `thong-ke-${state.statsViewDate}.xlsx`);
+                    return;
+                } else { // export-personnel-btn
+                    const allStaff = await getDocument("staff_list", "staffs", true);
+                    if (!allStaff) return;
+                    data = Object.values(allStaff).filter(p => !p.email.includes('@guest')).map(p => ({ 'Tên': p.name, 'Email': p.email, 'Phòng ban': p.depart, 'Ngôn ngữ': p.lan }));
+                    sheetName = "Nhân sự"; fileName = `nhan-su-${new Date().toISOString().split('T')[0]}.xlsx`;
                 }
-                hideLoader();
-                return;
+                XLSX.writeFile(XLSX.utils.book_new_append_sheet(XLSX.utils.json_to_sheet(data), sheetName), fileName);
+                showToast('Đã tải về file Excel'); return;
             }
 
-            if (target.id === 'export-menu-btn') {
-                const today = new Date();
-                const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
-                const menu = await getDocument(nextWeek, "menu");
-                
-                if (menu) {
-                    const data = Object.entries(menu).map(([day, dishes]) => ({
-                        'Ngày': { mon: 'Thứ 2', tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6' }[day],
-                        'Món ăn': dishes
-                    }));
-                    
-                    const ws = XLSX.utils.json_to_sheet(data);
-                    const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "Thực đơn");
-                    XLSX.writeFile(wb, `menu-${nextWeek}.xlsx`);
-                    showToast('Đã tải về file Excel');
-                }
-                return;
-            }
-
-            if (target.id === 'import-menu-btn') {
-                document.getElementById('menu-file-input').click();
-                return;
-            }
-
-            // Export stats
-            if (target.id === 'export-stats-btn') {
-                // Export current stats table
-                const table = document.querySelector('#stats-table-container table');
-                if (table) {
-                    const ws = XLSX.utils.table_to_sheet(table);
-                    const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "Thống kê");
-                    XLSX.writeFile(wb, `thong-ke-${state.statsViewDate}.xlsx`);
-                    showToast('Đã tải về file Excel');
-                }
-                return;
-            }
-
-            // Personnel management
-            if (target.id === 'add-personnel-btn') {
-                document.getElementById('personnel-modal-title').textContent = 'Thêm nhân viên';
-                document.getElementById('personnel-original-key').value = '';
-                document.getElementById('personnel-name').value = '';
-                document.getElementById('personnel-email').value = '';
-                
+            // Personnel management actions
+            if (target.id === 'add-personnel-btn' || target.classList.contains('edit-personnel-btn')) {
                 const departsData = await getDocument('staff_list', 'departs');
-                document.getElementById('personnel-depart').innerHTML = (departsData?.list || [])
-                    .map(d => `<option value="${d}">${d}</option>`)
-                    .join('');
-                
-                document.getElementById('personnel-modal').classList.remove('hidden');
-                return;
+                document.getElementById('personnel-depart').innerHTML = (departsData?.list || []).map(d => `<option value="${d}">${d}</option>`).join('');
+                if (target.id === 'add-personnel-btn') {
+                    document.getElementById('personnel-modal-title').textContent = 'Thêm nhân viên';
+                    ['personnel-original-key', 'personnel-name', 'personnel-email'].forEach(id => document.getElementById(id).value = '');
+                } else {
+                    const key = target.dataset.key;
+                    const profile = (await getDocument("staff_list", "staffs", true))[key];
+                    document.getElementById('personnel-modal-title').textContent = 'Sửa nhân viên';
+                    document.getElementById('personnel-original-key').value = key;
+                    document.getElementById('personnel-name').value = profile.name;
+                    document.getElementById('personnel-email').value = profile.email;
+                    document.getElementById('personnel-depart').value = profile.depart;
+                }
+                document.getElementById('personnel-modal').classList.remove('hidden'); return;
             }
-
-            if (target.classList.contains('edit-personnel-btn')) {
-                const key = target.dataset.key;
-                const allStaff = await getDocument("staff_list", "staffs", true);
-                const profile = allStaff[key];
-                
-                document.getElementById('personnel-modal-title').textContent = 'Sửa nhân viên';
-                document.getElementById('personnel-original-key').value = key;
-                document.getElementById('personnel-name').value = profile.name;
-                document.getElementById('personnel-email').value = profile.email;
-                
-                const departsData = await getDocument('staff_list', 'departs');
-                document.getElementById('personnel-depart').innerHTML = (departsData?.list || [])
-                    .map(d => `<option value="${d}" ${d === profile.depart ? 'selected' : ''}>${d}</option>`)
-                    .join('');
-                
-                document.getElementById('personnel-modal').classList.remove('hidden');
-                return;
-            }
-
             if (target.id === 'save-personnel-btn') {
                 showLoader();
                 try {
-                    const originalKey = document.getElementById('personnel-original-key').value;
                     const name = document.getElementById('personnel-name').value.trim();
                     const email = document.getElementById('personnel-email').value.trim();
-                    const depart = document.getElementById('personnel-depart').value;
-                    
-                    if (!name || !email) {
-                        showToast('Vui lòng điền đầy đủ thông tin', 'error');
-                        hideLoader();
-                        return;
-                    }
-                    
+                    if (!name || !email) { showToast('Vui lòng điền đầy đủ thông tin', 'error'); hideLoader(); return; }
+                    const originalKey = document.getElementById('personnel-original-key').value;
                     const newKey = emailToKey(email);
-                    const updateData = {
-                        [newKey]: { name, email, depart, lan: 'vi' }
-                    };
-                    
-                    if (originalKey && originalKey !== newKey) {
-                        updateData[originalKey] = deleteField();
-                    }
-                    
+                    const updateData = { [newKey]: { name, email, depart: document.getElementById('personnel-depart').value, lan: 'vi' } };
+                    if (originalKey && originalKey !== newKey) updateData[originalKey] = deleteField();
                     await updateDoc(doc(db, "staff_list", "staffs"), updateData);
                     state.cachedData.delete("staff_list/staffs");
-                    
-                    document.getElementById('personnel-modal').classList.add('hidden');
-                    showToast('Lưu thành công!');
-                    await renderAdminPersonnel();
-                } catch (error) {
-                    showToast('Có lỗi xảy ra', 'error');
-                }
-                hideLoader();
-                return;
+                    document.getElementById('personnel-modal').classList.add('hidden'); showToast('Lưu thành công!'); await renderAdminPersonnel();
+                } catch (error) { showToast('Có lỗi xảy ra', 'error'); }
+                hideLoader(); return;
             }
 
-            if (target.classList.contains('delete-personnel-btn')) {
-                const key = target.dataset.key;
+            // Delete actions
+            if (target.classList.contains('delete-personnel-btn') || target.classList.contains('reopen-order-btn')) {
                 const name = target.dataset.name;
-                
-                state.deleteTarget = { key, name, action: 'delete-personnel' };
-                document.getElementById('delete-message').textContent = 
-                    `Bạn có chắc muốn xóa nhân viên "${name}"? Hành động này không thể hoàn tác.`;
-                document.getElementById('delete-modal').classList.remove('hidden');
-                return;
-            }
-
-            if (target.id === 'export-personnel-btn') {
-                const allStaff = await getDocument("staff_list", "staffs", true);
-                if (!allStaff) return;
-                
-                const data = Object.entries(allStaff)
-                    .filter(([key]) => !key.startsWith('guest_'))
-                    .map(([key, profile]) => ({
-                        'Tên': profile.name,
-                        'Email': profile.email,
-                        'Phòng ban': profile.depart,
-                        'Ngôn ngữ': profile.lan
-                    }));
-                
-                const ws = XLSX.utils.json_to_sheet(data);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Nhân sự");
-                XLSX.writeFile(wb, `nhan-su-${new Date().toISOString().split('T')[0]}.xlsx`);
-                showToast('Đã tải về file Excel');
-                return;
+                const key = target.dataset.key;
+                if (target.classList.contains('delete-personnel-btn')) {
+                    state.deleteTarget = { key, name, action: 'delete-personnel' };
+                    document.getElementById('delete-message').textContent = `Bạn có chắc muốn xóa nhân viên "${name}"? Hành động này không thể hoàn tác.`;
+                } else { // reopen-order-btn
+                    state.deleteTarget = { key, name, action: 'reopen' };
+                    document.getElementById('delete-message').textContent = `Xóa tất cả đặt món của "${name}" trong tuần này để họ có thể đặt lại?`;
+                }
+                document.getElementById('delete-modal').classList.remove('hidden'); return;
             }
         });
 
-        // File input for menu import
-        document.getElementById('menu-file-input').addEventListener('change', async (e) => {
+        document.getElementById('menu-file-input').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
             showLoader();
-            try {
-                const reader = new FileReader();
-                reader.onload = async (evt) => {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    
-                    const today = new Date();
-                    const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                try {
+                    const workbook = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    const nextWeek = getWeekString(new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000));
                     const dayMap = { 'Thứ 2': 'mon', 'Thứ 3': 'tue', 'Thứ 4': 'wed', 'Thứ 5': 'thu', 'Thứ 6': 'fri' };
                     const menuData = {};
-                    
-                    jsonData.forEach(row => {
-                        const day = dayMap[row['Ngày']];
-                        if (day) {
-                            menuData[day] = row['Món ăn'];
-                        }
-                    });
-                    
+                    jsonData.forEach(row => { if (dayMap[row['Ngày']]) menuData[dayMap[row['Ngày']]] = row['Món ăn']; });
                     await setDoc(doc(db, nextWeek, "menu"), menuData);
-                    state.cachedData.delete(`${nextWeek}/menu`);
-                    showToast('Import thành công!');
-                    await renderAdminMenu();
-                };
-                reader.readAsArrayBuffer(file);
-            } catch (error) {
-                showToast('Import thất bại', 'error');
-                console.error(error);
-            }
-            hideLoader();
+                    state.cachedData.delete(`${nextWeek}/menu`); showToast('Import thành công!'); await renderAdminMenu();
+                } catch (error) { showToast('Import thất bại', 'error'); console.error(error); }
+                hideLoader();
+            };
+            reader.readAsArrayBuffer(file);
             e.target.value = '';
         });
 
-        function renderGuestDaysMenu(menu) {
-            if (!menu) {
-                document.getElementById('guest-days-container').innerHTML = '<p class="text-center" style="color: var(--text-muted);">Chưa có thực đơn</p>';
-                return;
-            }
-            
-            const days = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6" };
-            let html = '';
-            
-            Object.entries(days).forEach(([key, name]) => {
-                const dishes = menu[key]?.split(',').map(d => d.trim()).filter(d => d) || [];
-                html += `
-                    <div class="form-group">
-                        <label class="form-label">
-                            <input type="checkbox" name="guest-day-${key}" style="margin-right: 8px;">
-                            ${name}
-                        </label>
-                        <select name="guest-dish-${key}" class="form-select">
-                            <option value="">-- Chọn món --</option>
-                            ${dishes.map(dish => `<option value="${dish}">${parseDish(dish)}</option>`).join('')}
-                        </select>
-                    </div>
-                `;
-            });
-            
-            document.getElementById('guest-days-container').innerHTML = html;
-        }
-
-        async function checkOrderNotification() {
-            const tabBar = document.getElementById('tab-bar');
-            const orderTab = tabBar.querySelector('.nav-item[data-tab="order"]');
-            if (!orderTab || !state.currentUser) return;
-            
-            const today = new Date();
-            const dayOfWeek = today.getDay();
-            
-            if (dayOfWeek >= 4 || dayOfWeek === 0) {
-                const nextWeek = getWeekString(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
-                const nextWeekOrders = await getDocument(nextWeek, 'mon');
-                orderTab.classList.toggle('needs-attention', !nextWeekOrders || !nextWeekOrders[emailToKey(state.currentUser.email)]);
-            } else {
-                orderTab.classList.remove('needs-attention');
-            }
-        }
-
-        // Main App Initialization
+        // 7. KHỞI CHẠY ỨNG DỤNG
+        // -----------------------------------------------------------------------------------
         async function main() {
             showLoader();
             try {
                 await setPersistence(auth, browserLocalPersistence);
-                
                 onAuthStateChanged(auth, async (user) => {
                     if (user && user.uid !== state.currentUser?.uid) {
                         try {
-                            state.currentUser = user;
-                            state.authReady = true;
-                            await syncUserProfile();
-                            await checkOrderNotification();
-                            
-                            // Auto switch to order tab on Thursday/Friday
+                            state.currentUser = user; state.authReady = true; await syncUserProfile();
                             const dayOfWeek = new Date().getDay();
-                            if (dayOfWeek === 4 || dayOfWeek === 5) {
-                                state.currentTab = 'order';
-                            }
-                            
-                            updateUIForUser(user);
-                            await render();
+                            if (dayOfWeek === 4 || dayOfWeek === 5) state.currentTab = 'order'; // Auto-switch on Thu/Fri
+                            updateUIForUser(user); await render(); await checkOrderNotification();
                             showToast(`Chào mừng, ${getFirstName(state.staffProfile.name)}!`);
                         } catch (authError) {
-                            showToast(authError.message, 'error');
-                            await signOut(auth);
+                            showToast(authError.message, 'error'); await signOut(auth);
                         }
                     } else if (!user) {
-                        state.currentUser = null;
-                        state.isAdmin = false;
-                        state.authReady = true;
-                        updateUIForUser(null);
+                        state.currentUser = null; state.isAdmin = false; state.authReady = true; updateUIForUser(null);
                     }
                     hideLoader();
                 });
             } catch (error) {
-                console.error('App init error:', error);
-                hideLoader();
+                console.error('App init error:', error); hideLoader();
                 showToast('Không thể khởi tạo ứng dụng', 'error');
             }
         }
