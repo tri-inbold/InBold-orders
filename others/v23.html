@@ -408,12 +408,12 @@
             if (dishString === 'OPT_OUT') return t('optOut');
             const parts = dishString.split('|');
             const lang = state.staffProfile?.lan || 'vi';
-            return (lang === 'en' && parts.length > 1) ? parts[1].trim() : parts[0].trim();
+            return (lang === 'en' && parts.length > 1) ? parts.trim() : parts.trim();
         };
         const getFirstName = (fullName) => {
             if (!fullName) return '';
             const parts = fullName.trim().split(' ');
-            return (state.staffProfile?.lan || 'vi') === 'vi' ? parts[parts.length - 1] : parts[0];
+            return (state.staffProfile?.lan || 'vi') === 'vi' ? parts[parts.length - 1] : parts;
         };
         
         const showToast = (message, type = 'success') => {
@@ -567,7 +567,7 @@
             el('admin-content').innerHTML = `<div class="mt-3"><h3 style="color:var(--primary);margin-bottom:1rem;font-size:18px;" data-translate="notYetOrdered"></h3>${notOrderedList.length > 0 ? `<ul class="staff-list">${notOrderedList.map(item => `<li class="staff-item"><div class="staff-details"><div class="staff-name">${item.profile.name}</div></div><button class="icon-btn reopen-order-btn" data-key="${item.key}" data-name="${item.profile.name}"><i class="fas fa-redo"></i></button></li>`).join('')}</ul>` : `<p class="text-center text-muted p-3" data-translate="everyoneOrdered"></p>`}<h3 style="color:var(--primary);margin:2rem 0 1rem;font-size:18px;" data-translate="orderForGuest"></h3><button id="add-guest-order-btn" class="btn btn-primary btn-block"><i class="fas fa-plus"></i> ${t('add')}</button></div>`;
         }
         async function renderAdminStats() {
-            const dateStr = state.statsViewDate.toISOString().split('T')[0];
+            const dateStr = state.statsViewDate.toISOString().split('T');
             el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1rem;"><div class="shift-toggle" style="flex:1;"><input type="radio" id="stats-day" name="stats-mode" value="day" ${state.statsViewMode === 'day' ? 'checked' : ''}><label for="stats-day" data-translate="day"></label><input type="radio" id="stats-week" name="stats-mode" value="week" ${state.statsViewMode === 'week' ? 'checked' : ''}><label for="stats-week" data-translate="week"></label><input type="radio" id="stats-month" name="stats-mode" value="month" ${state.statsViewMode === 'month' ? 'checked' : ''}><label for="stats-month" data-translate="month"></label></div><div style="position:relative;"><label for="stats-date-picker" class="icon-btn"><i class="fas fa-calendar-alt"></i></label><input type="date" id="stats-date-picker" value="${dateStr}" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;"></div></div><div id="stats-content" class="mt-2"></div><button id="export-stats-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-file-excel"></i> ${t('downloadXLSX')}</button></div>`;
             await renderStatsContent();
         }
@@ -634,11 +634,11 @@
             const thisWeek = getWeekString(today), nextWeek = getWeekString(new Date(today.getTime() + 7 * 86400000));
             state.tempMenuData[thisWeek] = JSON.parse(JSON.stringify(await getDocument(thisWeek, "menu") || {}));
             state.tempMenuData[nextWeek] = JSON.parse(JSON.stringify(await getDocument(nextWeek, "menu") || {}));
-            el('admin-content').innerHTML = `<div class="mt-3">${renderMenuSection(thisWeek, false, `${t('thisWeekMenu')} (${thisWeek.split('_')[1]})`)}${renderMenuSection(nextWeek, true, `${t('nextWeekMenu')} (${nextWeek.split('_')[1]})`)}</div>`;
+            el('admin-content').innerHTML = `<div class="mt-3">${renderMenuSection(thisWeek, false, `${t('thisWeekMenu')} (${thisWeek.split('_')})`)}${renderMenuSection(nextWeek, true, `${t('nextWeekMenu')} (${nextWeek.split('_')})`)}</div>`;
         }
         async function renderAdminPersonnel() {
             const allStaff = await getDocument("staff_list", "staffs", true);
-            const sorted = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_')).sort((a, b) => a[1].name.localeCompare(b[1].name)) : [];
+            const sorted = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_')).sort((a, b) => a.name.localeCompare(b.name)) : [];
             el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="color:var(--primary);font-size:18px;" data-translate="staffManagement"></h3><div style="display:flex;gap:8px;"><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div><div class="table-wrapper"><table><thead><tr><th data-translate="name"></th><th class="hide-mobile" data-translate="email"></th><th class="hide-mobile" data-translate="department"></th><th style="width:120px;" data-translate="actions"></th></tr></thead><tbody>${sorted.length > 0 ? sorted.map(([key, p]) => `<tr><td>${p.name}</td><td class="hide-mobile">${p.email}</td><td class="hide-mobile">${p.depart || '-'}</td><td><div class="action-buttons"><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button><button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${p.name}"><i class="fas fa-trash"></i></button></div></td></tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted p-3" data-translate="noData"></td></tr>`}</tbody></table></div></div>`;
         }
 
@@ -712,6 +712,7 @@
         document.body.addEventListener('click', async (e) => {
             const target = e.target.closest('button, a, .profile-menu-item, .order-dish-item');
             if (!target) return;
+
             const { id, classList, dataset } = target;
 
             // Navigation & General
