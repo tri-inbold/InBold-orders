@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbold Menu v23</title>
+    <title>Inbold Menu</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -820,13 +820,12 @@
         
         .nav-item i {
             font-size: 18px;
-        }
-        
-        .nav-item img {
+            /* To make icon size consistent */
             width: 24px;
             height: 24px;
-            border-radius: 50%;
-            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .nav-item:hover {
@@ -836,10 +835,6 @@
         .nav-item.active {
             background: var(--primary);
             color: white;
-        }
-        
-        .nav-item.active img {
-            border-color: white;
         }
         
         .nav-item.needs-attention::after {
@@ -1796,12 +1791,16 @@
             
             content.innerHTML = `
                 <div class="mt-3">
-                    <div class="tabs">
-                        <button class="tab-btn ${state.statsViewMode === 'day' ? 'active' : ''}" data-mode="day">Ngày</button>
-                        <button class="tab-btn ${state.statsViewMode === 'week' ? 'active' : ''}" data-mode="week">Tuần</button>
-                        <button class="tab-btn ${state.statsViewMode === 'month' ? 'active' : ''}" data-mode="month">Tháng</button>
+                    <div class="form-group">
+                        <label class="form-label">Chế độ xem</label>
+                        <select id="stats-view-mode-select" class="form-select">
+                            <option value="day" ${state.statsViewMode === 'day' ? 'selected' : ''}>Ngày</option>
+                            <option value="week" ${state.statsViewMode === 'week' ? 'selected' : ''}>Tuần</option>
+                            <option value="month" ${state.statsViewMode === 'month' ? 'selected' : ''}>Tháng</option>
+                        </select>
                     </div>
-                    <div class="form-group mt-2">
+                    <div class="form-group">
+                        <label class="form-label">Chọn ngày</label>
                         <input type="date" id="stats-date-picker" class="form-input" value="${dateStr}">
                     </div>
                     <div id="stats-content" class="mt-2"></div>
@@ -2051,8 +2050,8 @@
                                             </button>
                                         </div>
                                     `).join('')}
-                                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                                        <input type="text" id="new-dish-${weekStr}-${key}" class="form-input" placeholder="Món Việt|English dish" style="flex: 1;">
+                                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: flex-start;">
+                                        <textarea id="new-dish-${weekStr}-${key}" class="form-textarea" placeholder="Món 1...\nMón 2..." style="flex: 1;"></textarea>
                                         <button class="icon-btn add-dish-btn" data-week="${weekStr}" data-day="${key}">
                                             <i class="fas fa-plus"></i>
                                         </button>
@@ -2072,31 +2071,18 @@
                     `;
                 }
                 
-                if (editable) {
-                    html += `
-                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                            <button id="import-menu-btn-${weekStr}" class="btn btn-secondary" style="flex: 1;">
-                                <i class="fas fa-file-import"></i>
-                                Import XLSX
-                            </button>
-                            <button id="export-menu-btn-${weekStr}" class="btn btn-secondary" style="flex: 1;">
-                                <i class="fas fa-file-export"></i>
-                                Export XLSX
-                            </button>
-                        </div>
-                        <button id="save-menu-btn-${weekStr}" class="btn btn-primary btn-block mt-2">
-                            <i class="fas fa-save"></i>
-                            Lưu Thực đơn
+                html += `
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button id="import-menu-btn-${weekStr}" class="btn btn-secondary" style="flex: 1;" ${!editable ? 'disabled' : ''}>
+                            <i class="fas fa-file-import"></i>
+                            Import XLSX
                         </button>
-                    `;
-                } else {
-                    html += `
-                        <button id="export-menu-btn-${weekStr}" class="btn btn-secondary btn-block mt-2">
+                        <button id="export-menu-btn-${weekStr}" class="btn btn-secondary" style="flex: 1;">
                             <i class="fas fa-file-export"></i>
                             Export XLSX
                         </button>
-                    `;
-                }
+                    </div>
+                `;
                 
                 return html;
             };
@@ -2104,7 +2090,7 @@
             document.getElementById('admin-content').innerHTML = `
                 <div class="mt-3">
                     ${renderMenuSection(thisMenuData, thisWeek, false, `Thực đơn tuần này (${thisWeek.split('_')[1]})`)}
-                    ${renderMenuSection(nextMenuData, nextWeek, isEditable, `Thực đơn tuần sau (${nextWeek.split('_')[1]})`)}
+                    ${renderMenuSection(nextMenuData, nextWeek, true, `Thực đơn tuần sau (${nextWeek.split('_')[1]})`)}
                 </div>
             `;
         }
@@ -2211,7 +2197,7 @@
 
                 tabBarHTML += `
                     <button class="nav-item" data-tab="profile">
-                        <img src="${user.photoURL}" alt="avatar">
+                        <i class="fas fa-user-circle"></i>
                         <span>Cá nhân</span>
                     </button>
                 `;
@@ -2240,6 +2226,12 @@
             // Stats date picker change
             if (e.target.id === 'stats-date-picker') {
                 state.statsViewDate = new Date(e.target.value);
+                await renderStatsContent();
+                return;
+            }
+            // Stats view mode change
+            if (e.target.id === 'stats-view-mode-select') {
+                state.statsViewMode = e.target.value;
                 await renderStatsContent();
                 return;
             }
@@ -2330,25 +2322,7 @@
                 await renderAdminSubTab();
                 return;
             }
-
-            // Stats mode tabs
-            if (target.dataset.mode) {
-                state.statsViewMode = target.dataset.mode;
-                document.querySelectorAll('[data-mode]').forEach(btn => btn.classList.remove('active'));
-                target.classList.add('active');
-                await renderStatsContent();
-                return;
-            }
             
-            // Stats date picker change
-            if (target.id === 'stats-date-picker') {
-                target.addEventListener('change', async (e) => {
-                    state.statsViewDate = new Date(e.target.value);
-                    await renderStatsContent();
-                });
-                return;
-            }
-
             // Menu Filter
             if (target.id === 'menu-filter-btn' || target.closest('#menu-filter-btn')) {
                 state.menuFilterMode = state.menuFilterMode === 'auto' ? 'all' : 'auto';
@@ -2515,22 +2489,23 @@
             if (target.classList.contains('add-dish-btn')) {
                 const weekStr = target.dataset.week;
                 const dayKey = target.dataset.day;
-                const input = document.getElementById(`new-dish-${weekStr}-${dayKey}`);
-                const dishValue = input.value.trim();
+                const textarea = document.getElementById(`new-dish-${weekStr}-${dayKey}`);
+                const dishValues = textarea.value.trim().split('\n').map(d => d.trim()).filter(d => d);
                 
-                if (!dishValue) return;
+                if (dishValues.length === 0) return;
                 
                 const menuData = await getDocument(weekStr, "menu") || {};
                 
-                if (!menuData[dayKey]) menuData[dayKey] = [];
-                if (!Array.isArray(menuData[dayKey])) menuData[dayKey] = [];
+                if (!menuData[dayKey] || !Array.isArray(menuData[dayKey])) {
+                    menuData[dayKey] = [];
+                }
                 
-                menuData[dayKey].push(dishValue);
+                menuData[dayKey].push(...dishValues);
                 
                 await setDoc(doc(db, weekStr, "menu"), menuData);
                 state.cachedData.delete(`${weekStr}/menu`);
                 
-                input.value = '';
+                textarea.value = '';
                 await renderAdminMenu();
                 return;
             }
@@ -2548,19 +2523,6 @@
                     state.cachedData.delete(`${weekStr}/menu`);
                     await renderAdminMenu();
                 }
-                return;
-            }
-
-            if (target.id && target.id.startsWith('save-menu-btn-')) {
-                showLoader();
-                try {
-                    const weekStr = target.id.replace('save-menu-btn-', '');
-                    showToast('Lưu thực đơn thành công!');
-                } catch (error) {
-                    showToast('Lưu thực đơn thất bại', 'error');
-                    console.error(error);
-                }
-                hideLoader();
                 return;
             }
 
@@ -2711,7 +2673,7 @@
                     
                     const newKey = emailToKey(email);
                     const staffRef = doc(db, "staff_list", "staffs");
-                    const allStaff = await getDocument("staff_list", "staffs", true);
+                    const allStaff = await getDocument("staff_list", "staffs", true) || {};
                     
                     // If editing and email changed, delete old entry
                     if (originalKey && originalKey !== newKey) {
