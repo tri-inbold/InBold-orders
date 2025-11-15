@@ -860,7 +860,8 @@
             menuFilterMode: 'auto', orderSelection: {},
             reopenTarget: { key: null, name: null }, deleteTarget: { key: null, name: null },
             cachedData: new Map(), statsViewMode: 'day',
-            statsViewDate: new Date(), guestOrderSelection: {}
+            statsViewDate: new Date(), guestOrderSelection: {},
+            menuEditMode: { thisWeek: false, nextWeek: false }
         };
         
         const t = {
@@ -1245,32 +1246,71 @@
             const thisWeekMenu = await getDocument(thisWeek, "menu", true) || {};
             const nextWeekMenu = await getDocument(nextWeek, "menu", true) || {};
             
-            const renderMenuSection = (weekStr, menuData, title) => {
+            // Check if menu exists to determine edit mode
+            const thisWeekHasMenu = Object.keys(thisWeekMenu).length > 0 && Object.values(thisWeekMenu).some(arr => arr && arr.length > 0);
+            const nextWeekHasMenu = Object.keys(nextWeekMenu).length > 0 && Object.values(nextWeekMenu).some(arr => arr && arr.length > 0);
+            
+            state.menuEditMode.thisWeek = !thisWeekHasMenu;
+            state.menuEditMode.nextWeek = !nextWeekHasMenu;
+            
+            const renderMenuSection = (weekKey, weekStr, menuData, title, isEditable) => {
                 let html = `<h3 style="color:var(--primary);margin:1.5rem 0 1rem;font-size:18px;">${title}</h3>`;
-                for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
-                    const dishes = menuData[dayKey] || [];
-                    html += `<div class="form-group">
-                        <label class="form-label">${dayName}</label>
-                        <textarea 
-                            id="menu-${weekStr}-${dayKey}" 
-                            class="form-textarea" 
-                            placeholder="${__('oneDishPerLine')}"
-                            style="min-height:120px;"
-                        >${dishes.join('\n')}</textarea>
-                    </div>`;
+                
+                if (!isEditable) {
+                    // Read-only mode - display as table
+                    for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
+                        const dishes = menuData[dayKey] || [];
+                        html += `<div class="form-group">
+                            <label class="form-label">${dayName}</label>
+                            <div style="background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.75rem;">
+                                ${dishes.length > 0 ? dishes.map(dish => `<div style="padding:0.25rem 0;color:var(--text);">${dish}</div>`).join('') : `<div style="color:var(--text-muted);font-size:13px;">${__('noDishYet')}</div>`}
+                            </div>
+                        </div>`;
+                    }
+                } else {
+                    // Edit mode - show inputs
+                    for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
+                        const dishes = menuData[dayKey] || [''];
+                        html += `<div class="form-group">
+                            <label class="form-label">${dayName}</label>
+                            <div id="menu-inputs-${weekKey}-${dayKey}" style="display:flex;flex-direction:column;gap:0.5rem;">
+                                ${dishes.map((dish, idx) => `
+                                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                                        <input 
+                                            type="text" 
+                                            class="form-input menu-dish-input" 
+                                            data-week="${weekKey}" 
+                                            data-day="${dayKey}" 
+                                            data-index="${idx}" 
+                                            value="${dish}"
+                                            placeholder="${__('dish')} ${idx + 1}"
+                                            style="flex:1;">
+                                        ${dishes.length > 1 ? `<button class="icon-btn remove-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}">
+                                            <i class="fas fa-times"></i>
+                                        </button>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button class="btn btn-secondary add-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" style="margin-top:0.5rem;width:100%;">
+                                <i class="fas fa-plus"></i> ${__('addDish')}
+                            </button>
+                        </div>`;
+                    }
                 }
+                
                 return html;
             };
             
             el('admin-content').innerHTML = `<div class="mt-3">
-                ${renderMenuSection(thisWeek, thisWeekMenu, `${__('menuThisWeek')} (${thisWeek.split('_')[1]})`)}
-                <button id="save-menu-${thisWeek}" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${thisWeek}">
+                ${renderMenuSection('thisWeek', thisWeek, thisWeekMenu, `${__('menuThisWeek')} (${thisWeek.split('_')[1]})`, state.menuEditMode.thisWeek)}
+                ${state.menuEditMode.thisWeek ? `<button id="save-menu-thisWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${thisWeek}" data-week-key="thisWeek">
                     <i class="fas fa-save"></i> ${__('save')} ${__('menuThisWeek')}
-                </button>
-                ${renderMenuSection(nextWeek, nextWeekMenu, `${__('menuNextWeek')} (${nextWeek.split('_')[1]})`)}
-                <button id="save-menu-${nextWeek}" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${nextWeek}">
+                </button>` : ''}
+                
+                ${renderMenuSection('nextWeek', nextWeek, nextWeekMenu, `${__('menuNextWeek')} (${nextWeek.split('_')[1]})`, state.menuEditMode.nextWeek)}
+                ${state.menuEditMode.nextWeek ? `<button id="save-menu-nextWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${nextWeek}" data-week-key="nextWeek">
                     <i class="fas fa-save"></i> ${__('save')} ${__('menuNextWeek')}
-                </button>
+                </button>` : ''}
             </div>`;
         }
         async function renderAdminPersonnel() {
@@ -1349,6 +1389,13 @@
             else if (name === 'guest-week') { await renderGuestOrderDays(value, true); }
         });
 
+        document.body.addEventListener('input', (e) => {
+            if (e.target.classList.contains('menu-dish-input')) {
+                const { week, day, index } = e.target.dataset;
+                // Store in temporary state if needed
+            }
+        });
+
         document.body.addEventListener('click', async (e) => {
             const target = e.target.closest('button, a, .profile-menu-item, .order-dish-item');
             if (!target) return;
@@ -1425,17 +1472,44 @@
                 state.statsViewDate = new Date();
                 el('stats-date-picker').value = state.statsViewDate.toISOString().split('T')[0];
                 await renderStatsContent();
-            } else if (id && id.startsWith('save-menu-')) {
+            } else if (classList.contains('add-menu-dish-btn')) {
+                const { week, day } = dataset;
+                const container = el(`menu-inputs-${week}-${day}`);
+                const currentInputs = container.querySelectorAll('.menu-dish-input');
+                const newIndex = currentInputs.length;
+                
+                const newInputHTML = `
+                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                        <input 
+                            type="text" 
+                            class="form-input menu-dish-input" 
+                            data-week="${week}" 
+                            data-day="${day}" 
+                            data-index="${newIndex}" 
+                            placeholder="${__('dish')} ${newIndex + 1}"
+                            style="flex:1;">
+                        <button class="icon-btn remove-menu-dish-btn" data-week="${week}" data-day="${day}" data-index="${newIndex}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', newInputHTML);
+            } else if (classList.contains('remove-menu-dish-btn')) {
+                const parent = target.closest('div[style*="display:flex"]');
+                if (parent) parent.remove();
+            } else if (id && (id === 'save-menu-thisWeek' || id === 'save-menu-nextWeek')) {
                 showLoader();
                 try {
                     const weekStr = dataset.week;
+                    const weekKey = dataset.weekKey;
                     const menuToSave = {};
                     
                     for (const day of ['mon', 'tue', 'wed', 'thu', 'fri']) {
-                        const textarea = el(`menu-${weekStr}-${day}`);
-                        if (textarea) {
-                            const dishes = textarea.value.trim().split('\n')
-                                .map(d => d.trim())
+                        const container = el(`menu-inputs-${weekKey}-${day}`);
+                        if (container) {
+                            const inputs = container.querySelectorAll('.menu-dish-input');
+                            const dishes = Array.from(inputs)
+                                .map(input => input.value.trim())
                                 .filter(Boolean);
                             menuToSave[day] = dishes;
                         }
@@ -1443,7 +1517,9 @@
                     
                     await setDoc(doc(db, weekStr, "menu"), menuToSave);
                     state.cachedData.delete(`${weekStr}/menu`);
+                    state.menuEditMode[weekKey] = false;
                     showToast(__('menuSaved'));
+                    await renderAdminMenu();
                 } catch (err) {
                     console.error(err);
                     showToast(__('error'), 'error');
