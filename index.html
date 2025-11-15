@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
         
         :root {
             --primary: #667eea;
@@ -40,7 +40,7 @@
         }
         
         body {
-            font-family: 'Roboto', 'Arial', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Montserrat', 'Arial', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--dark-bg);
             color: var(--text);
             line-height: 1.5;
@@ -463,7 +463,7 @@
             color: var(--text);
             font-size: 13px;
             transition: all 0.2s ease;
-            font-family: 'Roboto', 'Arial', sans-serif;
+            font-family: 'Montserrat', 'Arial', sans-serif;
         }
         
         .form-input:focus, .form-select:focus, .form-textarea:focus {
@@ -804,10 +804,9 @@
                 <div class="modal-header"><h2 class="modal-title" id="guest-order-modal-title">Đặt món cho khách</h2><button class="close-btn" data-modal="guest-order-modal"><i class="fas fa-times"></i></button></div>
                 <div class="form-group"><label class="form-label" id="guest-name-label">Tên khách</label><input type="text" id="guest-name-input" class="form-input" placeholder="Nhập tên"></div>
                 <div class="form-group"><label class="form-label" id="guest-depart-label">Phòng ban/Công ty</label><input type="text" id="guest-depart-input" class="form-input" placeholder="Nhập tên công ty"></div>
-                <div class="form-group"><label class="form-label" id="guest-shift-label">Ca ăn</label><div class="shift-toggle"><input type="radio" id="guest-shift-m" name="guest-shift" value="M" checked><label for="guest-shift-m" id="guest-shift-m-label">Sáng</label><input type="radio" id="guest-shift-e" name="guest-shift" value="E"><label for="guest-shift-e" id="guest-shift-e-label">Chiều</label></div></div>
                 <div class="form-group"><label class="form-label" id="guest-week-label">Tuần</label><div class="shift-toggle"><input type="radio" id="guest-week-this" name="guest-week" value="this" checked><label for="guest-week-this" id="guest-week-this-label">Tuần này</label><input type="radio" id="guest-week-next" name="guest-week" value="next"><label for="guest-week-next" id="guest-week-next-label">Tuần sau</label></div></div>
                 <div id="guest-order-days-container"></div>
-                <button id="save-guest-order-btn" class="btn btn-primary btn-block mt-3">Hoàn tất</button>
+                <button id="save-guest-order-btn" class="btn btn-primary btn-block mt-3 hidden">Đặt cho khách</button>
             </div>
         </div>
         
@@ -858,6 +857,8 @@
             currentUser: null, staffProfile: null, isAdmin: false,
             currentTab: 'today', adminSubTab: 'support', authReady: false,
             menuFilterMode: 'auto', orderSelection: {},
+            currentOrderDay: 'mon', userShiftSelection: 'M',
+            guestCurrentOrderDay: 'mon', guestShiftSelection: 'M',
             reopenTarget: { key: null, name: null }, deleteTarget: { key: null, name: null },
             cachedData: new Map(), statsViewMode: 'day',
             statsViewDate: new Date(), guestOrderSelection: {}
@@ -935,6 +936,7 @@
 
         const el = (id) => document.getElementById(id);
 
+        // Utility Functions
         const getWeekString = (date) => {
             const d = new Date(date);
             d.setHours(0, 0, 0, 0);
@@ -975,6 +977,7 @@
             return data;
         }
 
+        // --- Render Functions ---
         async function render() {
             if (!state.authReady || !state.staffProfile) { hideLoader(); return; }
             if (!state.cachedData.has('render_' + state.currentTab)) showLoader();
@@ -1017,56 +1020,66 @@
             const today = new Date();
             const dayOfWeek = today.getDay();
             const userEmailKey = emailToKey(state.currentUser.email);
-            
+            const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+            const dayNames = { mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') };
+
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-            const thisWeekString = getWeekString(today);
-            const nextWeekString = getWeekString(new Date(today.getTime() + 7 * 86400000));
+            const weekString = isWeekend ? getWeekString(new Date(today.getTime() + 7 * 86400000)) : getWeekString(today);
             
-            const checkWeekString = isWeekend ? nextWeekString : thisWeekString;
-            const checkOrders = await getDocument(checkWeekString, 'mon', true);
-            const hasOrdered = checkOrders && checkOrders[userEmailKey];
+            const monOrders = await getDocument(weekString, 'mon', true);
+            const hasOrdered = monOrders && monOrders[userEmailKey];
 
             if (hasOrdered) {
-                const displayWeekString = isWeekend ? nextWeekString : thisWeekString;
-                const days = { mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') };
-                let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${displayWeekString.split('_')[1]}</h2></div><ul class="staff-list">`;
-                
-                for (const [key, name] of Object.entries(days)) {
-                    const dayData = await getDocument(displayWeekString, key, true);
+                let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${weekString.split('_')[1]}</h2></div><ul class="staff-list">`;
+                for (const key of dayKeys) {
+                    const dayData = await getDocument(weekString, key, true);
                     const dish = dayData?.[userEmailKey]?.food;
-                    summaryHTML += `<li class="staff-item"><div class="staff-details"><div class="staff-name">${name}</div><div class="staff-dish">${parseDish(dish) || __('rest')}</div></div></li>`;
+                    summaryHTML += `<li class="staff-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish">${parseDish(dish) || __('rest')}</div></div></li>`;
                 }
                 container.innerHTML = summaryHTML + `</ul></div>`;
                 return;
             }
 
-            const orderWeekString = isWeekend ? nextWeekString : thisWeekString;
-            const menu = await getDocument(orderWeekString, "menu", true);
-            
+            const allSelected = dayKeys.every(day => state.orderSelection[day]);
+            if (allSelected) {
+                let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${weekString.split('_')[1]}</h2></div><ul class="staff-list">`;
+                for (const dayKey of dayKeys) {
+                    summaryHTML += `<li class="staff-item"><div class="staff-details"><div class="staff-name">${dayNames[dayKey]}</div><div class="staff-dish">${parseDish(state.orderSelection[dayKey])}</div></div></li>`;
+                }
+                summaryHTML += `</ul><button id="submit-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check-circle"></i> ${__('complete')}</button></div>`;
+                container.innerHTML = summaryHTML;
+                return;
+            }
+
+            const menu = await getDocument(weekString, "menu", true);
             if (!menu) {
                 container.innerHTML = `<div class="card text-center"><p class="text-muted">${__('noMenu')}</p></div>`;
                 return;
             }
 
-            const days = { mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') };
-            let orderCardsHTML = '';
+            const shiftToggleHTML = `<div class="form-group"><label class="form-label">${__('shift')}</label><div class="shift-toggle"><input type="radio" id="user-shift-m" name="user-shift" value="M" ${state.userShiftSelection === 'M' ? 'checked' : ''}><label for="user-shift-m">${__('morning')}</label><input type="radio" id="user-shift-e" name="user-shift" value="E" ${state.userShiftSelection === 'E' ? 'checked' : ''}><label for="user-shift-e">${__('evening')}</label></div></div>`;
             
-            for (const [dayKey, dayName] of Object.entries(days)) {
+            let tabsHTML = `<div class="tabs">`;
+            for (const dayKey of dayKeys) {
+                tabsHTML += `<button class="tab-btn order-day-tab-btn ${state.currentOrderDay === dayKey ? 'active' : ''}" data-day-key="${dayKey}">${dayNames[dayKey]}</button>`;
+            }
+            tabsHTML += `</div>`;
+            
+            let daysContentHTML = '';
+            for (const dayKey of dayKeys) {
                 const dishes = menu[dayKey] || [];
+                daysContentHTML += `<div id="order-day-${dayKey}" class="${state.currentOrderDay === dayKey ? '' : 'hidden'}">`;
                 if (Array.isArray(dishes) && dishes.length > 0) {
-                    orderCardsHTML += `<div class="order-day-card"><div class="order-day-header"><div class="order-day-title">${dayName}</div></div><div class="order-dish-list">${dishes.map(dish => `<div class="order-dish-item ${state.orderSelection[dayKey] === dish ? 'selected' : ''}" data-dish="${dish}" data-day-key="${dayKey}"><div class="order-dish-name">${parseDish(dish)}</div></div>`).join('')}</div></div>`;
+                    daysContentHTML += `<div class="order-dish-list">${dishes.map(dish => `<div class="order-dish-item" data-dish="${dish}" data-day-key="${dayKey}"><div class="order-dish-name">${parseDish(dish)}</div></div>`).join('')}</div>`;
+                } else {
+                    daysContentHTML += `<p class="text-center text-muted p-3">${__('noDishes')}</p><div class="order-dish-list"><div class="order-dish-item" data-dish="Nghỉ" data-day-key="${dayKey}"><div class="order-dish-name">${__('rest')}</div></div></div>`;
                 }
+                daysContentHTML += `</div>`;
             }
             
-            container.innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderForWeek')} ${orderWeekString.split('_')[1]}</h2></div>${orderCardsHTML}<button id="submit-order-btn" class="btn btn-primary btn-block mt-3" disabled><i class="fas fa-check-circle"></i> ${__('complete')}</button></div>`;
-            checkOrderCompletion();
+            container.innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderForWeek')} ${weekString.split('_')[1]}</h2></div>${shiftToggleHTML}${tabsHTML}${daysContentHTML}</div>`;
         }
-        
-        function checkOrderCompletion() {
-            const allSelected = ['mon', 'tue', 'wed', 'thu', 'fri'].every(day => state.orderSelection[day]);
-            const submitBtn = el('submit-order-btn');
-            if (submitBtn) submitBtn.disabled = !allSelected;
-        }
+
 
         async function renderMenu() {
             el('main-content').innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('todayList')}</h2><button id="menu-filter-btn" class="icon-btn"><i class="fas fa-filter"></i></button></div><div class="search-bar"><div class="search-wrapper"><i class="fas fa-search search-icon"></i><input type="text" id="search-staff" class="search-input" placeholder="${__('searchStaff')}"></div></div><div id="staff-list-container"></div></div>`;
@@ -1257,12 +1270,12 @@
                     if (isEditable) {
                         dishes.forEach((dish, idx) => {
                             html += `<div style="display:flex;gap:0.5rem;align-items:center;">
-                                        <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}" placeholder="${__('dish')} ${idx + 1}" style="flex:1;min-height:40px;resize:none;">${dish}</textarea>
+                                        <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}" placeholder="${__('dish')} ${idx + 1}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden">${dish}</textarea>
                                         <button class="icon-btn remove-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}"><i class="fas fa-times"></i></button>
                                      </div>`;
                         });
                         html += `<div style="display:flex;gap:0.5rem;align-items:center;">
-                                    <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;resize:none;"></textarea>
+                                    <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden"></textarea>
                                     <button class="icon-btn remove-menu-dish-btn hidden" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}"><i class="fas fa-times"></i></button>
                                  </div>`;
                     } else {
@@ -1286,6 +1299,8 @@
                 ${renderMenuSection('nextWeek', nextWeekMenu, `${__('menuNextWeek')} (${nextWeek.split('_')[1]})`, true)}
                 <button id="save-menu-nextWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${nextWeek}"><i class="fas fa-save"></i> ${__('save')} ${__('menuNextWeek')}</button>
             </div>`;
+
+            document.querySelectorAll('.menu-dish-textarea').forEach(autoResizeTextarea);
         }
 
         async function renderAdminPersonnel() {
@@ -1294,6 +1309,7 @@
             el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="color:var(--primary);font-size:18px;">${__('personnel')}</h3><div style="display:flex;gap:8px;"><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div><div class="table-wrapper"><table><thead><tr><th>${__('name')}</th><th class="hide-mobile">${__('email')}</th><th class="hide-mobile">${__('department')}</th><th style="width:120px;">${__('actions')}</th></tr></thead><tbody>${sorted.length > 0 ? sorted.map(([key, p]) => `<tr><td>${p.name}</td><td class="hide-mobile">${p.email}</td><td class="hide-mobile">${p.depart || '-'}</td><td><div class="action-buttons"><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button><button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${p.name}"><i class="fas fa-trash"></i></button></div></td></tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted p-3">${__('noData')}</td></tr>`}</tbody></table></div></div>`;
         }
 
+        // --- Core App Logic ---
         async function syncUserProfile() {
             const userEmailKey = emailToKey(state.currentUser.email);
             const staffData = await getDocument("staff_list", "staffs", true);
@@ -1320,19 +1336,52 @@
         }
         
         async function renderGuestOrderDays(weekType, forceRefresh = false) {
+            const container = el('guest-order-days-container');
+            const saveBtn = el('save-guest-order-btn');
             const today = new Date();
             const targetWeek = weekType === 'next' ? getWeekString(new Date(today.getTime() + 7 * 86400000)) : getWeekString(today);
             const menu = await getDocument(targetWeek, "menu", forceRefresh);
-            const container = el('guest-order-days-container');
-            if (!menu) { container.innerHTML = `<p class="text-center text-muted mt-2">${__('noMenu')}</p>`; return; }
-            let html = '';
-            for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
-                const dishes = menu[dayKey] || [];
-                if (Array.isArray(dishes) && dishes.length > 0) {
-                    html += `<div class="order-day-card"><div class="order-day-header"><div class="order-day-title">${dayName}</div></div><div class="order-dish-list">${dishes.map(dish => `<div class="order-dish-item guest-dish-item ${state.guestOrderSelection[dayKey] === dish ? 'selected' : ''}" data-dish="${dish}" data-day-key="${dayKey}"><div class="order-dish-name">${parseDish(dish)}</div></div>`).join('')}</div></div>`;
-                }
+            const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+            const dayNames = { mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') };
+
+            if (!menu) {
+                container.innerHTML = `<p class="text-center text-muted mt-2">${__('noMenu')}</p>`;
+                saveBtn.classList.add('hidden');
+                return;
             }
-            container.innerHTML = html || `<p class="text-center text-muted mt-2">${__('noDishes')}</p>`;
+
+            const allSelected = dayKeys.every(day => state.guestOrderSelection[day]);
+            if (allSelected) {
+                saveBtn.classList.remove('hidden');
+                let summaryHTML = `<h4 style="color:var(--primary);margin-top:1.5rem;margin-bottom:0.5rem;">${__('orderedWeek')} ${targetWeek.split('_')[1]}</h4><ul class="staff-list">`;
+                for (const dayKey of dayKeys) {
+                    summaryHTML += `<li class="staff-item"><div class="staff-details"><div class="staff-name">${dayNames[dayKey]}</div><div class="staff-dish">${parseDish(state.guestOrderSelection[dayKey])}</div></div></li>`;
+                }
+                container.innerHTML = summaryHTML + `</ul>`;
+                return;
+            }
+            
+            saveBtn.classList.add('hidden');
+            const shiftToggleHTML = `<div class="form-group"><label class="form-label">${__('shift')}</label><div class="shift-toggle"><input type="radio" id="guest-shift-m" name="guest-shift" value="M" ${state.guestShiftSelection === 'M' ? 'checked' : ''}><label for="guest-shift-m">${__('morning')}</label><input type="radio" id="guest-shift-e" name="guest-shift" value="E" ${state.guestShiftSelection === 'E' ? 'checked' : ''}><label for="guest-shift-e">${__('evening')}</label></div></div>`;
+
+            let tabsHTML = `<div class="tabs mt-2">`;
+            for (const dayKey of dayKeys) {
+                tabsHTML += `<button class="tab-btn guest-order-tab-btn ${state.guestCurrentOrderDay === dayKey ? 'active' : ''}" data-day-key="${dayKey}">${dayNames[dayKey]}</button>`;
+            }
+            tabsHTML += `</div>`;
+            
+            let daysContentHTML = '';
+            for (const dayKey of dayKeys) {
+                const dishes = menu[dayKey] || [];
+                daysContentHTML += `<div id="guest-order-day-${dayKey}" class="${state.guestCurrentOrderDay === dayKey ? '' : 'hidden'}">`;
+                if (Array.isArray(dishes) && dishes.length > 0) {
+                     daysContentHTML += `<div class="order-dish-list">${dishes.map(dish => `<div class="order-dish-item guest-dish-item" data-dish="${dish}" data-day-key="${dayKey}"><div class="order-dish-name">${parseDish(dish)}</div></div>`).join('')}</div>`;
+                } else {
+                     daysContentHTML += `<p class="text-center text-muted p-3">${__('noDishes')}</p><div class="order-dish-list"><div class="order-dish-item guest-dish-item" data-dish="Nghỉ" data-day-key="${dayKey}"><div class="order-dish-name">${__('rest')}</div></div></div>`;
+                }
+                daysContentHTML += `</div>`;
+            }
+            container.innerHTML = shiftToggleHTML + tabsHTML + daysContentHTML;
         }
 
         async function checkOrderNotification() {
@@ -1354,15 +1403,31 @@
             todayTab.classList.toggle('needs-attention', !hasOrdered);
         }
 
+        function autoResizeTextarea(element) {
+            element.style.height = 'auto';
+            element.style.height = `${element.scrollHeight}px`;
+        }
+
+        // --- Event Listeners ---
         document.body.addEventListener('change', async (e) => {
-            const { id, name, value } = e.target;
-            if (id === 'stats-date-picker') { state.statsViewDate = new Date(value); await renderStatsContent(); }
-            else if (name === 'stats-mode') { state.statsViewMode = value; await renderStatsContent(); }
-            else if (name === 'guest-week') { await renderGuestOrderDays(value, true); }
+            const { id, name, value, type, checked } = e.target;
+            if (id === 'stats-date-picker') { 
+                state.statsViewDate = new Date(value); await renderStatsContent(); 
+            } else if (name === 'stats-mode') { 
+                state.statsViewMode = value; await renderStatsContent(); 
+            } else if (name === 'guest-week') { 
+                await renderGuestOrderDays(value, true); 
+            } else if (name === 'user-shift') {
+                if (type === 'radio' && checked) state.userShiftSelection = value;
+            } else if (name === 'guest-shift') {
+                if (type === 'radio' && checked) state.guestShiftSelection = value;
+            }
         });
 
         document.body.addEventListener('input', (e) => {
             if (e.target.classList.contains('menu-dish-textarea')) {
+                autoResizeTextarea(e.target);
+                
                 const { week, day } = e.target.dataset;
                 const container = el(`menu-dishes-${week}-${day}`);
                 const allTextareas = container.querySelectorAll('.menu-dish-textarea');
@@ -1380,7 +1445,7 @@
                     newRow.style.gap = '0.5rem';
                     newRow.style.alignItems = 'center';
                     newRow.innerHTML = `
-                        <textarea class="form-textarea menu-dish-textarea" data-week="${week}" data-day="${day}" data-index="${newIndex}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;resize:none;"></textarea>
+                        <textarea class="form-textarea menu-dish-textarea" data-week="${week}" data-day="${day}" data-index="${newIndex}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden"></textarea>
                         <button class="icon-btn remove-menu-dish-btn hidden" data-week="${week}" data-day="${day}" data-index="${newIndex}"><i class="fas fa-times"></i></button>
                     `;
                     container.appendChild(newRow);
@@ -1394,6 +1459,7 @@
 
             const { id, classList, dataset } = target;
 
+            // Navigation
             if (classList.contains('nav-item')) {
                 if (dataset.tab === state.currentTab) return;
                 document.querySelector('.nav-item.active').classList.remove('active');
@@ -1408,6 +1474,7 @@
                 return;
             }
 
+            // Authentication
             if (id === 'login-btn') {
                 showLoader();
                 try { await signInWithPopup(auth, provider); } catch (err) { showToast(__('error'), 'error'); } finally { hideLoader(); }
@@ -1415,6 +1482,7 @@
                 if (confirm(__('logoutConfirm'))) { await signOut(auth); showToast(__('loggedOut')); }
             }
             
+            // User actions
             else if (classList.contains('lang-toggle-btn')) {
                 if (dataset.lang === state.staffProfile.lan) return;
                 showLoader();
@@ -1424,12 +1492,18 @@
                     await render(); 
                     showToast(__('changeLangSuccess'));
                 } catch { showToast(__('error'), 'error'); } finally { hideLoader(); }
+            } else if (classList.contains('order-day-tab-btn')) {
+                state.currentOrderDay = dataset.dayKey;
+                await renderOrderSection(el('order-section-container'));
             } else if (classList.contains('order-dish-item') && !classList.contains('guest-dish-item')) {
                 const { dayKey, dish } = dataset;
+                const dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri'];
                 state.orderSelection[dayKey] = dish;
-                document.querySelectorAll(`.order-dish-item[data-day-key="${dayKey}"]`).forEach(item => item.classList.remove('selected'));
-                target.classList.add('selected');
-                checkOrderCompletion();
+                const currentIndex = dayOrder.indexOf(dayKey);
+                if (currentIndex < dayOrder.length - 1) {
+                    state.currentOrderDay = dayOrder[currentIndex + 1];
+                }
+                await renderOrderSection(el('order-section-container'));
             } else if (id === 'submit-order-btn') {
                 showLoader();
                 try {
@@ -1441,17 +1515,19 @@
                         : getWeekString(today);
                     
                     for (const dayKey in state.orderSelection) {
-                        const payload = { [emailToKey(state.currentUser.email)]: { name: state.staffProfile.name, email: state.currentUser.email, food: state.orderSelection[dayKey], status: 'not', shift: 'M', depart: state.staffProfile.depart }};
+                        const payload = { [emailToKey(state.currentUser.email)]: { name: state.staffProfile.name, email: state.currentUser.email, food: state.orderSelection[dayKey], status: 'not', shift: state.userShiftSelection, depart: state.staffProfile.depart }};
                         await setDoc(doc(db, targetWeek, dayKey), payload, { merge: true });
                     }
                     showToast(__('orderSuccess')); 
-                    state.orderSelection = {}; 
+                    state.orderSelection = {};
+                    state.currentOrderDay = 'mon';
                     state.cachedData.clear();
                     await render();
                     await checkOrderNotification();
                 } catch { showToast(__('orderFailed'), 'error'); } finally { hideLoader(); }
             }
 
+            // Admin actions
             else if (id === 'menu-filter-btn') {
                 state.menuFilterMode = state.menuFilterMode === 'auto' ? 'all' : 'auto';
                 const dayData = await getDocument(getWeekString(new Date()), getDayKey(), true);
@@ -1543,13 +1619,62 @@
                 }
             } else if (id === 'add-guest-order-btn') {
                 state.guestOrderSelection = {};
+                state.guestCurrentOrderDay = 'mon';
                 await renderGuestOrderDays('this', true);
                 el('guest-order-modal').classList.remove('hidden');
+            } else if (classList.contains('guest-order-tab-btn')) {
+                state.guestCurrentOrderDay = dataset.dayKey;
+                const weekType = document.querySelector('input[name="guest-week"]:checked').value;
+                await renderGuestOrderDays(weekType);
             } else if (classList.contains('guest-dish-item')) {
                 const { dayKey, dish } = dataset;
-                state.guestOrderSelection[dayKey] = state.guestOrderSelection[dayKey] === dish ? null : dish;
-                document.querySelectorAll(`.guest-dish-item[data-day-key="${dayKey}"]`).forEach(item => item.classList.remove('selected'));
-                if(state.guestOrderSelection[dayKey]) target.classList.add('selected');
+                const dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri'];
+                state.guestOrderSelection[dayKey] = dish;
+                const currentIndex = dayOrder.indexOf(dayKey);
+                if (currentIndex < dayOrder.length - 1) {
+                    state.guestCurrentOrderDay = dayOrder[currentIndex + 1];
+                }
+                const weekType = document.querySelector('input[name="guest-week"]:checked').value;
+                await renderGuestOrderDays(weekType);
+            } else if (id === 'save-guest-order-btn') {
+                showLoader();
+                try {
+                    const guestName = el('guest-name-input').value.trim();
+                    const guestDepart = el('guest-depart-input').value.trim();
+                    if (!guestName) {
+                        showToast('Vui lòng nhập tên khách.', 'error');
+                        return;
+                    }
+                    const weekType = document.querySelector('input[name="guest-week"]:checked').value;
+                    const targetWeek = weekType === 'next' ? getWeekString(new Date(new Date().getTime() + 7 * 86400000)) : getWeekString(new Date());
+                    
+                    const guestKey = `guest_${Date.now()}`;
+
+                    for (const dayKey in state.guestOrderSelection) {
+                        const payload = {
+                            [guestKey]: {
+                                name: guestName,
+                                depart: guestDepart,
+                                food: state.guestOrderSelection[dayKey],
+                                status: 'not',
+                                shift: state.guestShiftSelection
+                            }
+                        };
+                        await setDoc(doc(db, targetWeek, dayKey), payload, { merge: true });
+                    }
+                    showToast(`${__('orderSuccess')} cho khách ${guestName}`);
+                    state.guestOrderSelection = {};
+                    state.guestCurrentOrderDay = 'mon';
+                    el('guest-order-modal').classList.add('hidden');
+                    state.cachedData.clear();
+                    await renderAdmin();
+                } catch(err) {
+                    console.error("Guest order save error:", err);
+                    showToast(__('orderFailed'), 'error');
+                } finally {
+                    hideLoader();
+                }
+
             } else if (classList.contains('reopen-order-btn')) {
                  state.reopenTarget = { key: dataset.key, name: dataset.name };
                  el('reopen-order-modal-title').textContent = `${__('reopenOrderFor')} ${dataset.name}?`;
@@ -1569,11 +1694,13 @@
                 } catch { showToast(__('error'), 'error'); } finally { hideLoader(); }
             }
             
+            // Modals
             else if(dataset.modal){
                  el(dataset.modal).classList.toggle('hidden');
             }
         });
 
+        // --- Main App Initialization ---
         async function main() {
             showLoader();
             try {
@@ -1593,6 +1720,11 @@
                         }
                     } else if (!user) {
                         state.currentUser = null; state.isAdmin = false; state.authReady = true;
+                        // Reset all states on logout
+                        Object.assign(state, {
+                            orderSelection: {}, currentOrderDay: 'mon', userShiftSelection: 'M',
+                            guestOrderSelection: {}, guestCurrentOrderDay: 'mon', guestShiftSelection: 'M'
+                        });
                         updateUIForUser(null);
                     }
                     hideLoader();
