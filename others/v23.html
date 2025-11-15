@@ -836,7 +836,7 @@
         <!-- Modals -->
         <div id="personnel-modal" class="modal hidden">
             <div class="modal-content">
-                <div class="modal-header"><h2 id="personnel-modal-title" class="modal-title"></h2><button class="close-btn" data-modal="personnel-modal"><i class="fa-solidfa-times"></i></button></div>
+                <div class="modal-header"><h2 id="personnel-modal-title" class="modal-title"></h2><button class="close-btn" data-modal="personnel-modal"><i class="fas fa-times"></i></button></div>
                 <input type="hidden" id="personnel-original-email-key">
                 <div class="form-group"><label class="form-label">Tên</label><input type="text" id="personnel-name-input" class="form-input"></div>
                 <div class="form-group"><label class="form-label">Email</label><input type="email" id="personnel-email-input" class="form-input"></div>
@@ -847,7 +847,7 @@
         
         <div id="guest-order-modal" class="modal hidden">
             <div class="modal-content">
-                <div class="modal-header"><h2 class="modal-title" id="guest-order-modal-title">Đặt món cho khách</h2><button class="close-btn" data-modal="guest-order-modal"><i class="fa-solidfa-times"></i></button></div>
+                <div class="modal-header"><h2 class="modal-title" id="guest-order-modal-title">Đặt món cho khách</h2><button class="close-btn" data-modal="guest-order-modal"><i class="fas fa-times"></i></button></div>
                 <div class="form-group"><label class="form-label" id="guest-name-label">Tên khách</label><input type="text" id="guest-name-input" class="form-input" placeholder="Nhập tên"></div>
                 <div class="form-group"><label class="form-label" id="guest-depart-label">Phòng ban/Công ty</label><input type="text" id="guest-depart-input" class="form-input" placeholder="Nhập tên công ty"></div>
                 <div class="form-group"><label class="form-label" id="guest-week-label">Tuần</label><div class="shift-toggle"><input type="radio" id="guest-week-this" name="guest-week" value="this" checked><label for="guest-week-this" id="guest-week-this-label">Tuần này</label><input type="radio" id="guest-week-next" name="guest-week" value="next"><label for="guest-week-next" id="guest-week-next-label">Tuần sau</label></div></div>
@@ -858,7 +858,7 @@
         
         <div id="reopen-order-modal" class="modal hidden">
             <div class="modal-content">
-                <div class="modal-header"><h2 id="reopen-order-modal-title" class="modal-title"></h2><button class="close-btn" data-modal="reopen-order-modal"><i class="fa-solidfa-times"></i></button></div>
+                <div class="modal-header"><h2 id="reopen-order-modal-title" class="modal-title"></h2><button class="close-btn" data-modal="reopen-order-modal"><i class="fas fa-times"></i></button></div>
                 <p class="text-muted mb-3" id="reopen-order-text"></p>
                 <button id="confirm-reopen-order-btn" class="btn btn-primary btn-block">Xác nhận</button>
             </div>
@@ -866,7 +866,7 @@
         
         <div id="delete-personnel-modal" class="modal hidden">
             <div class="modal-content">
-                <div class="modal-header"><h2 class="modal-title">Xóa nhân viên</h2><button class="close-btn" data-modal="delete-personnel-modal"><i class="fa-solidfa-times"></i></button></div>
+                <div class="modal-header"><h2 class="modal-title">Xóa nhân viên</h2><button class="close-btn" data-modal="delete-personnel-modal"><i class="fas fa-times"></i></button></div>
                 <p id="delete-personnel-text" class="text-muted mb-3"></p>
                 <div style="display: flex; gap: 12px;"><button class="btn btn-secondary" data-modal="delete-personnel-modal" style="flex: 1;">Hủy</button><button id="confirm-delete-personnel-btn" class="btn btn-primary" style="flex: 1;">Xóa</button></div>
             </div>
@@ -1008,7 +1008,7 @@
         const showToast = (message, type = 'success') => {
             const toast = el('toast-notification');
             const iconMap = { success: 'check', error: 'times', info: 'info' };
-            toast.innerHTML = `<div class="toast-icon ${type}"><i class="fa-solidfa-${iconMap[type]}"></i></div><span>${message}</span>`;
+            toast.innerHTML = `<div class="toast-icon ${type}"><i class="fas fa-${iconMap[type]}"></i></div><span>${message}</span>`;
             toast.className = `show ${type}`;
             setTimeout(() => toast.classList.remove('show'), 3000);
         };
@@ -1034,7 +1034,7 @@
                 }
             } catch (error) {
                 console.error('Render error:', error);
-                el('main-content').innerHTML = `<div class="card text-center" style="color: var(--error);"><i class="fa-solidfa-exclamation-circle"></i> Có lỗi xảy ra.</div>`;
+                el('main-content').innerHTML = `<div class="card text-center" style="color: var(--error);"><i class="fas fa-exclamation-circle"></i> Có lỗi xảy ra.</div>`;
             }
             hideLoader();
         }
@@ -1090,7 +1090,7 @@
                 for (const dayKey of dayKeys) {
                     summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[dayKey]}</div><div class="staff-dish">${parseDish(state.orderSelection[dayKey])}</div></div></li>`;
                 }
-                summaryHTML += `</ul><button id="submit-order-btn" class="btn btn-primary btn-block mt-3"><i class="fa-solidfa-check-circle"></i> ${__('complete')}</button></div>`;
+                summaryHTML += `</ul><button id="submit-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check-circle"></i> ${__('complete')}</button></div>`;
                 container.innerHTML = summaryHTML;
                 return;
             }
@@ -1126,7 +1126,7 @@
 
 
         async function renderMenu() {
-            el('main-content').innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('todayList')}</h2><button id="menu-filter-btn" class="icon-btn"><i class="fa-solidfa-filter"></i></button></div><div class="search-bar"><div class="search-wrapper"><i class="fa-solidfa-search search-icon"></i><input type="text" id="search-staff" class="search-input" placeholder="${__('searchStaff')}"></div></div><div id="staff-list-container"></div></div>`;
+            el('main-content').innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('todayList')}</h2><button id="menu-filter-btn" class="icon-btn"><i class="fas fa-filter"></i></button></div><div class="search-bar"><div class="search-wrapper"><i class="fas fa-search search-icon"></i><input type="text" id="search-staff" class="search-input" placeholder="${__('searchStaff')}"></div></div><div id="staff-list-container"></div></div>`;
             const dayData = await getDocument(getWeekString(new Date()), getDayKey(), true);
             if (dayData) {
                 updateStaffListView(dayData);
@@ -1140,7 +1140,7 @@
             const container = el('staff-list-container');
             const hour = new Date().getHours();
             const staffOrders = Object.values(dayData).filter(o => o.name && o.name.toLowerCase().includes(searchTerm.toLowerCase()));
-            el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fa-solid${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fa-solidfa-users"></i>`;
+            el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fas fa-users"></i>`;
             const createListHTML = (list) => list.sort((a, b) => (a.status === 'eaten' ? 1 : -1) || a.name.localeCompare(b.name)).map(order => `<li class="staff-item ${order.status === 'eaten' ? 'eaten' : ''}"><div class="staff-details"><div class="staff-name">${order.name}</div><div class="staff-dish">${parseDish(order.food)}</div></div></li>`).join('');
             const sang = staffOrders.filter(o => o.shift === 'M'), chieu = staffOrders.filter(o => o.shift === 'E');
             let html = '<ul class="staff-list">';
@@ -1159,12 +1159,12 @@
                 <div class="profile-language-toggle"><button class="lang-toggle-btn ${profile.lan === 'vi' ? 'active' : ''}" data-lang="vi">${__('vietnamese')}</button><button class="lang-toggle-btn ${profile.lan === 'en' ? 'active' : ''}" data-lang="en">${__('english')}</button></div>
                 <div class="profile-menu">
                     <a href="mailto:${SUPPORT_EMAIL}" style="text-decoration:none; color:inherit;" class="profile-menu-item">
-                        <i class="fa-solidfa-headset" style="color:var(--primary);"></i><span class="profile-menu-label">${__('support')}</span>
+                        <i class="fas fa-headset" style="color:var(--primary);"></i><span class="profile-menu-label">${__('support')}</span>
                     </a>
                 </div>
                 <div class="text-center" style="margin-top: 4rem;">
                     <button id="logout-menu-item" class="btn btn-secondary btn-small">
-                        <i class="fa-solidfa-sign-out-alt"></i>${__('logout')}
+                        <i class="fas fa-sign-out-alt"></i>${__('logout')}
                     </button>
                 </div>
             </div></div>`;
@@ -1172,10 +1172,10 @@
 
         async function renderAdmin() {
             el('main-content').innerHTML = `<div class="card"><div class="tabs">
-                <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support"><i class="fa-solidfa-headset"></i><span class="tab-label">${__('support')}</span></button>
-                <button class="tab-btn ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats"><i class="fa-solidfa-chart-pie"></i><span class="tab-label">${__('stats')}</span></button>
-                <button class="tab-btn ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu"><i class="fa-solidfa-utensils"></i><span class="tab-label">${__('menu')}</span></button>
-                <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel"><i class="fa-solidfa-users"></i><span class="tab-label">${__('personnel')}</span></button>
+                <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support"><i class="fas fa-headset"></i><span class="tab-label">${__('support')}</span></button>
+                <button class="tab-btn ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats"><i class="fas fa-chart-pie"></i><span class="tab-label">${__('stats')}</span></button>
+                <button class="tab-btn ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu"><i class="fas fa-utensils"></i><span class="tab-label">${__('menu')}</span></button>
+                <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel"><i class="fas fa-users"></i><span class="tab-label">${__('personnel')}</span></button>
             </div><div id="admin-content"></div></div>`;
             await renderAdminSubTab();
         }
@@ -1201,11 +1201,11 @@
                     </div>
                     <div style="display:flex;gap:8px;">
                         <button id="stats-today-btn" class="icon-btn" title="${__('today')}">
-                            <i class="fa-solid fa-calendar-day"></i>
+                            <i class="fas fa-calendar-day"></i>
                         </button>
                         <div style="position:relative;">
                             <label for="stats-date-picker" class="icon-btn">
-                                <i class="fa-solid fa-calendar-days"></i>
+                                <i class="fas fa-calendar-days"></i>
                             </label>
                             <input type="date" id="stats-date-picker" value="${dateStr}" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;">
                         </div>
@@ -1213,7 +1213,7 @@
                 </div>
                 <div id="stats-content" class="mt-2"></div>
                 <button id="export-stats-btn" class="btn btn-primary btn-block mt-3">
-                    <i class="fa-solidfa-file-excel"></i> ${__('downloadXLSX')}
+                    <i class="fas fa-file-excel"></i> ${__('downloadXLSX')}
                 </button>
             </div>`;
             await renderStatsContent();
@@ -1243,7 +1243,7 @@
                                         <td class="hide-mobile">${item.profile.depart || '-'}</td>
                                         <td>
                                             <button class="icon-btn reopen-order-btn" data-key="${item.key}" data-name="${item.profile.name}">
-                                                <i class="fa-solidfa-redo"></i>
+                                                <i class="fas fa-redo"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -1253,15 +1253,15 @@
                     </div>
                 ` : `<p class="text-center text-muted p-3">${__('everyoneOrdered')}</p>`}
                 <h3 style="color:var(--primary);margin:2rem 0 1rem;font-size:18px;">${__('orderForGuest')}</h3>
-                <button id="add-guest-order-btn" class="btn btn-primary btn-block"><i class="fa-solidfa-plus"></i> ${__('addGuest')}</button>
+                <button id="add-guest-order-btn" class="btn btn-primary btn-block"><i class="fas fa-plus"></i> ${__('addGuest')}</button>
             </div>`;
         }
         async function renderStatsContent() {
             const statsContent = el('stats-content');
             const headers = { 
-                ordered: `<i class="fa-solidfa-box" title="${__('ordered')}"></i>`, 
-                eaten: `<i class="fa-solidfa-check-circle" title="${__('eaten')}"></i>`, 
-                notEaten: `<i class="fa-solidfa-times-circle" title="${__('notEaten')}"></i>` 
+                ordered: `<i class="fas fa-box" title="${__('ordered')}"></i>`, 
+                eaten: `<i class="fas fa-check-circle" title="${__('eaten')}"></i>`, 
+                notEaten: `<i class="fas fa-times-circle" title="${__('notEaten')}"></i>` 
             };
             if (state.statsViewMode === 'day') {
                 const dayData = await getDocument(getWeekString(state.statsViewDate), getDayKey(state.statsViewDate));
@@ -1340,12 +1340,12 @@
                     dishes.forEach((dish, idx) => {
                         html += `<div style="display:flex;gap:0.5rem;align-items:center;">
                                     <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}" placeholder="${__('dish')} ${idx + 1}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden; width: 40px;">${dish}</textarea>
-                                    <button class="icon-btn remove-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}"><i class="fa-solidfa-times"></i></button>
+                                    <button class="icon-btn remove-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}"><i class="fas fa-times"></i></button>
                                  </div>`;
                     });
                     html += `<div style="display:flex;gap:0.5rem;align-items:center;">
                                 <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden; width: 40px;"></textarea>
-                                <button class="icon-btn remove-menu-dish-btn hidden" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}"><i class="fa-solidfa-times"></i></button>
+                                <button class="icon-btn remove-menu-dish-btn hidden" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}"><i class="fas fa-times"></i></button>
                              </div>`;
                     html += `</div></div>`;
                 }
@@ -1360,10 +1360,10 @@
                     ? renderMenuSummaryView(thisWeekMenu, thisWeekTitle)
                     : renderEditableMenuSection('thisWeek', thisWeekMenu, thisWeekTitle)
                 }
-                ${!thisWeekPassed ? `<button id="save-menu-thisWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${thisWeek}"><i class="fa-solidfa-save"></i> ${__('save')} ${__('menuThisWeek')}</button>` : ''}
+                ${!thisWeekPassed ? `<button id="save-menu-thisWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${thisWeek}"><i class="fas fa-save"></i> ${__('save')} ${__('menuThisWeek')}</button>` : ''}
                 
                 ${renderEditableMenuSection('nextWeek', nextWeekMenu, nextWeekTitle)}
-                <button id="save-menu-nextWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${nextWeek}"><i class="fa-solidfa-save"></i> ${__('save')} ${__('menuNextWeek')}</button>
+                <button id="save-menu-nextWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${nextWeek}"><i class="fas fa-save"></i> ${__('save')} ${__('menuNextWeek')}</button>
             </div>`;
 
             document.querySelectorAll('.menu-dish-textarea').forEach(autoResizeTextarea);
@@ -1372,7 +1372,7 @@
         async function renderAdminPersonnel() {
             const allStaff = await getDocument("staff_list", "staffs", true);
             const sorted = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_')).sort((a, b) => a[1].name.localeCompare(b[1].name)) : [];
-            el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="color:var(--primary);font-size:18px;">${__('personnel')}</h3><div style="display:flex;gap:8px;"><button id="add-personnel-btn" class="icon-btn"><i class="fa-solidfa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fa-solidfa-file-excel"></i></button></div></div><div class="table-wrapper"><table><thead><tr><th>${__('name')}</th><th class="hide-mobile">${__('email')}</th><th class="hide-mobile">${__('department')}</th><th>${__('actions')}</th></tr></thead><tbody>${sorted.length > 0 ? sorted.map(([key, p]) => `<tr><td>${p.name}</td><td class="hide-mobile">${p.email}</td><td class="hide-mobile">${p.depart || '-'}</td><td><div class="action-buttons"><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fa-solidfa-edit"></i></button><button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${p.name}"><i class="fa-solidfa-trash"></i></button></div></td></tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted p-3">${__('noData')}</td></tr>`}</tbody></table></div></div>`;
+            el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="color:var(--primary);font-size:18px;">${__('personnel')}</h3><div style="display:flex;gap:8px;"><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div><div class="table-wrapper"><table><thead><tr><th>${__('name')}</th><th class="hide-mobile">${__('email')}</th><th class="hide-mobile">${__('department')}</th><th>${__('actions')}</th></tr></thead><tbody>${sorted.length > 0 ? sorted.map(([key, p]) => `<tr><td>${p.name}</td><td class="hide-mobile">${p.email}</td><td class="hide-mobile">${p.depart || '-'}</td><td><div class="action-buttons"><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button><button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${p.name}"><i class="fas fa-trash"></i></button></div></td></tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted p-3">${__('noData')}</td></tr>`}</tbody></table></div></div>`;
         }
 
         async function syncUserProfile() {
@@ -1389,9 +1389,9 @@
         function updateUIForUser(user) {
             const tabBar = el('tab-bar');
             if (user && state.staffProfile) {
-                let html = `<button class="nav-item active" data-tab="today"><i class="fa-solidfa-home"></i></button><button class="nav-item" data-tab="menu"><i class="fa-solidfa-list"></i></button>`;
-                if (state.isAdmin) html += `<button class="nav-item" data-tab="admin"><i class="fa-solidfa-crown"></i></button>`;
-                html += `<button class="nav-item" data-tab="profile"><i class="fa-solidfa-user-circle"></i></button>`;
+                let html = `<button class="nav-item active" data-tab="today"><i class="fas fa-home"></i></button><button class="nav-item" data-tab="menu"><i class="fas fa-list"></i></button>`;
+                if (state.isAdmin) html += `<button class="nav-item" data-tab="admin"><i class="fas fa-crown"></i></button>`;
+                html += `<button class="nav-item" data-tab="profile"><i class="fas fa-user-circle"></i></button>`;
                 tabBar.innerHTML = html;
                 tabBar.classList.remove('hidden');
             } else {
@@ -1510,7 +1510,7 @@
                     newRow.style.alignItems = 'center';
                     newRow.innerHTML = `
                         <textarea class="form-textarea menu-dish-textarea" data-week="${week}" data-day="${day}" data-index="${newIndex}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden"></textarea>
-                        <button class="icon-btn remove-menu-dish-btn hidden" data-week="${week}" data-day="${day}" data-index="${newIndex}"><i class="fa-solidfa-times"></i></button>
+                        <button class="icon-btn remove-menu-dish-btn hidden" data-week="${week}" data-day="${day}" data-index="${newIndex}"><i class="fas fa-times"></i></button>
                     `;
                     container.appendChild(newRow);
                 }
