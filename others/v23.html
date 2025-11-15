@@ -1241,87 +1241,59 @@
             const today = new Date();
             const thisWeek = getWeekString(today), nextWeek = getWeekString(new Date(today.getTime() + 7 * 86400000));
             
-            // Load menus
-            const thisWeekMenu = await getDocument(thisWeek, "menu", true) || {};
-            const nextWeekMenu = await getDocument(nextWeek, "menu", true) || {};
+            const [thisWeekMenu, nextWeekMenu] = await Promise.all([
+                getDocument(thisWeek, "menu", true) || {},
+                getDocument(nextWeek, "menu", true) || {}
+            ]);
             
-            // Check if week has passed (tuần này đã qua thứ 6 chưa)
-            const dayOfWeek = today.getDay();
-            const thisWeekPassed = dayOfWeek === 0 || dayOfWeek === 6; // T7 hoặc CN = tuần này đã qua
+            const thisWeekPassed = today.getDay() === 0 || today.getDay() === 6;
             
             const renderMenuSection = (weekKey, weekStr, menuData, title, isEditable) => {
                 let html = `<h3 style="color:var(--primary);margin:1.5rem 0 1rem;font-size:18px;">${title}</h3>`;
                 
                 for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
                     const dishes = menuData[dayKey] || [];
-                    
                     html += `<div class="form-group">
-                        <label class="form-label">${dayName}</label>
-                        <div id="menu-dishes-${weekKey}-${dayKey}" style="display:flex;flex-direction:column;gap:0.5rem;">`;
-                    
-                    if (dishes.length === 0 && isEditable) {
-                        // Nếu chưa có món và có thể edit, tạo 1 textarea trống
-                        html += `
-                            <div style="display:flex;gap:0.5rem;align-items:center;">
-                                <textarea 
-                                    class="form-textarea menu-dish-textarea" 
-                                    data-week="${weekKey}" 
-                                    data-day="${dayKey}" 
-                                    data-index="0"
-                                    placeholder="${__('dish')} 1"
-                                    style="flex:1;min-height:40px;resize:none;"></textarea>
-                            </div>`;
-                    } else {
-                        // Hiển thị các món hiện có
-                        dishes.forEach((dish, idx) => {
-                            if (isEditable) {
-                                html += `
-                                    <div style="display:flex;gap:0.5rem;align-items:center;">
-                                        <textarea 
-                                            class="form-textarea menu-dish-textarea" 
-                                            data-week="${weekKey}" 
-                                            data-day="${dayKey}" 
-                                            data-index="${idx}"
-                                            placeholder="${__('dish')} ${idx + 1}"
-                                            style="flex:1;min-height:40px;resize:none;">${dish}</textarea>
-                                        ${dishes.length > 1 ? `<button class="icon-btn remove-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}">
-                                            <i class="fas fa-times"></i>
-                                        </button>` : ''}
-                                    </div>`;
-                            } else {
-                                // Read-only: chỉ hiển thị text
-                                html += `<div style="padding:0.5rem;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);">• ${dish}</div>`;
-                            }
-                        });
-                    }
-                    
-                    html += `</div>`;
-                    
-                    // Nút thêm món (chỉ khi editable)
+                                <label class="form-label">${dayName}</label>
+                                <div id="menu-dishes-${weekKey}-${dayKey}" style="display:flex;flex-direction:column;gap:0.5rem;">`;
+
                     if (isEditable) {
-                        html += `<button class="btn btn-secondary add-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" style="margin-top:0.5rem;width:100%;">
-                            <i class="fas fa-plus"></i> ${__('addDish')}
-                        </button>`;
+                        // Render existing dishes
+                        dishes.forEach((dish, idx) => {
+                            html += `<div style="display:flex;gap:0.5rem;align-items:center;">
+                                        <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}" placeholder="${__('dish')} ${idx + 1}" style="flex:1;min-height:40px;resize:none;">${dish}</textarea>
+                                        <button class="icon-btn remove-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}"><i class="fas fa-times"></i></button>
+                                     </div>`;
+                        });
+                        // Always render one extra empty textarea for adding new dishes
+                        html += `<div style="display:flex;gap:0.5rem;align-items:center;">
+                                    <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;resize:none;"></textarea>
+                                    <button class="icon-btn remove-menu-dish-btn hidden" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}"><i class="fas fa-times"></i></button>
+                                 </div>`;
+                    } else {
+                        // Read-only view
+                        if (dishes.length > 0) {
+                            dishes.forEach(dish => {
+                                html += `<div style="padding:0.5rem;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);">${dish}</div>`;
+                            });
+                        } else {
+                             html += `<div style="padding:0.5rem;color:var(--text-muted);">${__('noDishYet')}</div>`;
+                        }
                     }
-                    
-                    html += `</div>`;
+                    html += `</div></div>`;
                 }
-                
                 return html;
             };
             
             el('admin-content').innerHTML = `<div class="mt-3">
                 ${renderMenuSection('thisWeek', thisWeek, thisWeekMenu, `${__('menuThisWeek')} (${thisWeek.split('_')[1]})`, !thisWeekPassed)}
-                ${!thisWeekPassed ? `<button id="save-menu-thisWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${thisWeek}">
-                    <i class="fas fa-save"></i> ${__('save')} ${__('menuThisWeek')}
-                </button>` : ''}
+                ${!thisWeekPassed ? `<button id="save-menu-thisWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${thisWeek}"><i class="fas fa-save"></i> ${__('save')} ${__('menuThisWeek')}</button>` : ''}
                 
                 ${renderMenuSection('nextWeek', nextWeek, nextWeekMenu, `${__('menuNextWeek')} (${nextWeek.split('_')[1]})`, true)}
-                <button id="save-menu-nextWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${nextWeek}">
-                    <i class="fas fa-save"></i> ${__('save')} ${__('menuNextWeek')}
-                </button>
+                <button id="save-menu-nextWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${nextWeek}"><i class="fas fa-save"></i> ${__('save')} ${__('menuNextWeek')}</button>
             </div>`;
         }
+
         async function renderAdminPersonnel() {
             const allStaff = await getDocument("staff_list", "staffs", true);
             const sorted = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_')).sort((a, b) => a[1].name.localeCompare(b[1].name)) : [];
@@ -1396,6 +1368,35 @@
             if (id === 'stats-date-picker') { state.statsViewDate = new Date(value); await renderStatsContent(); }
             else if (name === 'stats-mode') { state.statsViewMode = value; await renderStatsContent(); }
             else if (name === 'guest-week') { await renderGuestOrderDays(value, true); }
+        });
+
+        document.body.addEventListener('input', (e) => {
+            if (e.target.classList.contains('menu-dish-textarea')) {
+                const { week, day } = e.target.dataset;
+                const container = el(`menu-dishes-${week}-${day}`);
+                const allTextareas = container.querySelectorAll('.menu-dish-textarea');
+                const lastTextarea = allTextareas[allTextareas.length - 1];
+
+                // Show remove button on the current line if it has content
+                const removeBtn = e.target.nextElementSibling;
+                if (removeBtn && removeBtn.classList.contains('remove-menu-dish-btn')) {
+                    removeBtn.classList.toggle('hidden', e.target.value.trim() === '');
+                }
+
+                // If typing in the last textarea and it has content, add a new one
+                if (e.target === lastTextarea && e.target.value.trim() !== '') {
+                    const newIndex = allTextareas.length;
+                    const newRow = document.createElement('div');
+                    newRow.style.display = 'flex';
+                    newRow.style.gap = '0.5rem';
+                    newRow.style.alignItems = 'center';
+                    newRow.innerHTML = `
+                        <textarea class="form-textarea menu-dish-textarea" data-week="${week}" data-day="${day}" data-index="${newIndex}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;resize:none;"></textarea>
+                        <button class="icon-btn remove-menu-dish-btn hidden" data-week="${week}" data-day="${day}" data-index="${newIndex}"><i class="fas fa-times"></i></button>
+                    `;
+                    container.appendChild(newRow);
+                }
+            }
         });
 
         document.body.addEventListener('click', async (e) => {
@@ -1474,27 +1475,6 @@
                 state.statsViewDate = new Date();
                 el('stats-date-picker').value = state.statsViewDate.toISOString().split('T')[0];
                 await renderStatsContent();
-            } else if (classList.contains('add-menu-dish-btn')) {
-                const { week, day } = dataset;
-                const container = el(`menu-dishes-${week}-${day}`);
-                const textareas = container.querySelectorAll('.menu-dish-textarea');
-                const newIndex = textareas.length;
-                
-                const newTextareaHTML = `
-                    <div style="display:flex;gap:0.5rem;align-items:center;">
-                        <textarea 
-                            class="form-textarea menu-dish-textarea" 
-                            data-week="${week}" 
-                            data-day="${day}" 
-                            data-index="${newIndex}"
-                            placeholder="${__('dish')} ${newIndex + 1}"
-                            style="flex:1;min-height:40px;resize:none;"></textarea>
-                        <button class="icon-btn remove-menu-dish-btn" data-week="${week}" data-day="${day}" data-index="${newIndex}">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', newTextareaHTML);
             } else if (classList.contains('remove-menu-dish-btn')) {
                 const parent = target.closest('div[style*="display:flex"]');
                 if (parent) parent.remove();
@@ -1511,7 +1491,7 @@
                             const textareas = container.querySelectorAll('.menu-dish-textarea');
                             const dishes = Array.from(textareas)
                                 .map(textarea => textarea.value.trim())
-                                .filter(Boolean);
+                                .filter(Boolean); // Lọc ra các dòng trống
                             menuToSave[day] = dishes;
                         }
                     }
