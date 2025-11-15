@@ -318,13 +318,13 @@
         
         .profile-language-toggle {
             display: flex;
-            gap: 0.5rem;
+            gap: 10px;
             justify-content: center;
             margin-bottom: 1.5rem;
         }
         
         .profile-language-toggle button {
-            padding: 0.5rem 1.5rem;
+            padding: 0.5rem;
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
             background: var(--card-bg);
@@ -332,7 +332,8 @@
             cursor: pointer;
             transition: all 0.2s ease;
             font-weight: 500;
-            font-size: 13px;
+            font-size: 14px;
+            width: 100px
         }
         
         .profile-language-toggle button.active {
@@ -352,7 +353,8 @@
         .profile-menu-item {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            align-self: center;
+            gap: 1rem 4rem;
             padding: 1rem;
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -461,7 +463,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             color: var(--text);
-            font-size: 13px;
+            font-size: 12px;
             transition: all 0.2s ease;
             font-family: 'Montserrat', 'Arial', sans-serif;
         }
@@ -475,6 +477,7 @@
         .form-textarea {
             resize: vertical;
             min-height: 80px;
+            height: auto;
         }
         
         .search-bar {
@@ -738,7 +741,7 @@
         
         .shift-toggle label {
             flex: 1;
-            padding: 8px 14px;
+            padding: 4px 8px;
             text-align: center;
             border-radius: 6px;
             cursor: pointer;
@@ -794,7 +797,7 @@
                 <input type="hidden" id="personnel-original-email-key">
                 <div class="form-group"><label class="form-label">Tên</label><input type="text" id="personnel-name-input" class="form-input"></div>
                 <div class="form-group"><label class="form-label">Email</label><input type="email" id="personnel-email-input" class="form-input"></div>
-                <div class="form-group"><label class="form-label">Phòng ban</label><select id="personnel-depart-select" class="form-select"></select></div>
+                <div class="form-group"><label class="form-label">Bộ phận</label><select id="personnel-depart-select" class="form-select"></select></div>
                 <button id="save-personnel-btn" class="btn btn-primary btn-block">Lưu</button>
             </div>
         </div>
@@ -802,8 +805,8 @@
         <div id="guest-order-modal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header"><h2 class="modal-title" id="guest-order-modal-title">Đặt món cho khách</h2><button class="close-btn" data-modal="guest-order-modal"><i class="fas fa-times"></i></button></div>
-                <div class="form-group"><label class="form-label" id="guest-name-label">Tên khách</label><input type="text" id="guest-name-input" class="form-input" placeholder="Nhập tên"></div>
-                <div class="form-group"><label class="form-label" id="guest-depart-label">Phòng ban/Công ty</label><input type="text" id="guest-depart-input" class="form-input" placeholder="Nhập tên công ty"></div>
+                <div class="form-group"><label class="form-label" id="guest-name-label">Tên khách</label><input type="text" id="guest-name-input" class="form-input" placeholder="Nhập tên khách"></div>
+                <div class="form-group"><label class="form-label" id="guest-depart-label">Bộ phận/Công ty</label><input type="text" id="guest-depart-input" class="form-input" placeholder="Nhập tên công ty"></div>
                 <div class="form-group"><label class="form-label" id="guest-week-label">Tuần</label><div class="shift-toggle"><input type="radio" id="guest-week-this" name="guest-week" value="this" checked><label for="guest-week-this" id="guest-week-this-label">Tuần này</label><input type="radio" id="guest-week-next" name="guest-week" value="next"><label for="guest-week-next" id="guest-week-next-label">Tuần sau</label></div></div>
                 <div id="guest-order-days-container"></div>
                 <button id="save-guest-order-btn" class="btn btn-primary btn-block mt-3 hidden">Đặt cho khách</button>
@@ -879,14 +882,14 @@
                 orderSuccess: 'Đặt món thành công!', orderFailed: 'Đặt món thất bại',
                 notOrderedYet: 'Chưa đặt món', everyoneOrdered: 'Mọi người đã đặt món.',
                 orderForGuest: 'Đặt cho khách', addGuest: 'Thêm', guestName: 'Tên khách',
-                guestNamePlaceholder: 'Nhập tên', department: 'Phòng ban',
+                guestNamePlaceholder: 'Nhập tên', department: 'Bộ phận',
                 guestDepartPlaceholder: 'Nhập tên công ty', shift: 'Ca ăn', thisWeek: 'Tuần này',
                 nextWeek: 'Tuần sau', noMenu: 'Chưa có thực đơn.', noDishes: 'Không có món nào.',
                 reopenOrderFor: 'Mở lại đặt món cho', reopenConfirmText: 'Thao tác này sẽ xóa mọi dữ liệu đặt món của người này trong tuần, cho phép họ đặt lại. Bạn có chắc chắn?',
                 confirm: 'Xác nhận', reopenSuccess: 'Đã mở lại đặt món',
                 stats: 'Thống kê', day: 'Ngày', week: 'Tuần', month: 'Tháng',
                 ordered: 'Đã đặt', eaten: 'Đã ăn', notEaten: 'Chưa ăn', dish: 'Món ăn',
-                total: 'Tổng', downloadXLSX: 'Tải XLSX', menu: 'Thực đơn',
+                total: 'Tổng', downloadXLSX: 'Tải file Excel', menu: 'Thực đơn',
                 menuThisWeek: 'Tuần này', menuNextWeek: 'Tuần sau', noDishYet: 'Chưa có món',
                 saveMenu: 'Lưu menu cho tuần sau', personnel: 'Nhân sự', name: 'Tên',
                 email: 'Email', actions: 'Thao tác', save: 'Lưu',
@@ -894,7 +897,7 @@
                 dishes: 'món', exportPersonnel: 'Export nhân sự', mon: 'Thứ 2',
                 tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6',
                 menuSaved: 'Đã lưu thực đơn', unknown: 'Chưa rõ', today: 'Hôm nay',
-                oneDishPerLine: 'Mỗi dòng một món ăn'
+                oneDishPerLine: 'Tên món tiếng Việt | name of food'
             },
             en: {
                 welcome: 'Welcome!', pleaseLogin: 'Please login', login: 'Login',
@@ -917,7 +920,7 @@
                 confirm: 'Confirm', reopenSuccess: 'Order reopened',
                 stats: 'Statistics', day: 'Day', week: 'Week', month: 'Month',
                 ordered: 'Ordered', eaten: 'Eaten', notEaten: 'Not eaten', dish: 'Dish',
-                total: 'Total', downloadXLSX: 'Download XLSX', menu: 'Menu',
+                total: 'Total', downloadXLSX: 'Download Excel file', menu: 'Menu',
                 menuThisWeek: 'This week', menuNextWeek: 'Next week', noDishYet: 'No dishes yet',
                 saveMenu: 'Save menu for next week', personnel: 'Personnel', name: 'Name',
                 email: 'Email', actions: 'Actions', save: 'Save',
@@ -925,7 +928,7 @@
                 dishes: 'dishes', exportPersonnel: 'Export personnel', mon: 'Monday',
                 tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday',
                 menuSaved: 'Menu saved', unknown: 'Unknown', today: 'Today',
-                oneDishPerLine: 'One dish per line'
+                oneDishPerLine: 'Name of food in Vietnamese | Name of food'
             }
         };
         
@@ -1269,13 +1272,13 @@
 
                     if (isEditable) {
                         dishes.forEach((dish, idx) => {
-                            html += `<div style="display:flex;gap:0.5rem;align-items:center;">
-                                        <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}" placeholder="${__('dish')} ${idx + 1}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden">${dish}</textarea>
+                            html += `<div style="display:flex;gap:0.5rem;align-items:flex-start;">
+                                        <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}" placeholder="${__('dish')} ${idx + 1}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden;height:40px;">${dish}</textarea>
                                         <button class="icon-btn remove-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}"><i class="fas fa-times"></i></button>
                                      </div>`;
                         });
                         html += `<div style="display:flex;gap:0.5rem;align-items:center;">
-                                    <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden"></textarea>
+                                    <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden;height:40px;"></textarea>
                                     <button class="icon-btn remove-menu-dish-btn hidden" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}"><i class="fas fa-times"></i></button>
                                  </div>`;
                     } else {
@@ -1306,7 +1309,7 @@
         async function renderAdminPersonnel() {
             const allStaff = await getDocument("staff_list", "staffs", true);
             const sorted = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_')).sort((a, b) => a[1].name.localeCompare(b[1].name)) : [];
-            el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="color:var(--primary);font-size:18px;">${__('personnel')}</h3><div style="display:flex;gap:8px;"><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div><div class="table-wrapper"><table><thead><tr><th>${__('name')}</th><th class="hide-mobile">${__('email')}</th><th class="hide-mobile">${__('department')}</th><th style="width:120px;">${__('actions')}</th></tr></thead><tbody>${sorted.length > 0 ? sorted.map(([key, p]) => `<tr><td>${p.name}</td><td class="hide-mobile">${p.email}</td><td class="hide-mobile">${p.depart || '-'}</td><td><div class="action-buttons"><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button><button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${p.name}"><i class="fas fa-trash"></i></button></div></td></tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted p-3">${__('noData')}</td></tr>`}</tbody></table></div></div>`;
+            el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="color:var(--primary);font-size:18px;">${__('personnel')}</h3><div style="display:flex;gap:8px;"><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div><div class="table-wrapper"><table><thead><tr><th>${__('name')}</th><th class="hide-mobile">${__('email')}</th><th class="hide-mobile">${__('department')}</th><th style="width:auto;">${__('actions')}</th></tr></thead><tbody>${sorted.length > 0 ? sorted.map(([key, p]) => `<tr><td>${p.name}</td><td class="hide-mobile">${p.email}</td><td class="hide-mobile">${p.depart || '-'}</td><td><div class="action-buttons"><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button><button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${p.name}"><i class="fas fa-trash"></i></button></div></td></tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted p-3">${__('noData')}</td></tr>`}</tbody></table></div></div>`;
         }
 
         // --- Core App Logic ---
