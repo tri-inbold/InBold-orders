@@ -97,11 +97,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
         
         .card-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--text);
         }
@@ -266,10 +266,10 @@
         .staff-item {
             display: flex;
             align-items: center;
-            padding: 0.75rem;
-            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            background: rgb(25, 34, 49);
             border-radius: var(--radius-sm);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             border: 1px solid transparent;
             transition: all 0.2s ease;
         }
@@ -284,7 +284,7 @@
         
         .staff-name {
             font-weight: 500;
-            font-size: 14px;
+            font-size: 10px;
             margin-bottom: 2px;
         }
         
@@ -294,7 +294,7 @@
             color: var(--text-muted);
         }
         .summary-list-item .staff-dish {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 500;
             color: var(--text);
         }
@@ -882,7 +882,7 @@
         const provider = new GoogleAuthProvider();
         
         const ADMIN_EMAILS = ['tri.vu.trong@inbold.com', 'truc.tran@inbold.com'];
-        const SUPPORT_EMAIL = 'truc.tran@inbold.com';
+        const SUPPORT_EMAIL = 'truc.tran@inbold.com'; // hỗ trợ viên
 
         const state = {
             currentUser: null, staffProfile: null, isAdmin: false,
@@ -904,12 +904,12 @@
                 rest: 'Nghỉ', todayList: 'Danh sách hôm nay', searchStaff: 'Tìm nhân viên...',
                 noData: 'Chưa có dữ liệu.', notFound: 'Không tìm thấy.', morning: 'Ca sáng',
                 evening: 'Ca chiều', profile: 'Hồ sơ', notUpdated: 'Chưa cập nhật',
-                vietnamese: 'Tiếng Việt', english: 'English', support: 'Hỗ trợ', logout: 'Đăng xuất',
+                vietnamese: 'Tiếng Việt', english: 'English', support: 'Hỗ trợ đặt', logout: 'Đăng xuất',
                 logoutConfirm: 'Bạn có muốn đăng xuất?', loggedOut: 'Đã đăng xuất',
                 changeLangSuccess: 'Đổi ngôn ngữ thành công', error: 'Lỗi',
                 orderSuccess: 'Đặt món thành công!', orderFailed: 'Đặt món thất bại',
                 notOrderedYet: 'Chưa đặt món', everyoneOrdered: 'Mọi người đã đặt món.',
-                orderForGuest: 'Đặt cho khách', addGuest: 'Thêm', guestName: 'Tên khách',
+                orderForGuest: 'Đặt cho khách', addGuest: 'Đặt món cho khách', guestName: 'Tên khách',
                 guestNamePlaceholder: 'Nhập tên', department: 'Phòng ban',
                 guestDepartPlaceholder: 'Nhập tên công ty', shift: 'Ca ăn', thisWeek: 'Tuần này',
                 nextWeek: 'Tuần sau', noMenu: 'Chưa có thực đơn.', noDishes: 'Không có món nào.',
@@ -920,7 +920,7 @@
                 total: 'Tổng', downloadXLSX: 'Tải XLSX', menu: 'Thực đơn',
                 menuThisWeek: 'Tuần này', menuNextWeek: 'Tuần sau', noDishYet: 'Chưa có món',
                 saveMenu: 'Lưu menu cho tuần sau', personnel: 'Nhân sự', name: 'Tên',
-                email: 'Email', actions: 'Thao tác', save: 'Lưu',
+                email: 'Email', actions: 'Reset', save: 'Lưu',
                 addDish: 'Thêm món', removedDish: 'Đã xóa món ăn', added: 'Đã thêm',
                 dishes: 'món', exportPersonnel: 'Export nhân sự', mon: 'Thứ 2',
                 tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6',
@@ -935,12 +935,12 @@
                 rest: 'Off', todayList: 'Today\'s List', searchStaff: 'Search staff...',
                 noData: 'No data yet.', notFound: 'Not found.', morning: 'Morning shift',
                 evening: 'Evening shift', profile: 'Profile', notUpdated: 'Not updated',
-                vietnamese: 'Tiếng Việt', english: 'English', support: 'Support', logout: 'Logout',
+                vietnamese: 'Tiếng Việt', english: 'English', support: 'Order support', logout: 'Logout',
                 logoutConfirm: 'Do you want to logout?', loggedOut: 'Logged out',
                 changeLangSuccess: 'Language changed successfully', error: 'Error',
                 orderSuccess: 'Order successful!', orderFailed: 'Order failed',
                 notOrderedYet: 'Not ordered yet', everyoneOrdered: 'Everyone has ordered.',
-                orderForGuest: 'Order for guest', addGuest: 'Add', guestName: 'Guest name',
+                orderForGuest: 'Order for guest', addGuest: 'Order for guest', guestName: 'Guest name',
                 guestNamePlaceholder: 'Enter name', department: 'Department',
                 guestDepartPlaceholder: 'Enter company name', shift: 'Shift', thisWeek: 'This week',
                 nextWeek: 'Next week', noMenu: 'No menu available.', noDishes: 'No dishes.',
@@ -951,7 +951,7 @@
                 total: 'Total', downloadXLSX: 'Download XLSX', menu: 'Menu',
                 menuThisWeek: 'This week', menuNextWeek: 'Next week', noDishYet: 'No dishes yet',
                 saveMenu: 'Save menu for next week', personnel: 'Personnel', name: 'Name',
-                email: 'Email', actions: 'Actions', save: 'Save',
+                email: 'Email', actions: 'Reset', save: 'Save',
                 addDish: 'Add dish', removedDish: 'Dish removed', added: 'Added',
                 dishes: 'dishes', exportPersonnel: 'Export personnel', mon: 'Monday',
                 tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday',
@@ -967,7 +967,6 @@
 
         const el = (id) => document.getElementById(id);
 
-        // Utility Functions
         const getWeekString = (date) => {
             const d = new Date(date);
             d.setHours(0, 0, 0, 0);
@@ -1008,7 +1007,6 @@
             return data;
         }
 
-        // --- Render Functions ---
         async function render() {
             if (!state.authReady || !state.staffProfile) { hideLoader(); return; }
             if (!state.cachedData.has('render_' + state.currentTab)) showLoader();
@@ -1159,8 +1157,8 @@
 
         async function renderAdmin() {
             el('main-content').innerHTML = `<div class="card"><div class="tabs">
-                <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support"><i class="fas fa-headset"></i>${__('support')}</button>
                 <button class="tab-btn ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats"><i class="fas fa-chart-pie"></i>${__('stats')}</button>
+                <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support"><i class="fas fa-headset"></i>${__('support')}</button>
                 <button class="tab-btn ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu"><i class="fas fa-utensils"></i>${__('menu')}</button>
                 <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel"><i class="fas fa-users"></i>${__('personnel')}</button>
             </div><div id="admin-content"></div></div>`;
@@ -1168,49 +1166,11 @@
         }
         async function renderAdminSubTab() {
             switch (state.adminSubTab) {
-                case 'support': await renderAdminSupport(); break;
                 case 'stats': await renderAdminStats(); break;
+                case 'support': await renderAdminSupport(); break;
                 case 'menu': await renderAdminMenu(); break;
                 case 'personnel': await renderAdminPersonnel(); break;
             }
-        }
-        async function renderAdminSupport() {
-            const [allStaff, monOrders] = await Promise.all([getDocument("staff_list", "staffs", true), getDocument(getWeekString(new Date()), "mon", true)]);
-            const notOrderedList = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_') && (!monOrders || !monOrders[key])).map(([key, profile]) => ({ key, profile })).sort((a, b) => a.profile.name.localeCompare(b.profile.name)) : [];
-            
-            el('admin-content').innerHTML = `<div class="mt-3">
-                <h3 style="color:var(--primary);margin-bottom:1rem;font-size:18px;">${__('notOrderedYet')}</h3>
-                ${notOrderedList.length > 0 ? `
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>${__('name')}</th>
-                                    <th class="hide-mobile">${__('email')}</th>
-                                    <th class="hide-mobile">${__('department')}</th>
-                                    <th style="width:80px;">${__('actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${notOrderedList.map(item => `
-                                    <tr>
-                                        <td>${item.profile.name}</td>
-                                        <td class="hide-mobile">${item.profile.email}</td>
-                                        <td class="hide-mobile">${item.profile.depart || '-'}</td>
-                                        <td>
-                                            <button class="icon-btn reopen-order-btn" data-key="${item.key}" data-name="${item.profile.name}">
-                                                <i class="fas fa-redo"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                ` : `<p class="text-center text-muted p-3">${__('everyoneOrdered')}</p>`}
-                <h3 style="color:var(--primary);margin:2rem 0 1rem;font-size:18px;">${__('orderForGuest')}</h3>
-                <button id="add-guest-order-btn" class="btn btn-primary btn-block"><i class="fas fa-plus"></i> ${__('addGuest')}</button>
-            </div>`;
         }
         async function renderAdminStats() {
             const dateStr = state.statsViewDate.toISOString().split('T')[0];
@@ -1242,6 +1202,44 @@
                 </button>
             </div>`;
             await renderStatsContent();
+        }
+        async function renderAdminSupport() {
+            const [allStaff, monOrders] = await Promise.all([getDocument("staff_list", "staffs", true), getDocument(getWeekString(new Date()), "mon", true)]);
+            const notOrderedList = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_') && (!monOrders || !monOrders[key])).map(([key, profile]) => ({ key, profile })).sort((a, b) => a.profile.name.localeCompare(b.profile.name)) : [];
+            
+            el('admin-content').innerHTML = `<div class="mt-3">
+                <h3 style="color:var(--primary);margin-bottom:1rem;font-size:18px;">${__('notOrderedYet')}</h3>
+                ${notOrderedList.length > 0 ? `
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>${__('name')}</th>
+                                    <th class="hide-mobile">${__('email')}</th>
+                                    <th class="hide-mobile">${__('department')}</th>
+                                    <th style="width:60px;">${__('actions')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${notOrderedList.map(item => `
+                                    <tr>
+                                        <td>${item.profile.name}</td>
+                                        <td class="hide-mobile">${item.profile.email}</td>
+                                        <td class="hide-mobile">${item.profile.depart || '-'}</td>
+                                        <td>
+                                            <button class="icon-btn reopen-order-btn" data-key="${item.key}" data-name="${item.profile.name}">
+                                                <i class="fas fa-redo"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : `<p class="text-center text-muted p-3">${__('everyoneOrdered')}</p>`}
+                <h3 style="color:var(--primary);margin:2rem 0 1rem;font-size:18px;">${__('orderForGuest')}</h3>
+                <button id="add-guest-order-btn" class="btn btn-primary btn-block"><i class="fas fa-plus"></i> ${__('addGuest')}</button>
+            </div>`;
         }
         async function renderStatsContent() {
             const statsContent = el('stats-content');
@@ -1362,7 +1360,6 @@
             el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="color:var(--primary);font-size:18px;">${__('personnel')}</h3><div style="display:flex;gap:8px;"><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div><div class="table-wrapper"><table><thead><tr><th>${__('name')}</th><th class="hide-mobile">${__('email')}</th><th class="hide-mobile">${__('department')}</th><th style="width:120px;">${__('actions')}</th></tr></thead><tbody>${sorted.length > 0 ? sorted.map(([key, p]) => `<tr><td>${p.name}</td><td class="hide-mobile">${p.email}</td><td class="hide-mobile">${p.depart || '-'}</td><td><div class="action-buttons"><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button><button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${p.name}"><i class="fas fa-trash"></i></button></div></td></tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted p-3">${__('noData')}</td></tr>`}</tbody></table></div></div>`;
         }
 
-        // --- Core App Logic ---
         async function syncUserProfile() {
             const userEmailKey = emailToKey(state.currentUser.email);
             const staffData = await getDocument("staff_list", "staffs", true);
@@ -1461,7 +1458,6 @@
             element.style.height = `${element.scrollHeight}px`;
         }
 
-        // --- Event Listeners ---
         document.body.addEventListener('change', async (e) => {
             const { id, name, value, type, checked } = e.target;
             if (id === 'stats-date-picker') { 
@@ -1512,7 +1508,6 @@
 
             const { id, classList, dataset } = target;
 
-            // Navigation
             if (classList.contains('nav-item')) {
                 if (dataset.tab === state.currentTab) return;
                 document.querySelector('.nav-item.active').classList.remove('active');
@@ -1527,7 +1522,6 @@
                 return;
             }
 
-            // Authentication
             if (id === 'login-btn') {
                 showLoader();
                 try { await signInWithPopup(auth, provider); } catch (err) { showToast(__('error'), 'error'); } finally { hideLoader(); }
@@ -1535,7 +1529,6 @@
                 if (confirm(__('logoutConfirm'))) { await signOut(auth); showToast(__('loggedOut')); }
             }
             
-            // User actions
             else if (classList.contains('lang-toggle-btn')) {
                 if (dataset.lang === state.staffProfile.lan) return;
                 showLoader();
@@ -1580,7 +1573,6 @@
                 } catch { showToast(__('orderFailed'), 'error'); } finally { hideLoader(); }
             }
 
-            // Admin actions
             else if (id === 'menu-filter-btn') {
                 state.menuFilterMode = state.menuFilterMode === 'auto' ? 'all' : 'auto';
                 const dayData = await getDocument(getWeekString(new Date()), getDayKey(), true);
@@ -1748,13 +1740,11 @@
                 } catch { showToast(__('error'), 'error'); } finally { hideLoader(); }
             }
             
-            // Modals
             else if(dataset.modal){
                  el(dataset.modal).classList.toggle('hidden');
             }
         });
 
-        // --- Main App Initialization ---
         async function main() {
             showLoader();
             try {
@@ -1774,7 +1764,6 @@
                         }
                     } else if (!user) {
                         state.currentUser = null; state.isAdmin = false; state.authReady = true;
-                        // Reset all states on logout
                         Object.assign(state, {
                             orderSelection: {}, currentOrderDay: 'mon', userShiftSelection: 'M',
                             guestOrderSelection: {}, guestCurrentOrderDay: 'mon', guestShiftSelection: 'M'
