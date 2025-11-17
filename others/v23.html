@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inbold Menu</title>
     <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3e%3cpath fill='%23667eea' d='M63.9 14.4C63.1 6.2 56.2 0 48 0s-15.1 6.2-16 14.3L17.9 149.7c-1.3 6-1.9 12.1-1.9 18.2 0 45.9 35.1 83.6 80 87.7L96 480c0 17.7 14.3 32 32 32s32-14.3 32-32l0-224.4c44.9-4.1 80-41.8 80-87.7 0-6.1-.6-12.2-1.9-18.2L223.9 14.3C223.1 6.2 216.2 0 208 0s-15.1 6.2-15.9 14.4L178.5 149.9c-.6 5.7-5.4 10.1-11.1 10.1-5.8 0-10.6-4.4-11.2-10.2L143.9 14.6C143.2 6.3 136.3 0 128 0s-15.2 6.3-15.9 14.6L99.8 149.8c-.5 5.8-5.4 10.2-11.2 10.2-5.8 0-10.6-4.4-11.1-10.1L63.9 14.4zM448 0C432 0 320 32 320 176l0 112c0 35.3 28.7 64 64 64l32 0 0 128c0 17.7 14.3 32 32 32s32-14.3 32-32l0-448c0-17.7-14.3-32-32-32z'/%3e%3c/svg%3e">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"> // https://fontawesome.com/search?ic=free-collection
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
         
-        :root {
+        :root { 
             --primary: #667eea;
             --primary-dark: #5a67d8;
             --primary-light: #7c8aed;
@@ -33,6 +33,8 @@
             --radius-md: 12px;
             --radius-lg: 16px;
         }
+
+        // Cân nhắc thêm dark mode
         
         * {
             box-sizing: border-box;
@@ -221,6 +223,51 @@
             background: var(--primary);
             border-color: var(--primary);
             color: white;
+        }
+
+        .action-buttons-hero {
+            display: flex;
+            gap: 12px;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        
+        .btn-skip, .btn-eaten {
+            flex: 1;
+            max-width: 150px;
+        }
+        
+        .btn-skip {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-skip:hover {
+            background: #dd6b20;
+            transform: translateY(-1px);
+        }
+        
+        .btn-eaten {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-eaten:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+        }
+
+        .staff-item.skipped {
+            opacity: 0.6;
+            background: rgba(237, 137, 54, 0.1);
+            border-color: var(--warning);
+        }
+        
+        .staff-item.skipped .staff-dish::after {
+            content: ' (' attr(data-skip-text) ')';
+            color: var(--warning);
+            font-weight: 600;
+            font-size: 11px;
         }
         
         .order-day-card {
@@ -934,13 +981,14 @@
                 ordered: 'Đã đặt', eaten: 'Đã ăn', notEaten: 'Chưa ăn', dish: 'Món ăn',
                 total: 'Tổng', downloadXLSX: 'Tải XLSX', menu: 'Thực đơn',
                 menuThisWeek: 'Tuần này', menuNextWeek: 'Tuần sau', noDishYet: 'Chưa có món',
-                saveMenu: 'Lưu menu cho tuần sau', personnel: 'Danh sách nhân sự', name: 'Tên',
+                saveMenu: 'Lưu menu cho tuần sau', personnel: 'Nhân sự', name: 'Tên',
                 email: 'Email', actions: ' ', save: 'Lưu',
                 addDish: 'Thêm món', removedDish: 'Đã xóa món ăn', added: 'Đã thêm',
                 dishes: 'món', exportPersonnel: 'Export nhân sự', mon: 'Thứ 2',
                 tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6',
                 menuSaved: 'Đã lưu thực đơn', unknown: 'Chưa rõ', today: 'Hôm nay',
-                oneDishPerLine: 'Mỗi dòng một món ăn'
+                oneDishPerLine: 'Tên món tiếng việt | Tên món tiếng anh', 
+                skip: 'Nhường', skipped: 'Đã nhường', eaten: 'Đã ăn', skipSuccess: 'Đã nhường suất ăn', eatenSuccess: 'Đã xác nhận ăn',
             },
             en: {
                 welcome: 'Welcome!', pleaseLogin: 'Please login', login: 'Login',
@@ -965,13 +1013,14 @@
                 ordered: 'Ordered', eaten: 'Eaten', notEaten: 'Not eaten', dish: 'Dish',
                 total: 'Total', downloadXLSX: 'Download XLSX', menu: 'Menu',
                 menuThisWeek: 'This week', menuNextWeek: 'Next week', noDishYet: 'No dishes yet',
-                saveMenu: 'Save menu for next week', personnel: 'Personnel list', name: 'Name',
+                saveMenu: 'Save menu for next week', personnel: 'Personnel', name: 'Name',
                 email: 'Email', actions: ' ', save: 'Save',
                 addDish: 'Add dish', removedDish: 'Dish removed', added: 'Added',
                 dishes: 'dishes', exportPersonnel: 'Export personnel', mon: 'Monday',
                 tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday',
                 menuSaved: 'Menu saved', unknown: 'Unknown', today: 'Today',
-                oneDishPerLine: 'One dish per line'
+                oneDishPerLine: 'Name of dish in Vietnamese | Name of dish in English', 
+                skip: 'Skip', skipped: 'Skipped', eaten: 'Eaten', skipSuccess: 'Meal skipped', eatenSuccess: 'Confirmed eaten'
             }
         };
         
@@ -1051,7 +1100,25 @@
                 const dayData = await getDocument(getWeekString(new Date()), dayKey, false);
                 const userOrder = dayData?.[userEmailKey];
                 if (userOrder) {
-                    heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${parseDish(userOrder.food)}</div><div class="hero-subtitle">${__('todayMeal')}</div></div></div>`;
+                    const currentStatus = userOrder.status || 'not'; // Không ăn
+                    const isSkipped = currentStatus === 'skip'; // Nhường => tính là đã ăn trong report
+                    const isEaten = currentStatus === 'eaten'; // Đã ăn
+                    
+                    heroHtml = `<div class="card hero-card">
+                        <div class="hero-content">
+                            <div class="hero-greeting">${__('hi')} ${firstName}</div>
+                            <div class="hero-title">${parseDish(userOrder.food)}</div>
+                            <div class="hero-subtitle">${__('todayMeal')}</div>
+                            <div class="action-buttons-hero">
+                                <button class="btn btn-skip ${isSkipped ? 'active' : ''}" data-action="skip" data-day="${dayKey}" ${isSkipped ? 'disabled' : ''}>
+                                    <i class="fas fa-ban"></i> ${__('skip')}
+                                </button>
+                                <button class="btn btn-eaten ${isEaten ? 'active' : ''}" data-action="eaten" data-day="${dayKey}" ${isEaten ? 'disabled' : ''}>
+                                    <i class="fas fa-check"></i> ${__('eaten')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
                 } else {
                     heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${__('notOrdered')}</div><div class="hero-subtitle">${__('notOrderedDesc')}</div></div></div>`;
                 }
@@ -1141,11 +1208,31 @@
             const hour = new Date().getHours();
             const staffOrders = Object.values(dayData).filter(o => o.name && o.name.toLowerCase().includes(searchTerm.toLowerCase()));
             el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fas fa-users"></i>`;
-            const createListHTML = (list) => list.sort((a, b) => (a.status === 'eaten' ? 1 : -1) || a.name.localeCompare(b.name)).map(order => `<li class="staff-item ${order.status === 'eaten' ? 'eaten' : ''}"><div class="staff-details"><div class="staff-name">${order.name}</div><div class="staff-dish">${parseDish(order.food)}</div></div></li>`).join('');
-            const sang = staffOrders.filter(o => o.shift === 'M'), chieu = staffOrders.filter(o => o.shift === 'E');
+            
+            const createListHTML = (list) => list.sort((a, b) => {
+                const statusOrder = { skip: 0, eaten: 1, not: 2 }; // Xếp theo skipped => eaten => not => tên
+                const statusCompare = (statusOrder[a.status] || 2) - (statusOrder[b.status] || 2);
+                return statusCompare !== 0 ? statusCompare : a.name.localeCompare(b.name);
+            }).map(order => {
+                const statusClass = order.status === 'eaten' ? 'eaten' : (order.status === 'skip' ? 'skipped' : '');
+                return `<li class="staff-item ${statusClass}">
+                    <div class="staff-details">
+                        <div class="staff-name">${order.name}</div>
+                        <div class="staff-dish" ${order.status === 'skip' ? `data-skip-text="${__('skipped')}"` : ''}>${parseDish(order.food)}</div>
+                    </div>
+                </li>`;
+            }).join('');
+            
+            const sang = staffOrders.filter(o => o.shift === 'M');
+            const chieu = staffOrders.filter(o => o.shift === 'E');
+            
             let html = '<ul class="staff-list">';
-            if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') if (sang.length) html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;">${__('morning')}</h3>${createListHTML(sang)}`;
-            if ((state.menuFilterMode === 'auto' && hour >= 15) || state.menuFilterMode === 'all') if (chieu.length) html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;">${__('evening')}</h3>${createListHTML(chieu)}`;
+            if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') {
+                if (sang.length) html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;">${__('morning')}</h3>${createListHTML(sang)}`;
+            }
+            if ((state.menuFilterMode === 'auto' && hour >= 15) || state.menuFilterMode === 'all') {
+                if (chieu.length) html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;">${__('evening')}</h3>${createListHTML(chieu)}`;
+            }
             html += '</ul>';
             container.innerHTML = html.length > 20 ? html : `<p class="text-center text-muted p-3">${__('notFound')}</p>`;
         }
@@ -1588,6 +1675,29 @@
                 } catch { showToast(__('orderFailed'), 'error'); } finally { hideLoader(); }
             }
 
+            else if (dataset.action === 'skip' || dataset.action === 'eaten') {
+                showLoader();
+                try {
+                    const weekString = getWeekString(new Date());
+                    const dayKey = dataset.day;
+                    const userEmailKey = emailToKey(state.currentUser.email);
+                    const newStatus = dataset.action === 'skip' ? 'skip' : 'eaten';
+                    
+                    await updateDoc(doc(db, weekString, dayKey), {
+                        [`${userEmailKey}.status`]: newStatus
+                    });
+                    
+                    state.cachedData.delete(`${weekString}/${dayKey}`);
+                    showToast(dataset.action === 'skip' ? __('skipSuccess') : __('eatenSuccess'));
+                    await render();
+                } catch (err) {
+                    console.error(err);
+                    showToast(__('error'), 'error');
+                } finally {
+                    hideLoader();
+                }
+            }
+            
             else if (id === 'menu-filter-btn') {
                 state.menuFilterMode = state.menuFilterMode === 'auto' ? 'all' : 'auto';
                 const dayData = await getDocument(getWeekString(new Date()), getDayKey(), true);
