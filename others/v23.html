@@ -994,7 +994,6 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
         
-        const ADMIN_EMAILS = ['tri.vu.trong@inbold.com', 'truc.tran@inbold.com'];
         const SUPPORT_EMAIL = 'truc.tran@inbold.com'; // hỗ trợ viên, sửa ở đây
 
         const state = {
@@ -1619,7 +1618,13 @@
                 throw new Error("Tài khoản của bạn không có trong danh sách được phép.");
             }
             state.staffProfile = staffData[userEmailKey];
-            state.isAdmin = ADMIN_EMAILS.includes(state.currentUser.email);
+            
+            try {
+                const adminData = await getDocument("admin_list", "admins", true);
+                state.isAdmin = adminData && adminData[userEmailKey] === true;
+            } catch (error) {
+                state.isAdmin = false;
+            }
         }
 
         function updateUIForUser(user) {
