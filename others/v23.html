@@ -1609,22 +1609,36 @@
             const sorted = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_')).sort((a, b) => a[1].name.localeCompare(b[1].name)) : [];
             el('admin-content').innerHTML = `<div class="mt-3"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="color:var(--primary);font-size:18px;">${__('personnel')}</h3><div style="display:flex;gap:8px;"><button id="add-personnel-btn" class="icon-btn"><i class="fas fa-plus"></i></button><button id="export-personnel-btn" class="icon-btn"><i class="fas fa-file-excel"></i></button></div></div><div class="table-wrapper"><table><thead><tr><th>${__('name')}</th><th class="hide-mobile">${__('email')}</th><th class="hide-mobile">${__('department')}</th><th>${__('actions')}</th></tr></thead><tbody>${sorted.length > 0 ? sorted.map(([key, p]) => `<tr><td>${p.name}</td><td class="hide-mobile">${p.email}</td><td class="hide-mobile">${p.depart || '-'}</td><td><div class="action-buttons"><button class="icon-btn edit-personnel-btn" data-key="${key}"><i class="fas fa-edit"></i></button><button class="icon-btn delete-personnel-btn" data-key="${key}" data-name="${p.name}"><i class="fas fa-trash"></i></button></div></td></tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted p-3">${__('noData')}</td></tr>`}</tbody></table></div></div>`;
         }
-
+        
         async function syncUserProfile() {
             const userEmailKey = emailToKey(state.currentUser.email);
+            
+            console.log('🔍 DEBUG: Checking user...');
+            console.log('Email:', state.currentUser.email);
+            console.log('Email Key:', userEmailKey);
+            
             const staffData = await getDocument("staff_list", "staffs", true);
+            console.log('Staff Data:', staffData);
+            
             if (!staffData || !staffData[userEmailKey]) {
                 await signOut(auth);
                 throw new Error("Tài khoản của bạn không có trong danh sách được phép.");
             }
             state.staffProfile = staffData[userEmailKey];
+            console.log('✅ Staff Profile:', state.staffProfile);
             
             try {
+                console.log('🔍 Checking admin...');
                 const adminData = await getDocument("admin_list", "admins", true);
+                console.log('Admin Data:', adminData);
+                console.log('Is user in admin list?', adminData && adminData[userEmailKey] === true);
                 state.isAdmin = adminData && adminData[userEmailKey] === true;
             } catch (error) {
+                console.error('❌ Admin check error:', error);
                 state.isAdmin = false;
             }
+            
+            console.log('Final isAdmin:', state.isAdmin);
         }
 
         function updateUIForUser(user) {
