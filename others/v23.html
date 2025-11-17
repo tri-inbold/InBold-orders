@@ -308,11 +308,6 @@
         }
         
         .skipped-section {
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: rgba(237, 137, 54, 0.05);
-            border-radius: var(--radius-sm);
-            border: 1px solid rgba(237, 137, 54, 0.2);
         }
         
         .skipped-section-header {
@@ -1259,6 +1254,31 @@
             }
         }
 
+        function checkAndClearWeeklyCache() {
+            const lastClearKey = 'lastCacheClear';
+            const lastClear = localStorage.getItem(lastClearKey);
+            const now = new Date();
+            
+            // Kiểm tra xem đã qua thứ 2 chưa
+            if (lastClear) {
+                const lastClearDate = new Date(lastClear);
+                const daysSinceLastClear = Math.floor((now - lastClearDate) / (1000 * 60 * 60 * 24));
+                
+                // Nếu đã qua thứ 2 (hoặc >= 7 ngày)
+                const isMonday = now.getDay() === 1;
+                const needsClear = (isMonday && daysSinceLastClear >= 1) || daysSinceLastClear >= 7;
+                
+                if (needsClear) {
+                    state.cachedData.clear();
+                    localStorage.setItem(lastClearKey, now.toISOString());
+                    console.log('🗑️ Weekly cache cleared');
+                }
+            } else {
+                // Lần đầu tiên, lưu timestamp
+                localStorage.setItem(lastClearKey, now.toISOString());
+            }
+        }
+        
         function updateStaffListView(dayData, searchTerm = '') {
             const container = el('staff-list-container');
             const hour = new Date().getHours();
@@ -2033,6 +2053,7 @@
         async function main() {
             showLoader();
             try {
+                checkAndClearWeeklyCache();
                 await setPersistence(auth, browserLocalPersistence);
                 onAuthStateChanged(auth, async (user) => {
                     if (user && user.uid !== state.currentUser?.uid) {
