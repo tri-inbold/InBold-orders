@@ -1204,9 +1204,7 @@
             }
             el('main-content').innerHTML = heroHtml + `<div id="order-section-container"></div>`;
             await renderOrderSection(el('order-section-container'));
-                        } catch (err) {
-            console.error('❌ Error fetching day data:', err);
-            throw err;
+                        }
         }
         
 
