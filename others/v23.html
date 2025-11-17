@@ -1125,29 +1125,58 @@
             if (!state.authReady || !state.staffProfile) { hideLoader(); return; }
             if (!state.cachedData.has('render_' + state.currentTab)) showLoader();
             try {
+                console.log('🔍 Rendering tab:', state.currentTab);
                 switch (state.currentTab) {
-                    case 'today': await renderToday(); break;
-                    case 'menu': await renderMenu(); break;
-                    case 'profile': await renderProfile(); break;
-                    case 'admin': await renderAdmin(); break;
+                    case 'today': 
+                        console.log('📍 Calling renderToday()...');
+                        await renderToday(); 
+                        break;
+                    case 'menu': 
+                        console.log('📍 Calling renderMenu()...');
+                        await renderMenu(); 
+                        break;
+                    case 'profile': 
+                        console.log('📍 Calling renderProfile()...');
+                        await renderProfile(); 
+                        break;
+                    case 'admin': 
+                        console.log('📍 Calling renderAdmin()...');
+                        await renderAdmin(); 
+                        break;
                 }
+                console.log('✅ Render completed');
             } catch (error) {
-                console.error('Render error:', error);
+                console.error('❌ Render error:', error);
+                console.error('❌ Error code:', error.code);
+                console.error('❌ Error message:', error.message);
+                console.error('❌ Full error:', JSON.stringify(error, null, 2));
                 el('main-content').innerHTML = `<div class="card text-center" style="color: var(--error);"><i class="fas fa-exclamation-circle"></i> Có lỗi xảy ra.</div>`;
             }
             hideLoader();
         }
 
         async function renderToday() {
+            console.log('🔍 renderToday() started');
             const dayKey = getDayKey();
+            console.log('📅 Day key:', dayKey);
+            
             const firstName = getFirstName(state.staffProfile.name);
             const userEmailKey = emailToKey(state.currentUser.email);
             let heroHtml = '';
-
+        
             if (['sun', 'sat'].includes(dayKey)) {
+                console.log('🏖️ Weekend detected');
                 heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${__('weekend')}</div></div></div>`;
             } else {
-                const dayData = await getDocument(getWeekString(new Date()), dayKey, false);
+                console.log('📍 Fetching today data...');
+                const weekString = getWeekString(new Date());
+                console.log('📍 Week string:', weekString);
+                console.log('📍 Day key:', dayKey);
+                console.log('📍 Calling getDocument:', weekString, dayKey);
+                
+                try {
+                const dayData = await getDocument(weekString, dayKey, false);
+                console.log('✅ Day data fetched:', dayData);
                 const userOrder = dayData?.[userEmailKey];
                 if (userOrder) {
                     const currentStatus = userOrder.status || 'not';
@@ -1175,7 +1204,11 @@
             }
             el('main-content').innerHTML = heroHtml + `<div id="order-section-container"></div>`;
             await renderOrderSection(el('order-section-container'));
+                        } catch (err) {
+            console.error('❌ Error fetching day data:', err);
+            throw err;
         }
+        
 
         async function renderOrderSection(container) {
             const today = new Date();
