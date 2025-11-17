@@ -1155,7 +1155,7 @@
             hideLoader();
         }
 
-        async function renderToday() {
+       async function renderToday() {
             console.log('🔍 renderToday() started');
             const dayKey = getDayKey();
             console.log('📅 Day key:', dayKey);
@@ -1175,38 +1175,53 @@
                 console.log('📍 Calling getDocument:', weekString, dayKey);
                 
                 try {
-                const dayData = await getDocument(weekString, dayKey, false);
-                console.log('✅ Day data fetched:', dayData);
-                const userOrder = dayData?.[userEmailKey];
-                if (userOrder) {
-                    const currentStatus = userOrder.status || 'not';
-                    const isSkipped = currentStatus === 'skip';
-                    const isEaten = currentStatus === 'eaten';
+                    const dayData = await getDocument(weekString, dayKey, false);
+                    console.log('✅ Day data fetched:', dayData);
                     
-                    heroHtml = `<div class="card hero-card">
-                        <div class="hero-content">
-                            <div class="hero-greeting">${__('hi')} ${firstName}</div>
-                            <div class="hero-title">${parseDish(userOrder.food)}</div>
-                            <div class="hero-subtitle">${__('todayMeal')}</div>
-                            <div class="action-buttons-hero">
-                                <button class="btn btn-skip ${isSkipped ? 'active' : ''}" data-action="skip" data-day="${dayKey}" ${isSkipped || isEaten ? 'disabled' : ''}>
-                                    <i class="fas fa-ban"></i> ${__('skip')}
-                                </button>
-                                <button class="btn btn-eaten ${isEaten ? 'active' : ''}" data-action="eaten" data-day="${dayKey}" ${isEaten ? 'disabled' : ''}>
-                                    <i class="fas fa-check"></i> ${__('eaten')}
-                                </button>
+                    const userOrder = dayData?.[userEmailKey];
+                    if (userOrder) {
+                        const currentStatus = userOrder.status || 'not';
+                        const isSkipped = currentStatus === 'skip';
+                        const isEaten = currentStatus === 'eaten';
+                        
+                        heroHtml = `<div class="card hero-card">
+                            <div class="hero-content">
+                                <div class="hero-greeting">${__('hi')} ${firstName}</div>
+                                <div class="hero-title">${parseDish(userOrder.food)}</div>
+                                <div class="hero-subtitle">${__('todayMeal')}</div>
+                                <div class="action-buttons-hero">
+                                    <button class="btn btn-skip ${isSkipped ? 'active' : ''}" data-action="skip" data-day="${dayKey}" ${isSkipped || isEaten ? 'disabled' : ''}>
+                                        <i class="fas fa-ban"></i> ${__('skip')}
+                                    </button>
+                                    <button class="btn btn-eaten ${isEaten ? 'active' : ''}" data-action="eaten" data-day="${dayKey}" ${isEaten ? 'disabled' : ''}>
+                                        <i class="fas fa-check"></i> ${__('eaten')}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </div>`;
-                } else {
-                    heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${__('notOrdered')}</div><div class="hero-subtitle">${__('notOrderedDesc')}</div></div></div>`;
+                        </div>`;
+                    } else {
+                        heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${__('notOrdered')}</div><div class="hero-subtitle">${__('notOrderedDesc')}</div></div></div>`;
+                    }
+                } catch (err) {
+                    console.error('❌ Error fetching day data:', err);
+                    console.error('❌ Error code:', err.code);
+                    console.error('❌ Error message:', err.message);
+                    throw err;
                 }
             }
+            
+            console.log('📍 Setting main-content HTML...');
             el('main-content').innerHTML = heroHtml + `<div id="order-section-container"></div>`;
-            await renderOrderSection(el('order-section-container'));
-                        }
+            
+            console.log('📍 Calling renderOrderSection...');
+            try {
+                await renderOrderSection(el('order-section-container'));
+                console.log('✅ renderToday() completed');
+            } catch (err) {
+                console.error('❌ Error in renderOrderSection:', err);
+                throw err;
+            }
         }
-        
 
         async function renderOrderSection(container) {
             const today = new Date();
