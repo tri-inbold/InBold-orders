@@ -254,19 +254,68 @@
             background: #38a169;
             transform: translateY(-1px);
         }
-
+       
         .staff-item.skipped {
-            opacity: 0.6;
+            opacity: 0.8;
             background: rgba(237, 137, 54, 0.1);
             border-color: var(--warning);
+            position: relative;
         }
         
-        .staff-item.skipped .staff-dish::after {
-            content: ' (' attr(data-skip-text) ')';
+        .staff-item.skipped .staff-name::after {
+            content: ' (Đã nhường)';
             color: var(--warning);
             font-weight: 600;
-            font-size: 11px;
+            font-size: 10px;
+            margin-left: 4px;
         }
+
+        .staff-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-mark-eaten {
+            padding: 6px 12px;
+            font-size: 11px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-mark-eaten:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+        }
+        
+        .department-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .department-header {
+            color: var(--primary);
+            padding: 0.75rem 0 0.5rem;
+            font-size: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .department-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
         
         .order-day-card {
             background: var(--card-bg);
@@ -324,6 +373,7 @@
         .staff-item {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0.5rem 1rem;
             background: rgb(25, 34, 49);
             border-radius: var(--radius-sm);
@@ -1204,35 +1254,82 @@
         function updateStaffListView(dayData, searchTerm = '') {
             const container = el('staff-list-container');
             const hour = new Date().getHours();
-            const staffOrders = Object.values(dayData).filter(o => o.name && o.name.toLowerCase().includes(searchTerm.toLowerCase()));
+            const staffOrders = Object.entries(dayData)
+                .filter(([key, o]) => o.name && o.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                .map(([key, o]) => ({ ...o, key }));
+            
             el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fas fa-users"></i>`;
             
-            const createListHTML = (list) => list.sort((a, b) => {
-                const statusOrder = { skip: 0, eaten: 1, not: 2 }; // Xếp theo skipped => eaten => not => tên
-                const statusCompare = (statusOrder[a.status] || 2) - (statusOrder[b.status] || 2);
-                return statusCompare !== 0 ? statusCompare : a.name.localeCompare(b.name);
-            }).map(order => {
-                const statusClass = order.status === 'eaten' ? 'eaten' : (order.status === 'skip' ? 'skipped' : '');
-                return `<li class="staff-item ${statusClass}">
-                    <div class="staff-details">
-                        <div class="staff-name">${order.name}</div>
-                        <div class="staff-dish" ${order.status === 'skip' ? `data-skip-text="${__('skipped')}"` : ''}>${parseDish(order.food)}</div>
+            const createDepartmentHTML = (list, departName) => {
+                const sorted = list.sort((a, b) => {
+                    const statusOrder = { skip: 0, not: 1, eaten: 2 }; // Sắp xếp theo skip => not => eaten => tên người
+                    const statusCompare = (statusOrder[a.status] || 1) - (statusOrder[b.status] || 1);
+                    return statusCompare !== 0 ? statusCompare : a.name.localeCompare(b.name);
+                });
+                
+                const skippedCount = sorted.filter(o => o.status === 'skip').length;
+                const notEatenCount = sorted.filter(o => o.status === 'not' || o.status === 'skip').length;
+                const eatenCount = sorted.filter(o => o.status === 'eaten').length;
+                
+                const items = sorted.map(order => {
+                    const statusClass = order.status === 'eaten' ? 'eaten' : (order.status === 'skip' ? 'skipped' : '');
+                    const actionBtn = order.status === 'skip' 
+                        ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${getDayKey()}"><i class="fas fa-check"></i> Đã ăn</button></div>`
+                        : '';
+                    
+                    return `<li class="staff-item ${statusClass}">
+                        <div class="staff-details">
+                            <div class="staff-name">${order.name}</div>
+                            <div class="staff-dish">${parseDish(order.food)}</div>
+                        </div>
+                        ${actionBtn}
+                    </li>`;
+                }).join('');
+                
+                return `<div class="department-group">
+                    <div class="department-header">
+                        <span>${departName}</span>
+                        <span class="department-count">(${notEatenCount} chưa ăn / ${eatenCount} đã ăn${skippedCount > 0 ? ` / ${skippedCount} nhường` : ''})</span>
                     </div>
-                </li>`;
-            }).join('');
+                    <ul class="staff-list">${items}</ul>
+                </div>`;
+            };
             
             const sang = staffOrders.filter(o => o.shift === 'M');
             const chieu = staffOrders.filter(o => o.shift === 'E');
             
-            let html = '<ul class="staff-list">';
+            const createShiftHTML = (list) => {
+                // Group by department
+                const byDepartment = {};
+                list.forEach(order => {
+                    const depart = order.depart || __('unknown');
+                    if (!byDepartment[depart]) byDepartment[depart] = [];
+                    byDepartment[depart].push(order);
+                });
+                
+                // Sort departments alphabetically
+                const sortedDepartments = Object.keys(byDepartment).sort();
+                
+                return sortedDepartments.map(depart => 
+                    createDepartmentHTML(byDepartment[depart], depart)
+                ).join('');
+            };
+            
+            let html = '';
             if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') {
-                if (sang.length) html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;">${__('morning')}</h3>${createListHTML(sang)}`;
+                if (sang.length) {
+                    html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--primary);margin-bottom:1rem;">${__('morning')}</h3>`;
+                    html += createShiftHTML(sang);
+                }
             }
             if ((state.menuFilterMode === 'auto' && hour >= 15) || state.menuFilterMode === 'all') {
-                if (chieu.length) html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;">${__('evening')}</h3>${createListHTML(chieu)}`;
+                if (chieu.length) {
+                    html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--primary);margin-bottom:1rem;margin-top:${sang.length ? '2rem' : '0'};">${__('evening')}</h3>`;
+                    html += createShiftHTML(chieu);
+                }
             }
-            html += '</ul>';
-            container.innerHTML = html.length > 20 ? html : `<p class="text-center text-muted p-3">${__('notFound')}</p>`;
+            
+            container.innerHTML = html || `<p class="text-center text-muted p-3">${__('notFound')}</p>`;
         }
 
         async function renderProfile() {
@@ -1672,7 +1769,6 @@
                     await checkOrderNotification();
                 } catch { showToast(__('orderFailed'), 'error'); } finally { hideLoader(); }
             }
-
             else if (dataset.action === 'skip' || dataset.action === 'eaten') {
                 showLoader();
                 try {
@@ -1695,7 +1791,32 @@
                     hideLoader();
                 }
             }
-            
+            else if (classList.contains('mark-eaten-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                showLoader();
+                try {
+                    const weekString = getWeekString(new Date());
+                    const dayKey = dataset.day;
+                    const userKey = dataset.key;
+                    
+                    await updateDoc(doc(db, weekString, dayKey), {
+                        [`${userKey}.status`]: 'eaten'
+                    });
+                    
+                    state.cachedData.delete(`${weekString}/${dayKey}`);
+                    showToast(__('eatenSuccess'));
+                    
+                    // Re-render menu tab
+                    const dayData = await getDocument(weekString, dayKey, true);
+                    if (dayData) updateStaffListView(dayData);
+                } catch (err) {
+                    console.error(err);
+                    showToast(__('error'), 'error');
+                } finally {
+                    hideLoader();
+                }
+            }                
             else if (id === 'menu-filter-btn') {
                 state.menuFilterMode = state.menuFilterMode === 'auto' ? 'all' : 'auto';
                 const dayData = await getDocument(getWeekString(new Date()), getDayKey(), true);
