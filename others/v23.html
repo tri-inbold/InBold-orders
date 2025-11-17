@@ -269,12 +269,12 @@
             font-size: 10px;
             margin-left: 4px;
         }
-
+        
         .staff-item-actions {
             display: flex;
             gap: 6px;
         }
-
+        
         .btn-mark-eaten {
             padding: 6px 12px;
             font-size: 11px;
@@ -295,27 +295,35 @@
         }
         
         .department-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.75rem;
         }
         
         .department-header {
             color: var(--primary);
-            padding: 0.75rem 0 0.5rem;
-            font-size: 15px;
+            padding: 0.5rem 0 0.25rem;
+            font-size: 14px;
             font-weight: 600;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .skipped-section {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(237, 137, 54, 0.05);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(237, 137, 54, 0.2);
+        }
+        
+        .skipped-section-header {
+            color: var(--warning);
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        
-        .department-count {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 400;
-        }
-
         
         .order-day-card {
             background: var(--card-bg);
@@ -1148,9 +1156,9 @@
                 const dayData = await getDocument(getWeekString(new Date()), dayKey, false);
                 const userOrder = dayData?.[userEmailKey];
                 if (userOrder) {
-                    const currentStatus = userOrder.status || 'not'; // Không ăn
-                    const isSkipped = currentStatus === 'skip'; // Nhường => tính là đã ăn trong report
-                    const isEaten = currentStatus === 'eaten'; // Đã ăn
+                    const currentStatus = userOrder.status || 'not';
+                    const isSkipped = currentStatus === 'skip';
+                    const isEaten = currentStatus === 'eaten';
                     
                     heroHtml = `<div class="card hero-card">
                         <div class="hero-content">
@@ -1158,7 +1166,7 @@
                             <div class="hero-title">${parseDish(userOrder.food)}</div>
                             <div class="hero-subtitle">${__('todayMeal')}</div>
                             <div class="action-buttons-hero">
-                                <button class="btn btn-skip ${isSkipped ? 'active' : ''}" data-action="skip" data-day="${dayKey}" ${isSkipped ? 'disabled' : ''}>
+                                <button class="btn btn-skip ${isSkipped ? 'active' : ''}" data-action="skip" data-day="${dayKey}" ${isSkipped || isEaten ? 'disabled' : ''}>
                                     <i class="fas fa-ban"></i> ${__('skip')}
                                 </button>
                                 <button class="btn btn-eaten ${isEaten ? 'active' : ''}" data-action="eaten" data-day="${dayKey}" ${isEaten ? 'disabled' : ''}>
@@ -1260,36 +1268,57 @@
             
             el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fas fa-users"></i>`;
             
-            const createDepartmentHTML = (list, departName) => {
-                const sorted = list.sort((a, b) => {
-                    const statusOrder = { skip: 0, not: 1, eaten: 2 }; // Sắp xếp theo skip => not => eaten => tên người
-                    const statusCompare = (statusOrder[a.status] || 1) - (statusOrder[b.status] || 1);
-                    return statusCompare !== 0 ? statusCompare : a.name.localeCompare(b.name);
+            const createStaffItem = (order, showMarkEaten = false) => {
+                const statusClass = order.status === 'eaten' ? 'eaten' : (order.status === 'skip' ? 'skipped' : '');
+                const actionBtn = showMarkEaten 
+                    ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${getDayKey()}"><i class="fas fa-check"></i> Đã ăn</button></div>`
+                    : '';
+                
+                return `<li class="staff-item ${statusClass}">
+                    <div class="staff-details">
+                        <div class="staff-name">${order.name}</div>
+                        <div class="staff-dish">${parseDish(order.food)}</div>
+                    </div>
+                    ${actionBtn}
+                </li>`;
+            };
+            
+            const createDepartmentHTML = (list) => {
+                const byDepartment = {};
+                list.forEach(order => {
+                    const depart = order.depart || __('unknown');
+                    if (!byDepartment[depart]) byDepartment[depart] = [];
+                    byDepartment[depart].push(order);
                 });
                 
-                const skippedCount = sorted.filter(o => o.status === 'skip').length;
-                const notEatenCount = sorted.filter(o => o.status === 'not' || o.status === 'skip').length;
-                const eatenCount = sorted.filter(o => o.status === 'eaten').length;
+                const sortedDepartments = Object.keys(byDepartment).sort();
                 
-                const items = sorted.map(order => {
-                    const statusClass = order.status === 'eaten' ? 'eaten' : (order.status === 'skip' ? 'skipped' : '');
-                    const actionBtn = order.status === 'skip' 
-                        ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${getDayKey()}"><i class="fas fa-check"></i> Đã ăn</button></div>`
-                        : '';
+                return sortedDepartments.map(depart => {
+                    const sorted = byDepartment[depart].sort((a, b) => {
+                        const statusOrder = { not: 0, eaten: 1 };
+                        const statusCompare = (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
+                        return statusCompare !== 0 ? statusCompare : a.name.localeCompare(b.name);
+                    });
                     
-                    return `<li class="staff-item ${statusClass}">
-                        <div class="staff-details">
-                            <div class="staff-name">${order.name}</div>
-                            <div class="staff-dish">${parseDish(order.food)}</div>
-                        </div>
-                        ${actionBtn}
-                    </li>`;
+                    const items = sorted.map(order => createStaffItem(order)).join('');
+                    
+                    return `<div class="department-group">
+                        <div class="department-header">${depart}</div>
+                        <ul class="staff-list">${items}</ul>
+                    </div>`;
                 }).join('');
+            };
+            
+            const createSkippedSection = (list) => {
+                if (list.length === 0) return '';
                 
-                return `<div class="department-group">
-                    <div class="department-header">
-                        <span>${departName}</span>
-                        <span class="department-count">(${notEatenCount} chưa ăn / ${eatenCount} đã ăn${skippedCount > 0 ? ` / ${skippedCount} nhường` : ''})</span>
+                const sorted = list.sort((a, b) => a.name.localeCompare(b.name));
+                const items = sorted.map(order => createStaffItem(order, true)).join('');
+                
+                return `<div class="skipped-section">
+                    <div class="skipped-section-header">
+                        <i class="fas fa-hand-holding-heart"></i>
+                        <span>Danh sách đã nhường (${list.length})</span>
                     </div>
                     <ul class="staff-list">${items}</ul>
                 </div>`;
@@ -1299,20 +1328,10 @@
             const chieu = staffOrders.filter(o => o.shift === 'E');
             
             const createShiftHTML = (list) => {
-                // Group by department
-                const byDepartment = {};
-                list.forEach(order => {
-                    const depart = order.depart || __('unknown');
-                    if (!byDepartment[depart]) byDepartment[depart] = [];
-                    byDepartment[depart].push(order);
-                });
+                const skipped = list.filter(o => o.status === 'skip');
+                const others = list.filter(o => o.status !== 'skip');
                 
-                // Sort departments alphabetically
-                const sortedDepartments = Object.keys(byDepartment).sort();
-                
-                return sortedDepartments.map(depart => 
-                    createDepartmentHTML(byDepartment[depart], depart)
-                ).join('');
+                return createSkippedSection(skipped) + createDepartmentHTML(others);
             };
             
             let html = '';
@@ -1331,7 +1350,6 @@
             
             container.innerHTML = html || `<p class="text-center text-muted p-3">${__('notFound')}</p>`;
         }
-
         async function renderProfile() {
             const { currentUser: user, staffProfile: profile } = state;
             el('main-content').innerHTML = `<div class="card"><div class="profile-section">
@@ -1510,23 +1528,44 @@
             const nextWeekMenu = nextWeekData || {};
             
             const thisWeekPassed = today.getDay() === 0 || today.getDay() === 6 || (today.getDay() === 5 && today.getHours() >= 15);
-
-            const renderEditableMenuSection = (weekKey, menuData, title) => {
+        
+            const renderReadOnlyMenuSection = (menuData, title) => {
                 let html = `<h3 style="color:var(--primary);margin:1.5rem 0 1rem;font-size:18px;">${title}</h3>`;
                 for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
                     const dishes = menuData[dayKey] || [];
                     html += `<div class="form-group">
                                 <label class="form-label">${dayName}</label>
-                                <div id="menu-dishes-${weekKey}-${dayKey}" style="display:flex;flex-direction:column;gap:0.5rem;">`;
-
-                    dishes.forEach((dish, idx) => {
-                        html += `<div style="display:flex;gap:0.5rem;align-items:center;">
-                                    <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}" placeholder="${__('dish')} ${idx + 1}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden; width: 40px;">${dish}</textarea>
-                                    <button class="icon-btn remove-menu-dish-btn" data-week="${weekKey}" data-day="${dayKey}" data-index="${idx}"><i class="fas fa-times"></i></button>
-                                 </div>`;
-                    });
+                                <ul class="staff-list">`;
+                    if (dishes.length > 0) {
+                        dishes.forEach(dish => {
+                            html += `<li class="staff-item"><div class="staff-details"><div class="staff-dish">${parseDish(dish)}</div></div></li>`;
+                        });
+                    } else {
+                        html += `<li class="staff-item"><div class="staff-details"><div class="staff-dish text-muted">${__('noDishYet')}</div></div></li>`;
+                    }
+                    html += `</ul></div>`;
+                }
+                return html;
+            };
+        
+            const renderEditableMenuSection = (weekKey, menuData, title) => {
+                let html = `<h3 style="color:var(--primary);margin:1.5rem 0 1rem;font-size:18px;">${title}</h3>`;
+                for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
+                    const dishes = menuData[dayKey] || [];
+                    html += `<div class="form-group">
+                                <label class="form-label">${dayName}</label>`;
+                    
+                    if (dishes.length > 0) {
+                        html += `<ul class="staff-list">`;
+                        dishes.forEach(dish => {
+                            html += `<li class="staff-item"><div class="staff-details"><div class="staff-dish">${parseDish(dish)}</div></div></li>`;
+                        });
+                        html += `</ul>`;
+                    }
+                    
+                    html += `<div id="menu-dishes-${weekKey}-${dayKey}" style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem;">`;
                     html += `<div style="display:flex;gap:0.5rem;align-items:center;">
-                                <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden; width: 40px;"></textarea>
+                                <textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden;"></textarea>
                                 <button class="icon-btn remove-menu-dish-btn hidden" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}"><i class="fas fa-times"></i></button>
                              </div>`;
                     html += `</div></div>`;
@@ -1536,18 +1575,13 @@
             
             const thisWeekTitle = `${__('menuThisWeek')} (${thisWeek.split('_')[1]})`;
             const nextWeekTitle = `${__('menuNextWeek')} (${nextWeek.split('_')[1]})`;
-
+        
             el('admin-content').innerHTML = `<div class="mt-3">
-                ${thisWeekPassed 
-                    ? renderMenuSummaryView(thisWeekMenu, thisWeekTitle)
-                    : renderEditableMenuSection('thisWeek', thisWeekMenu, thisWeekTitle)
-                }
-                ${!thisWeekPassed ? `<button id="save-menu-thisWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${thisWeek}"><i class="fas fa-save"></i> ${__('save')} ${__('menuThisWeek')}</button>` : ''}
-                
+                ${renderReadOnlyMenuSection(thisWeekMenu, thisWeekTitle)}
                 ${renderEditableMenuSection('nextWeek', nextWeekMenu, nextWeekTitle)}
                 <button id="save-menu-nextWeek" class="btn btn-primary btn-block" style="margin-top:1rem;" data-week="${nextWeek}"><i class="fas fa-save"></i> ${__('save')} ${__('menuNextWeek')}</button>
             </div>`;
-
+        
             document.querySelectorAll('.menu-dish-textarea').forEach(autoResizeTextarea);
         }
 
@@ -1828,21 +1862,28 @@
             } else if (classList.contains('remove-menu-dish-btn')) {
                 const parent = target.closest('div[style*="display:flex"]');
                 if (parent) parent.remove();
-            } else if (id === 'save-menu-thisWeek' || id === 'save-menu-nextWeek') {
+            } else if (id === 'save-menu-nextWeek') {
                 showLoader();
                 try {
                     const weekStr = dataset.week;
-                    const weekKey = id === 'save-menu-thisWeek' ? 'thisWeek' : 'nextWeek';
-                    const menuToSave = {};
+                    const weekKey = 'nextWeek';
                     
+                    // Lấy menu hiện tại
+                    const currentMenu = await getDocument(weekStr, "menu", true) || {};
+                    const menuToSave = { ...currentMenu };
+                    
+                    // Chỉ thêm món mới
                     for (const day of ['mon', 'tue', 'wed', 'thu', 'fri']) {
                         const container = el(`menu-dishes-${weekKey}-${day}`);
                         if (container) {
                             const textareas = container.querySelectorAll('.menu-dish-textarea');
-                            const dishes = Array.from(textareas)
+                            const newDishes = Array.from(textareas)
                                 .map(textarea => textarea.value.trim())
                                 .filter(Boolean);
-                            menuToSave[day] = dishes;
+                            
+                            // Merge với món cũ
+                            const existingDishes = currentMenu[day] || [];
+                            menuToSave[day] = [...existingDishes, ...newDishes];
                         }
                     }
                     
