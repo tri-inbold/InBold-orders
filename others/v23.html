@@ -262,14 +262,6 @@
             position: relative;
         }
         
-        .staff-item.skipped .staff-name::after {
-            content: ' (Đã nhường)';
-            color: var(--warning);
-            font-weight: 600;
-            font-size: 10px;
-            margin-left: 4px;
-        }
-        
         .staff-item-actions {
             display: flex;
             gap: 6px;
@@ -1038,7 +1030,8 @@
                 tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6',
                 menuSaved: 'Đã lưu thực đơn', unknown: 'Chưa rõ', today: 'Hôm nay',
                 oneDishPerLine: 'Tên món tiếng việt | Tên món tiếng anh', 
-                skip: 'Nhường', skipped: 'Đã nhường', eaten: 'Đã ăn', skipSuccess: 'Đã nhường suất ăn', eatenSuccess: 'Đã xác nhận ăn',
+                skip: 'Nhường', skipped: 'Đã nhường', eaten: 'Đã ăn', skipSuccess: 'Đã nhường suất ăn', eatenSuccess: 'Đã xác nhận ăn', 
+                skippedList: 'Danh sách đã nhường',
             },
             en: {
                 welcome: 'Welcome!', pleaseLogin: 'Please login', login: 'Login',
@@ -1070,7 +1063,8 @@
                 tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday',
                 menuSaved: 'Menu saved', unknown: 'Unknown', today: 'Today',
                 oneDishPerLine: 'Name of dish in Vietnamese | Name of dish in English', 
-                skip: 'Skip', skipped: 'Skipped', eaten: 'Eaten', skipSuccess: 'Meal skipped', eatenSuccess: 'Confirmed eaten'
+                skip: 'Give', skipped: 'Given', eaten: 'Eaten', skipSuccess: 'Given', eatenSuccess: 'Confirmed eaten',
+                skippedList: 'Given meals list',
             }
         };
         
@@ -1125,102 +1119,55 @@
             if (!state.authReady || !state.staffProfile) { hideLoader(); return; }
             if (!state.cachedData.has('render_' + state.currentTab)) showLoader();
             try {
-                console.log('🔍 Rendering tab:', state.currentTab);
                 switch (state.currentTab) {
-                    case 'today': 
-                        console.log('📍 Calling renderToday()...');
-                        await renderToday(); 
-                        break;
-                    case 'menu': 
-                        console.log('📍 Calling renderMenu()...');
-                        await renderMenu(); 
-                        break;
-                    case 'profile': 
-                        console.log('📍 Calling renderProfile()...');
-                        await renderProfile(); 
-                        break;
-                    case 'admin': 
-                        console.log('📍 Calling renderAdmin()...');
-                        await renderAdmin(); 
-                        break;
+                    case 'today': await renderToday(); break;
+                    case 'menu': await renderMenu(); break;
+                    case 'profile': await renderProfile(); break;
+                    case 'admin': await renderAdmin(); break;
                 }
-                console.log('✅ Render completed');
             } catch (error) {
-                console.error('❌ Render error:', error);
-                console.error('❌ Error code:', error.code);
-                console.error('❌ Error message:', error.message);
-                console.error('❌ Full error:', JSON.stringify(error, null, 2));
+                console.error('Render error:', error);
                 el('main-content').innerHTML = `<div class="card text-center" style="color: var(--error);"><i class="fas fa-exclamation-circle"></i> Có lỗi xảy ra.</div>`;
             }
             hideLoader();
         }
 
-       async function renderToday() {
-            console.log('🔍 renderToday() started');
+        async function renderToday() {
             const dayKey = getDayKey();
-            console.log('📅 Day key:', dayKey);
-            
             const firstName = getFirstName(state.staffProfile.name);
             const userEmailKey = emailToKey(state.currentUser.email);
             let heroHtml = '';
         
             if (['sun', 'sat'].includes(dayKey)) {
-                console.log('🏖️ Weekend detected');
                 heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${__('weekend')}</div></div></div>`;
             } else {
-                console.log('📍 Fetching today data...');
-                const weekString = getWeekString(new Date());
-                console.log('📍 Week string:', weekString);
-                console.log('📍 Day key:', dayKey);
-                console.log('📍 Calling getDocument:', weekString, dayKey);
-                
-                try {
-                    const dayData = await getDocument(weekString, dayKey, false);
-                    console.log('✅ Day data fetched:', dayData);
+                const dayData = await getDocument(getWeekString(new Date()), dayKey, false);
+                const userOrder = dayData?.[userEmailKey];
+                if (userOrder) {
+                    const currentStatus = userOrder.status || 'not';
+                    const isSkipped = currentStatus === 'skip';
+                    const isEaten = currentStatus === 'eaten';
                     
-                    const userOrder = dayData?.[userEmailKey];
-                    if (userOrder) {
-                        const currentStatus = userOrder.status || 'not';
-                        const isSkipped = currentStatus === 'skip';
-                        const isEaten = currentStatus === 'eaten';
-                        
-                        heroHtml = `<div class="card hero-card">
-                            <div class="hero-content">
-                                <div class="hero-greeting">${__('hi')} ${firstName}</div>
-                                <div class="hero-title">${parseDish(userOrder.food)}</div>
-                                <div class="hero-subtitle">${__('todayMeal')}</div>
-                                <div class="action-buttons-hero">
-                                    <button class="btn btn-skip ${isSkipped ? 'active' : ''}" data-action="skip" data-day="${dayKey}" ${isSkipped || isEaten ? 'disabled' : ''}>
-                                        <i class="fas fa-ban"></i> ${__('skip')}
-                                    </button>
-                                    <button class="btn btn-eaten ${isEaten ? 'active' : ''}" data-action="eaten" data-day="${dayKey}" ${isEaten ? 'disabled' : ''}>
-                                        <i class="fas fa-check"></i> ${__('eaten')}
-                                    </button>
-                                </div>
+                    heroHtml = `<div class="card hero-card">
+                        <div class="hero-content">
+                            <div class="hero-greeting">${__('hi')} ${firstName}</div>
+                            <div class="hero-title">${parseDish(userOrder.food)}</div>
+                            <div class="action-buttons-hero">
+                                <button class="btn btn-skip ${isSkipped ? 'active' : ''}" data-action="skip" data-day="${dayKey}" ${isSkipped || isEaten ? 'disabled' : ''}>
+                                    <i class="fas fa-ban"></i> ${__('skip')}
+                                </button>
+                                <button class="btn btn-eaten ${isEaten ? 'active' : ''}" data-action="eaten" data-day="${dayKey}" ${isEaten ? 'disabled' : ''}>
+                                    <i class="fas fa-check"></i> ${__('eaten')}
+                                </button>
                             </div>
-                        </div>`;
-                    } else {
-                        heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${__('notOrdered')}</div><div class="hero-subtitle">${__('notOrderedDesc')}</div></div></div>`;
-                    }
-                } catch (err) {
-                    console.error('❌ Error fetching day data:', err);
-                    console.error('❌ Error code:', err.code);
-                    console.error('❌ Error message:', err.message);
-                    throw err;
+                        </div>
+                    </div>`;
+                } else {
+                    heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${__('notOrdered')}</div><div class="hero-subtitle">${__('notOrderedDesc')}</div></div></div>`;
                 }
             }
-            
-            console.log('📍 Setting main-content HTML...');
             el('main-content').innerHTML = heroHtml + `<div id="order-section-container"></div>`;
-            
-            console.log('📍 Calling renderOrderSection...');
-            try {
-                await renderOrderSection(el('order-section-container'));
-                console.log('✅ renderToday() completed');
-            } catch (err) {
-                console.error('❌ Error in renderOrderSection:', err);
-                throw err;
-            }
+            await renderOrderSection(el('order-section-container'));
         }
 
         async function renderOrderSection(container) {
@@ -1383,7 +1330,7 @@
                 return `<div class="skipped-section">
                     <div class="skipped-section-header">
                         <i class="fas fa-hand-holding-heart"></i>
-                        <span>Danh sách đã nhường (${list.length})</span>
+                        <span>${__('skippedList')} (${list.length})</span>
                     </div>
                     <ul class="staff-list">${items}</ul>
                 </div>`;
@@ -1658,33 +1605,19 @@
         
         async function syncUserProfile() {
             const userEmailKey = emailToKey(state.currentUser.email);
-            
-            console.log('🔍 DEBUG: Checking user...');
-            console.log('Email:', state.currentUser.email);
-            console.log('Email Key:', userEmailKey);
-            
             const staffData = await getDocument("staff_list", "staffs", true);
-            console.log('Staff Data:', staffData);
-            
             if (!staffData || !staffData[userEmailKey]) {
                 await signOut(auth);
                 throw new Error("Tài khoản của bạn không có trong danh sách được phép.");
             }
             state.staffProfile = staffData[userEmailKey];
-            console.log('✅ Staff Profile:', state.staffProfile);
             
             try {
-                console.log('🔍 Checking admin...');
                 const adminData = await getDocument("admin_list", "admins", true);
-                console.log('Admin Data:', adminData);
-                console.log('Is user in admin list?', adminData && adminData[userEmailKey] === true);
                 state.isAdmin = adminData && adminData[userEmailKey] === true;
             } catch (error) {
-                console.error('❌ Admin check error:', error);
                 state.isAdmin = false;
             }
-            
-            console.log('Final isAdmin:', state.isAdmin);
         }
 
         function updateUIForUser(user) {
