@@ -295,7 +295,6 @@
             padding: 0.5rem 0 0.25rem;
             font-size: 14px;
             font-weight: 600;
-            border-bottom: 1px solid var(--border);
             margin-bottom: 0.25rem;
         }
         
@@ -1116,7 +1115,13 @@
             const iconMap = { success: 'check', error: 'times', info: 'info' };
             toast.innerHTML = `<div class="toast-icon ${type}"><i class="fas fa-${iconMap[type]}"></i></div><span>${message}</span>`;
             toast.className = `show ${type}`;
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    toast.style.opacity = '1';
+                }, 300);
+            }, 2000);
         };
         async function getDocument(collection, documentId, forceRefresh = false) {
             const cacheKey = `${collection}/${documentId}`;
@@ -1385,7 +1390,7 @@
         }
         
         async function renderMenu() {
-            el('main-content').innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('todayList')}</h2><button id="menu-filter-btn" class="icon-btn"><i class="fas fa-filter"></i></button></div><div class="search-bar"><div class="search-wrapper"><i class="fas fa-search search-icon"></i><input type="text" id="search-staff" class="search-input" placeholder="${__('searchStaff')}"></div></div><div id="staff-list-container"></div></div>`;
+            el('main-content').innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('todayList')}</h2></div><div class="search-bar"><div class="search-wrapper"><i class="fas fa-search search-icon"></i><input type="text" id="search-staff" class="search-input" placeholder="${__('searchStaff')}"></div><button id="menu-filter-btn" class="icon-btn"><i class="fas fa-filter"></i></button></div><div id="staff-list-container"></div></div>`;
             const dayData = await getDocument(getWeekString(new Date()), getDayKey(), true);
             if (dayData) {
                 updateStaffListView(dayData);
@@ -1424,7 +1429,7 @@
                 .filter(([key, o]) => o.name && o.status !== 'reopen' && o.name.toLowerCase().includes(searchTerm.toLowerCase())) 
                 .map(([key, o]) => ({ ...o, key }));
 
-            el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fas fa-users"></i>`;
+            el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fas fa-clock"></i>`;
             
             const createStaffItem = (order, showMarkEaten = false) => {
                 const statusClass = order.status === 'eaten' ? 'eaten' : (order.status === 'skip' ? 'skipped' : '');
@@ -1496,13 +1501,13 @@
             let html = '';
             if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') {
                 if (sang.length) {
-                    html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--primary);margin-bottom:1rem;">${__('morning')}</h3>`;
+                    html += `<h3 style="color:var(--text);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--text);margin-bottom:1rem;">${__('morning')}</h3>`;
                     html += createShiftHTML(sang);
                 }
             }
             if ((state.menuFilterMode === 'auto' && hour >= 15) || state.menuFilterMode === 'all') {
                 if (chieu.length) {
-                    html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--primary);margin-bottom:1rem;margin-top:${sang.length ? '2rem' : '0'};">${__('evening')}</h3>`;
+                    html += `<h3 style="color:var(--text);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--text);margin-bottom:1rem;margin-top:${sang.length ? '2rem' : '0'};">${__('evening')}</h3>`;
                     html += createShiftHTML(chieu);
                 }
             }
@@ -1534,7 +1539,7 @@
                 <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support"><i class="fas fa-headset"></i><span class="tab-label">${__('support')}</span></button>
                 <button class="tab-btn ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats"><i class="fas fa-chart-pie"></i><span class="tab-label">${__('stats')}</span></button>
                 <button class="tab-btn ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu"><i class="fas fa-utensils"></i><span class="tab-label">${__('menu')}</span></button>
-                <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel"><i class="fas fa-users"></i><span class="tab-label">${__('personnel')}</span></button>
+                <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel"><i class="fas fa-clock"></i><span class="tab-label">${__('personnel')}</span></button>
             </div><div id="admin-content"></div></div>`;
             await renderAdminSubTab();
         }
