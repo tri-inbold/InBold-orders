@@ -499,7 +499,7 @@
         .profile-menu-icon.red { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
         
         .profile-menu-text { flex: 1; text-align: left; }
-        .profile-menu-label { font-size: 14px; font-weight: 500; }
+        .profile-menu-label { font-size: 14px; font-weight: 500; color: var(--primary); }
         .profile-menu-value { font-size: 12px; color: var(--text-muted); }
         
         .btn {
@@ -834,6 +834,7 @@
             overflow-x: auto;
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
+            margin-bottom: 1rem;
         }
         
         table { width: 100%; border-collapse: collapse; }
@@ -1429,7 +1430,7 @@
                 .filter(([key, o]) => o.name && o.status !== 'reopen' && o.name.toLowerCase().includes(searchTerm.toLowerCase())) 
                 .map(([key, o]) => ({ ...o, key }));
 
-            el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fas fa-clock"></i>`;
+            el('menu-filter-btn').innerHTML = state.menuFilterMode === 'auto' ? `<i class="fas ${hour < 15 ? 'fa-sun' : 'fa-moon'}"></i>` : `<i class="fas fa-user-group"></i>`;
             
             const createStaffItem = (order, showMarkEaten = false) => {
                 const statusClass = order.status === 'eaten' ? 'eaten' : (order.status === 'skip' ? 'skipped' : '');
@@ -1501,13 +1502,13 @@
             let html = '';
             if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') {
                 if (sang.length) {
-                    html += `<h3 style="color:var(--text);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--text);margin-bottom:1rem;">${__('morning')}</h3>`;
+                    html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--primary);margin-bottom:1rem;">${__('morning')}</h3>`;
                     html += createShiftHTML(sang);
                 }
             }
             if ((state.menuFilterMode === 'auto' && hour >= 15) || state.menuFilterMode === 'all') {
                 if (chieu.length) {
-                    html += `<h3 style="color:var(--text);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--text);margin-bottom:1rem;margin-top:${sang.length ? '2rem' : '0'};">${__('evening')}</h3>`;
+                    html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--primary);margin-bottom:1rem;margin-top:${sang.length ? '2rem' : '0'};">${__('evening')}</h3>`;
                     html += createShiftHTML(chieu);
                 }
             }
@@ -1539,7 +1540,7 @@
                 <button class="tab-btn ${state.adminSubTab === 'support' ? 'active' : ''}" data-subtab="support"><i class="fas fa-headset"></i><span class="tab-label">${__('support')}</span></button>
                 <button class="tab-btn ${state.adminSubTab === 'stats' ? 'active' : ''}" data-subtab="stats"><i class="fas fa-chart-pie"></i><span class="tab-label">${__('stats')}</span></button>
                 <button class="tab-btn ${state.adminSubTab === 'menu' ? 'active' : ''}" data-subtab="menu"><i class="fas fa-utensils"></i><span class="tab-label">${__('menu')}</span></button>
-                <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel"><i class="fas fa-clock"></i><span class="tab-label">${__('personnel')}</span></button>
+                <button class="tab-btn ${state.adminSubTab === 'personnel' ? 'active' : ''}" data-subtab="personnel"><i class="fas fa-user-group"></i><span class="tab-label">${__('personnel')}</span></button>
             </div><div id="admin-content"></div></div>`;
             await renderAdminSubTab();
         }
@@ -1643,7 +1644,7 @@
                 const createTable = (data, name) => {
                     if (Object.keys(data).length === 0) return '';
                     const totals = Object.values(data).reduce((acc, curr) => ({ordered: acc.ordered + curr.ordered, eaten: acc.eaten + curr.eaten, notEaten: acc.notEaten + curr.notEaten}), {ordered: 0, eaten: 0, notEaten: 0});
-                    return `<h4 class="mt-2" style="color:var(--primary);">${name}</h4><div class="table-wrapper"><table><thead><tr><th>${__('dish')}</th><th>${headers.ordered}</th><th>${headers.eaten}</th><th>${headers.notEaten}</th></tr></thead><tbody>
+                    return `<div class="table-wrapper"><table><thead><tr><th>${name}</th><th>${headers.ordered}</th><th>${headers.eaten}</th><th>${headers.notEaten}</th></tr></thead><tbody>
                         ${Object.entries(data).map(([dish, d]) => `<tr><td>${dish}</td><td>${d.ordered}</td><td>${d.eaten}</td><td>${d.notEaten}</td></tr>`).join('')}
                         <tr style="font-weight:600;background:rgba(102,126,234,0.1)"><td>${__('total')}</td><td>${totals.ordered}</td><td>${totals.eaten}</td><td>${totals.notEaten}</td></tr></tbody></table></div>`;
                 };
