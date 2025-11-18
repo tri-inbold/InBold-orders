@@ -1277,7 +1277,7 @@
                 for (const dayKey of dayKeys) {
                     summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[dayKey]}</div><div class="staff-dish">${parseDish(state.orderSelection[dayKey])}</div></div></li>`;
                 }
-                summaryHTML += `</ul><button id="submit-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check-circle"></i> ${__('complete')}</button></div>`;
+                summaryHTML += `</ul><button id="submit-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check"></i> ${__('complete')}</button></div>`;
                 container.innerHTML = summaryHTML;
                 return;
             }
@@ -1347,7 +1347,7 @@
                 for (const dayKey of dayKeys) {
                     summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[dayKey]}</div><div class="staff-dish">${parseDish(state.orderSelection[dayKey])}</div></div></li>`;
                 }
-                summaryHTML += `</ul><button id="submit-reopen-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check-circle"></i> ${__('complete')}</button></div>`;
+                summaryHTML += `</ul><button id="submit-reopen-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check"></i> ${__('complete')}</button></div>`;
                 container.innerHTML = summaryHTML;
                 return;
             }
@@ -1623,9 +1623,9 @@
         async function renderStatsContent() {
             const statsContent = el('stats-content');
             const headers = { 
-                ordered: `<i class="fas fa-box" title="${__('ordered')}"></i>`, 
-                eaten: `<i class="fas fa-check-circle" title="${__('eaten')}"></i>`, 
-                notEaten: `<i class="fas fa-times-circle" title="${__('notEaten')}"></i>` 
+                ordered: `<i class="fas fa-list-ul" title="${__('ordered')}"></i>`, 
+                eaten: `<i class="fas fa-check" title="${__('eaten')}"></i>`, 
+                notEaten: `<i class="fas fa-xmark" title="${__('notEaten')}"></i>` 
             };
             if (state.statsViewMode === 'day') {
                 const dayData = await getDocument(getWeekString(state.statsViewDate), getDayKey(state.statsViewDate));
