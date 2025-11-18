@@ -1643,7 +1643,7 @@
                 const createTable = (data, name) => {
                     if (Object.keys(data).length === 0) return '';
                     const totals = Object.values(data).reduce((acc, curr) => ({ordered: acc.ordered + curr.ordered, eaten: acc.eaten + curr.eaten, notEaten: acc.notEaten + curr.notEaten}), {ordered: 0, eaten: 0, notEaten: 0});
-                    return `<h4 class="mt-2" style="color:var(--primary);">${name}</h4><div class="table-wrapper"><table><thead><tr><th>${__('dish')}</th><th>${headers.ordered}</th><th>${headers.eaten}</th><th>${headers.notEaten}</th></tr></thead><tbody>
+                    return `<h4 class="mt-2" style="color:var(--primary);">${name}</h4><div class="table-wrapper"><table><thead><tr><th>${name}</th><th>${headers.ordered}</th><th>${headers.eaten}</th><th>${headers.notEaten}</th></tr></thead><tbody>
                         ${Object.entries(data).map(([dish, d]) => `<tr><td>${dish}</td><td>${d.ordered}</td><td>${d.eaten}</td><td>${d.notEaten}</td></tr>`).join('')}
                         <tr style="font-weight:600;background:rgba(102,126,234,0.1)"><td>${__('total')}</td><td>${totals.ordered}</td><td>${totals.eaten}</td><td>${totals.notEaten}</td></tr></tbody></table></div>`;
                 };
