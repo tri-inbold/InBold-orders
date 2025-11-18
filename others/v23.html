@@ -1422,7 +1422,8 @@
             
             const createStaffItem = (order, showMarkEaten = false) => {
                 const statusClass = order.status === 'eaten' ? 'eaten' : (order.status === 'skip' ? 'skipped' : '');
-                const actionBtn = showMarkEaten 
+                const isNoOrder = order.food === 'Không đặt cơm | No order' || order.food === 'Không đặt cơm';
+                const actionBtn = (showMarkEaten && !isNoOrder)
                     ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${getDayKey()}"><i class="fas fa-check"></i> Đã ăn</button></div>`
                     : '';
                 
@@ -1620,8 +1621,8 @@
                 if (!dayData) { statsContent.innerHTML = `<p class="text-center text-muted p-3">${__('noData')}</p>`; return; }
                 const stats = { M: {}, E: {} };
                 Object.values(dayData).forEach(order => {
-                    // Bỏ qua status reopen và skip trong thống kê
                     if (order.status === 'reopen' || order.status === 'skip') return;
+                    if (order.food === 'Không đặt cơm | No order' || order.food === 'Không đặt cơm') return;
                     
                     const shift = order.shift || 'M', dish = parseDish(order.food);
                     if (!stats[shift][dish]) stats[shift][dish] = { ordered: 0, eaten: 0, notEaten: 0 };
@@ -1645,8 +1646,8 @@
                     if (d.getDay() === 0 || d.getDay() === 6) continue;
                     const dayData = await getDocument(getWeekString(d), getDayKey(d));
                     if (dayData) Object.values(dayData).forEach(order => {
-                        // Bỏ qua status reopen và skip trong thống kê
                         if (order.status === 'reopen' || order.status === 'skip') return;
+                        if (order.food === 'Không đặt cơm | No order' || order.food === 'Không đặt cơm') return;
                         
                         const depart = order.depart || __('unknown');
                         if (!departStats[depart]) departStats[depart] = { ordered: 0, eaten: 0, notEaten: 0 };
@@ -2067,7 +2068,16 @@
                                 .filter(Boolean);
                             
                             const existingDishes = currentMenu[day] || [];
-                            menuToSave[day] = [...existingDishes, ...newDishes];
+                            const allDishes = [...existingDishes, ...newDishes];
+                            
+                            const hasNoOrder = allDishes.some(dish => 
+                                dish === 'Không đặt cơm | No order' || dish === 'Không đặt cơm'
+                            );
+                            if (!hasNoOrder) {
+                                allDishes.push('Không đặt cơm | No order');
+                            }
+                            
+                            menuToSave[day] = allDishes;
                         }
                     }
                     
