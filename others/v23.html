@@ -1502,13 +1502,13 @@
             let html = '';
             if ((state.menuFilterMode === 'auto' && hour < 15) || state.menuFilterMode === 'all') {
                 if (sang.length) {
-                    html += `<h3 style="color:var(--text);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--text);margin-bottom:1rem;">${__('morning')}</h3>`;
+                    html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--primary);margin-bottom:1rem;">${__('morning')}</h3>`;
                     html += createShiftHTML(sang);
                 }
             }
             if ((state.menuFilterMode === 'auto' && hour >= 15) || state.menuFilterMode === 'all') {
                 if (chieu.length) {
-                    html += `<h3 style="color:var(--text);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--text);margin-bottom:1rem;margin-top:${sang.length ? '2rem' : '0'};">${__('evening')}</h3>`;
+                    html += `<h3 style="color:var(--primary);padding:1rem 0 .5rem;font-size:18px;border-bottom:2px solid var(--primary);margin-bottom:1rem;margin-top:${sang.length ? '2rem' : '0'};">${__('evening')}</h3>`;
                     html += createShiftHTML(chieu);
                 }
             }
