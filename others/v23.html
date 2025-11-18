@@ -1620,6 +1620,9 @@
                 if (!dayData) { statsContent.innerHTML = `<p class="text-center text-muted p-3">${__('noData')}</p>`; return; }
                 const stats = { M: {}, E: {} };
                 Object.values(dayData).forEach(order => {
+                    // Bỏ qua status reopen và skip trong thống kê
+                    if (order.status === 'reopen' || order.status === 'skip') return;
+                    
                     const shift = order.shift || 'M', dish = parseDish(order.food);
                     if (!stats[shift][dish]) stats[shift][dish] = { ordered: 0, eaten: 0, notEaten: 0 };
                     stats[shift][dish].ordered++;
@@ -1642,6 +1645,9 @@
                     if (d.getDay() === 0 || d.getDay() === 6) continue;
                     const dayData = await getDocument(getWeekString(d), getDayKey(d));
                     if (dayData) Object.values(dayData).forEach(order => {
+                        // Bỏ qua status reopen và skip trong thống kê
+                        if (order.status === 'reopen' || order.status === 'skip') return;
+                        
                         const depart = order.depart || __('unknown');
                         if (!departStats[depart]) departStats[depart] = { ordered: 0, eaten: 0, notEaten: 0 };
                         departStats[depart].ordered++;
