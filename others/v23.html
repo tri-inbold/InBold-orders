@@ -1144,6 +1144,24 @@
             const dayKey = getDayKey();
             const firstName = getFirstName(state.staffProfile.name);
             const userEmailKey = emailToKey(state.currentUser.email);
+            
+            const isReopenMode = localStorage.getItem('reopenMode') === 'true';
+            const reopenForUser = localStorage.getItem('reopenForUser');
+            
+            if (isReopenMode && reopenForUser === userEmailKey) {
+                const heroHtml = `<div class="card hero-card">
+                    <div class="hero-content">
+                        <div class="hero-greeting">${__('hi')} ${firstName}</div>
+                        <div class="hero-title">Đặt lại món tuần này</div>
+                        <div class="hero-subtitle">Bạn đã được mở lại đặt món</div>
+                    </div>
+                </div>`;
+                
+                el('main-content').innerHTML = heroHtml + `<div id="order-section-container"></div>`;
+                await renderReopenOrderSection(el('order-section-container'));
+                return;
+            }
+            
             let heroHtml = '';
         
             if (['sun', 'sat'].includes(dayKey)) {
@@ -1177,7 +1195,6 @@
             el('main-content').innerHTML = heroHtml + `<div id="order-section-container"></div>`;
             await renderOrderSection(el('order-section-container'));
         }
-
         async function renderOrderSection(container) {
             const today = new Date();
             const dayOfWeek = today.getDay();
@@ -1186,48 +1203,46 @@
             const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
             const dayNames = { mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') };
         
-            const isReopenMode = localStorage.getItem('reopenMode') === 'true';
-            const reopenDate = localStorage.getItem('reopenDate');
+            const canOrderNextWeek = (dayOfWeek === 5 && hour >= 15) || dayOfWeek === 6 || dayOfWeek === 0;
             
-            let canOrderNextWeek, weekString, availableDays;
+            const isWorkWeek = dayOfWeek >= 1 && dayOfWeek <= 5;
             
-            if (isReopenMode && reopenDate) {
-                const reopenDay = new Date(reopenDate).getDay();
-                weekString = getWeekString(today);
-                canOrderNextWeek = false;
-                
-                const dayOrder = { 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri' };
-                availableDays = [];
-                
-                if (reopenDay >= 1 && reopenDay <= 5) {
-                    for (let d = reopenDay; d <= 5; d++) {
-                        availableDays.push(dayOrder[d]);
+            const currentWeekString = getWeekString(today);
+            const nextWeekString = getWeekString(new Date(today.getTime() + 7 * 86400000));
+            
+            const currentWeekOrders = await getDocument(currentWeekString, 'mon', true);
+            const hasOrderedCurrentWeek = currentWeekOrders && currentWeekOrders[userEmailKey];
+            
+            if (isWorkWeek && !canOrderNextWeek) {
+                if (hasOrderedCurrentWeek) {
+                    let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${currentWeekString.split('_')[1]}</h2></div><ul class="staff-list">`;
+                    for (const key of dayKeys) {
+                        const dayData = await getDocument(currentWeekString, key, true);
+                        const dish = dayData?.[userEmailKey]?.food;
+                        summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish">${parseDish(dish) || __('rest')}</div></div></li>`;
                     }
-                }
-                
-                if (availableDays.length === 0) {
-                    localStorage.removeItem('reopenMode');
-                    localStorage.removeItem('reopenDate');
-                    container.innerHTML = `<div class="card text-center" style="padding: 2rem;">
-                        <i class="fas fa-calendar-xmark" style="font-size: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
-                        <h3 style="color: var(--text); margin-bottom: 0.5rem;">Không thể đặt món</h3>
-                        <p class="text-muted" style="margin-bottom: 1.5rem;">Tuần này đã kết thúc. Vui lòng đợi đến thứ 6 để đặt món tuần sau.</p>
-                    </div>`;
+                    container.innerHTML = summaryHTML + `</ul></div>`;
                     return;
                 }
-            } else {
-                canOrderNextWeek = (dayOfWeek === 5 && hour >= 15) || dayOfWeek === 6 || dayOfWeek === 0;
-                weekString = canOrderNextWeek ? getWeekString(new Date(today.getTime() + 7 * 86400000)) : getWeekString(today);
-                availableDays = dayKeys;
+                
+                container.innerHTML = `<div class="card text-center" style="padding: 2rem;">
+                    <i class="fas fa-calendar-xmark" style="font-size: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                    <h3 style="color: var(--text); margin-bottom: 0.5rem;">Chưa đặt món tuần này</h3>
+                    <p class="text-muted" style="margin-bottom: 1.5rem;">Liên hệ bộ phận hỗ trợ để được mở lại đặt món.</p>
+                    <a href="mailto:${SUPPORT_EMAIL}" class="btn btn-primary" style="text-decoration: none;">
+                        <i class="fas fa-headset"></i> ${__('support')}
+                    </a>
+                </div>`;
+                return;
             }
             
-            const monOrders = await getDocument(weekString, 'mon', true);
-            const hasOrdered = monOrders && monOrders[userEmailKey];
+            const nextWeekOrders = await getDocument(nextWeekString, 'mon', true);
+            const hasOrderedNextWeek = nextWeekOrders && nextWeekOrders[userEmailKey];
         
-            if (hasOrdered && !isReopenMode) {
-                let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${weekString.split('_')[1]}</h2></div><ul class="staff-list">`;
+            if (hasOrderedNextWeek) {
+                let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${nextWeekString.split('_')[1]}</h2></div><ul class="staff-list">`;
                 for (const key of dayKeys) {
-                    const dayData = await getDocument(weekString, key, true);
+                    const dayData = await getDocument(nextWeekString, key, true);
                     const dish = dayData?.[userEmailKey]?.food;
                     summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish">${parseDish(dish) || __('rest')}</div></div></li>`;
                 }
@@ -1235,31 +1250,10 @@
                 return;
             }
         
-            if (!canOrderNextWeek && !isReopenMode) {
-                container.innerHTML = `<div class="card text-center" style="padding: 2rem;">
-                    <i class="fas fa-calendar-xmark" style="font-size: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
-                    <h3 style="color: var(--text); margin-bottom: 0.5rem;">Chưa đặt món tuần này</h3>
-                    <p class="text-muted" style="margin-bottom: 1.5rem;">Bạn chỉ có thể đặt món cho tuần sau từ thứ 6 (sau 3 giờ chiều) đến chủ nhật.</p>
-                    <a href="mailto:${SUPPORT_EMAIL}" class="btn btn-primary" style="text-decoration: none;">
-                        <i class="fas fa-headset"></i> ${__('support')}
-                    </a>
-                </div>`;
-                return;
-            }
-        
-            const allSelected = availableDays.every(day => state.orderSelection[day]);
+            const allSelected = dayKeys.every(day => state.orderSelection[day]);
             if (allSelected) {
-                let summaryHTML = `<div class="card">`;
-                
-                if (isReopenMode) {
-                    summaryHTML += `<div style="background: var(--warning); color: white; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; text-align: center;">
-                        <i class="fas fa-info-circle"></i> Đặt món bổ sung cho tuần này
-                    </div>`;
-                }
-                
-                summaryHTML += `<div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${weekString.split('_')[1]}</h2></div><ul class="staff-list">`;
-                
-                for (const dayKey of availableDays) {
+                let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${nextWeekString.split('_')[1]}</h2></div><ul class="staff-list">`;
+                for (const dayKey of dayKeys) {
                     summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[dayKey]}</div><div class="staff-dish">${parseDish(state.orderSelection[dayKey])}</div></div></li>`;
                 }
                 summaryHTML += `</ul><button id="submit-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check-circle"></i> ${__('complete')}</button></div>`;
@@ -1267,29 +1261,22 @@
                 return;
             }
         
-            const menu = await getDocument(weekString, "menu", true);
+            const menu = await getDocument(nextWeekString, "menu", true);
             if (!menu) {
                 container.innerHTML = `<div class="card text-center"><p class="text-muted">${__('noMenu')}</p></div>`;
                 return;
             }
         
-            let headerHTML = '';
-            if (isReopenMode) {
-                headerHTML = `<div style="background: var(--warning); color: white; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; text-align: center;">
-                    <i class="fas fa-info-circle"></i> Đặt món bổ sung từ ${dayNames[availableDays[0]]} đến ${dayNames[availableDays[availableDays.length - 1]]}
-                </div>`;
-            }
-        
             const shiftToggleHTML = `<div class="form-group"><label class="form-label">${__('shift')}</label><div class="shift-toggle"><input type="radio" id="user-shift-m" name="user-shift" value="M" ${state.userShiftSelection === 'M' ? 'checked' : ''}><label for="user-shift-m">${__('morning')}</label><input type="radio" id="user-shift-e" name="user-shift" value="E" ${state.userShiftSelection === 'E' ? 'checked' : ''}><label for="user-shift-e">${__('evening')}</label></div></div>`;
             
             let tabsHTML = `<div class="tabs">`;
-            for (const dayKey of availableDays) {
+            for (const dayKey of dayKeys) {
                 tabsHTML += `<button class="tab-btn order-day-tab-btn ${state.currentOrderDay === dayKey ? 'active' : ''}" data-day-key="${dayKey}">${dayNames[dayKey]}</button>`;
             }
             tabsHTML += `</div>`;
             
             let daysContentHTML = '';
-            for (const dayKey of availableDays) {
+            for (const dayKey of dayKeys) {
                 const dishes = menu[dayKey] || [];
                 daysContentHTML += `<div id="order-day-${dayKey}" class="${state.currentOrderDay === dayKey ? '' : 'hidden'}">`;
                 if (Array.isArray(dishes) && dishes.length > 0) {
@@ -1300,13 +1287,87 @@
                 daysContentHTML += `</div>`;
             }
             
-            container.innerHTML = `<div class="card">${headerHTML}<div class="card-header"><h2 class="card-title">${__('orderForWeek')} ${weekString.split('_')[1]}</h2></div>${shiftToggleHTML}${tabsHTML}${daysContentHTML}</div>`;
-            
-            if (!availableDays.includes(state.currentOrderDay)) {
-                state.currentOrderDay = availableDays[0];
-            }
+            container.innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderForWeek')} ${nextWeekString.split('_')[1]}</h2></div>${shiftToggleHTML}${tabsHTML}${daysContentHTML}</div>`;
         }
 
+        async function renderReopenOrderSection(container) {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const userEmailKey = emailToKey(state.currentUser.email);
+            const currentWeekString = getWeekString(today);
+            
+            const dayOrder = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+            const dayKeys = [];
+            const dayNames = { mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') };
+            
+            for (let d = dayOfWeek; d <= 5; d++) {
+                if (d >= 1 && d <= 5) {
+                    dayKeys.push(dayOrder[d]);
+                }
+            }
+            
+            if (dayKeys.length === 0) {
+                container.innerHTML = `<div class="card text-center" style="padding: 2rem;">
+                    <i class="fas fa-calendar-xmark" style="font-size: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                    <h3 style="color: var(--text); margin-bottom: 0.5rem;">Không thể đặt món</h3>
+                    <p class="text-muted" style="margin-bottom: 1.5rem;">Tuần này đã kết thúc.</p>
+                </div>`;
+                return;
+            }
+            
+            const allSelected = dayKeys.every(day => state.orderSelection[day]);
+            if (allSelected) {
+                let summaryHTML = `<div class="card">
+                    <div style="background: var(--warning); color: white; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; text-align: center;">
+                        <i class="fas fa-info-circle"></i> Đặt món bổ sung cho tuần này
+                    </div>
+                    <div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${currentWeekString.split('_')[1]}</h2></div><ul class="staff-list">`;
+                
+                for (const dayKey of dayKeys) {
+                    summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[dayKey]}</div><div class="staff-dish">${parseDish(state.orderSelection[dayKey])}</div></div></li>`;
+                }
+                summaryHTML += `</ul><button id="submit-reopen-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check-circle"></i> ${__('complete')}</button></div>`;
+                container.innerHTML = summaryHTML;
+                return;
+            }
+            
+            const menu = await getDocument(currentWeekString, "menu", true);
+            if (!menu) {
+                container.innerHTML = `<div class="card text-center"><p class="text-muted">${__('noMenu')}</p></div>`;
+                return;
+            }
+            
+            const shiftToggleHTML = `<div class="form-group"><label class="form-label">${__('shift')}</label><div class="shift-toggle"><input type="radio" id="user-shift-m" name="user-shift" value="M" ${state.userShiftSelection === 'M' ? 'checked' : ''}><label for="user-shift-m">${__('morning')}</label><input type="radio" id="user-shift-e" name="user-shift" value="E" ${state.userShiftSelection === 'E' ? 'checked' : ''}><label for="user-shift-e">${__('evening')}</label></div></div>`;
+            
+            let tabsHTML = `<div class="tabs">`;
+            for (const dayKey of dayKeys) {
+                tabsHTML += `<button class="tab-btn order-day-tab-btn ${state.currentOrderDay === dayKey ? 'active' : ''}" data-day-key="${dayKey}">${dayNames[dayKey]}</button>`;
+            }
+            tabsHTML += `</div>`;
+            
+            let daysContentHTML = '';
+            for (const dayKey of dayKeys) {
+                const dishes = menu[dayKey] || [];
+                daysContentHTML += `<div id="order-day-${dayKey}" class="${state.currentOrderDay === dayKey ? '' : 'hidden'}">`;
+                if (Array.isArray(dishes) && dishes.length > 0) {
+                    daysContentHTML += `<div class="order-dish-list">${dishes.map(dish => `<div class="order-dish-item" data-dish="${dish}" data-day-key="${dayKey}"><div class="order-dish-name">${parseDish(dish)}</div></div>`).join('')}</div>`;
+                } else {
+                    daysContentHTML += `<p class="text-center text-muted p-3">${__('noDishes')}</p><div class="order-dish-list"><div class="order-dish-item" data-dish="Nghỉ" data-day-key="${dayKey}"><div class="order-dish-name">${__('rest')}</div></div></div>`;
+                }
+                daysContentHTML += `</div>`;
+            }
+            
+            const warningHTML = `<div style="background: var(--warning); color: white; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; text-align: center;">
+                <i class="fas fa-info-circle"></i> Đặt món từ ${dayNames[dayKeys[0]]} đến ${dayNames[dayKeys[dayKeys.length - 1]]}
+            </div>`;
+            
+            container.innerHTML = `<div class="card">${warningHTML}<div class="card-header"><h2 class="card-title">${__('orderForWeek')} ${currentWeekString.split('_')[1]}</h2></div>${shiftToggleHTML}${tabsHTML}${daysContentHTML}</div>`;
+            
+            if (!dayKeys.includes(state.currentOrderDay)) {
+                state.currentOrderDay = dayKeys[0];
+            }
+        }
+        
         async function renderMenu() {
             el('main-content').innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('todayList')}</h2><button id="menu-filter-btn" class="icon-btn"><i class="fas fa-filter"></i></button></div><div class="search-bar"><div class="search-wrapper"><i class="fas fa-search search-icon"></i><input type="text" id="search-staff" class="search-input" placeholder="${__('searchStaff')}"></div></div><div id="staff-list-container"></div></div>`;
             const dayData = await getDocument(getWeekString(new Date()), getDayKey(), true);
@@ -2119,23 +2180,23 @@
                 showLoader();
                 try {
                     const weekString = getWeekString(new Date());
+                    const targetKey = state.reopenTarget.key;
+                    
                     for (const day of ['mon', 'tue', 'wed', 'thu', 'fri']) {
-                        await updateDoc(doc(db, weekString, day), { [state.reopenTarget.key]: deleteField() });
+                        await updateDoc(doc(db, weekString, day), { [targetKey]: deleteField() });
                     }
                     
-                    if (state.reopenTarget.key === emailToKey(state.currentUser.email)) {
-                        localStorage.setItem('reopenMode', 'true');
-                        localStorage.setItem('reopenDate', new Date().toISOString());
-                        state.orderSelection = {};
-                        state.currentOrderDay = 'mon';
-                    }
+                    localStorage.setItem('reopenMode', 'true');
+                    localStorage.setItem('reopenForUser', targetKey);
+                    localStorage.setItem('reopenDate', new Date().toISOString());
                     
                     showToast(__('reopenSuccess'));
                     el('reopen-order-modal').classList.add('hidden');
                     state.cachedData.clear();
-                    await render();
                     
-                    if (state.reopenTarget.key === emailToKey(state.currentUser.email)) {
+                    if (targetKey === emailToKey(state.currentUser.email)) {
+                        state.orderSelection = {};
+                        state.currentOrderDay = 'mon';
                         state.currentTab = 'today';
                         document.querySelector('.nav-item.active')?.classList.remove('active');
                         document.querySelector('.nav-item[data-tab="today"]')?.classList.add('active');
@@ -2144,9 +2205,37 @@
                         await renderAdmin();
                     }
                 } catch { showToast(__('error'), 'error'); } finally { hideLoader(); }
-            }
-           
-            else if (id === 'add-personnel-btn') {
+            } else if (id === 'submit-reopen-order-btn') {
+                showLoader();
+                try {
+                    const currentWeekString = getWeekString(new Date());
+                    
+                    for (const dayKey in state.orderSelection) {
+                        const payload = { 
+                            [emailToKey(state.currentUser.email)]: { 
+                                name: state.staffProfile.name, 
+                                email: state.currentUser.email, 
+                                food: state.orderSelection[dayKey], 
+                                status: 'not', 
+                                shift: state.userShiftSelection, 
+                                depart: state.staffProfile.depart 
+                            }
+                        };
+                        await setDoc(doc(db, currentWeekString, dayKey), payload, { merge: true });
+                    }
+                    
+                    localStorage.removeItem('reopenMode');
+                    localStorage.removeItem('reopenForUser');
+                    localStorage.removeItem('reopenDate');
+                    
+                    showToast(__('orderSuccess')); 
+                    state.orderSelection = {};
+                    state.currentOrderDay = 'mon';
+                    state.cachedData.clear();
+                    await render();
+                    await checkOrderNotification();
+                } catch { showToast(__('orderFailed'), 'error'); } finally { hideLoader(); }
+            } else if (id === 'add-personnel-btn') {
                 el('personnel-modal-title').textContent = 'Thêm nhân viên';
                 el('personnel-original-email-key').value = '';
                 el('personnel-name-input').value = '';
