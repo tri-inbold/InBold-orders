@@ -1601,11 +1601,54 @@
             await renderStatsContent();
         }
         async function renderAdminSupport() {
-            const [allStaff, monOrders] = await Promise.all([getDocument("staff_list", "staffs", true), getDocument(getWeekString(new Date()), "mon", true)]);
-            const notOrderedList = allStaff ? Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_') && (!monOrders || !monOrders[key])).map(([key, profile]) => ({ key, profile })).sort((a, b) => a.profile.name.localeCompare(b.profile.name)) : [];
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const hour = today.getHours();
+            
+            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek <= 4) || (dayOfWeek === 5 && hour < 15);
+            const checkWeekString = isCurrentWeekPeriod 
+                ? getWeekString(today)
+                : getWeekString(new Date(today.getTime() + 7 * 86400000));
+            
+            const allStaff = await getDocument("staff_list", "staffs", true);
+            
+            if (!allStaff) {
+                el('admin-content').innerHTML = `<div class="mt-3">
+                    <h3 style="color:var(--primary);margin-bottom:1rem;font-size:18px;">${__('notOrderedYet')}</h3>
+                    <p class="text-center text-muted p-3">${__('noData')}</p>
+                </div>`;
+                return;
+            }
+            
+            const notOrderedList = [];
+            const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+            
+            for (const [key, profile] of Object.entries(allStaff)) {
+                if (key.startsWith('guest_')) continue;
+                
+                let hasAnyOrders = false;
+                
+                for (const dayKey of dayKeys) {
+                    const dayData = await getDocument(checkWeekString, dayKey, true);
+                    if (dayData && dayData[key]) {
+                        const userOrder = dayData[key];
+                        // Only count if it's a real order (not reopen status)
+                        if (userOrder.status && userOrder.status !== 'reopen') {
+                            hasAnyOrders = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!hasAnyOrders) {
+                    notOrderedList.push({ key, profile });
+                }
+            }
+            
+            notOrderedList.sort((a, b) => a.profile.name.localeCompare(b.profile.name));
             
             el('admin-content').innerHTML = `<div class="mt-3">
-                <h3 style="color:var(--primary);margin-bottom:1rem;font-size:18px;">${__('notOrderedYet')}</h3>
+                <h3 style="color:var(--primary);margin-bottom:1rem;font-size:18px;">${__('notOrderedYet')} (${notOrderedList.length})</h3>
                 ${notOrderedList.length > 0 ? `
                     <div class="table-wrapper">
                         <table>
