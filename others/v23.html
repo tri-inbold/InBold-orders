@@ -1235,26 +1235,32 @@
             const currentWeekOrders = await getDocument(currentWeekString, 'mon', true);
             const hasOrderedCurrentWeek = currentWeekOrders && currentWeekOrders[userEmailKey];
             
+            let hasAnyCurrentWeekOrders = false;
             if (isCurrentWeekPeriod) {
-                if (hasOrderedCurrentWeek) {
-                    let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${currentWeekString.split('_')[1]}</h2></div><ul class="staff-list">`;
-                    for (const key of dayKeys) {
-                        const dayData = await getDocument(currentWeekString, key, true);
-                        const dish = dayData?.[userEmailKey]?.food;
-                        summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish">${parseDish(dish) || __('rest')}</div></div></li>`;
+                for (const dayKey of dayKeys) {
+                    const dayData = await getDocument(currentWeekString, dayKey, true);
+                    if (dayData && dayData[userEmailKey] && dayData[userEmailKey].status !== 'reopen') {
+                        hasAnyCurrentWeekOrders = true;
+                        break;
                     }
-                    container.innerHTML = summaryHTML + `</ul></div>`;
-                    return;
                 }
-                
-                container.innerHTML = `<div class="card text-center" style="padding: 2rem;">
-                    <i class="fas fa-calendar-xmark" style="font-size: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
-                    <h3 style="color: var(--text); margin-bottom: 0.5rem;">Chưa đặt món tuần này</h3>
-                    <p class="text-muted" style="margin-bottom: 1.5rem;">Liên hệ bộ phận hỗ trợ để được mở lại đặt món.</p>
-                    <a href="mailto:${SUPPORT_EMAIL}" class="btn btn-primary" style="text-decoration: none;">
-                        <i class="fas fa-headset"></i> ${__('support')}
-                    </a>
-                </div>`;
+            }
+            
+            if (isCurrentWeekPeriod) {
+                if (hasOrderedCurrentWeek || hasAnyCurrentWeekOrders) {
+                let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${currentWeekString.split('_')[1]}</h2></div><ul class="staff-list">`;
+                for (const key of dayKeys) {
+                    const dayData = await getDocument(currentWeekString, key, true);
+                    const userOrder = dayData?.[userEmailKey];
+                    
+                    if (userOrder && userOrder.status !== 'reopen') {
+                        const dish = userOrder.food;
+                        summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish">${parseDish(dish)}</div></div></li>`;
+                    } else if (!userOrder || userOrder.status === 'reopen') {
+                        summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish text-muted">${__('notOrdered')}</div></div></li>`;
+                    }
+                }
+                container.innerHTML = summaryHTML + `</ul></div>`;
                 return;
             }
             
