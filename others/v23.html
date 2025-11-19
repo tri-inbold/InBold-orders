@@ -1865,17 +1865,30 @@
             
             const today = new Date();
             const dayOfWeek = today.getDay();
+            const hour = today.getHours();
             const userEmailKey = emailToKey(state.currentUser.email);
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
             
-            const checkWeekString = isWeekend 
-                ? getWeekString(new Date(today.getTime() + 7 * 86400000))
-                : getWeekString(today);
+            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek <= 4) || (dayOfWeek === 5 && hour < 15);
+            const checkWeekString = isCurrentWeekPeriod 
+                ? getWeekString(today)
+                : getWeekString(new Date(today.getTime() + 7 * 86400000));
             
-            const checkOrders = await getDocument(checkWeekString, 'mon');
-            const hasOrdered = checkOrders && checkOrders[userEmailKey];
+            let hasAnyOrders = false;
+            const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
             
-            todayTab.classList.toggle('needs-attention', !hasOrdered);
+            for (const dayKey of dayKeys) {
+                const dayData = await getDocument(checkWeekString, dayKey, true);
+                if (dayData && dayData[userEmailKey]) {
+                    const userOrder = dayData[userEmailKey];
+                    if (userOrder.status && userOrder.status !== 'reopen') {
+                        hasAnyOrders = true;
+                        break;
+                    }
+                }
+            }
+            
+            todayTab.classList.toggle('needs-attention', !hasAnyOrders);
         }
 
         function autoResizeTextarea(element) {
@@ -2350,10 +2363,8 @@
                     
                     for (const dayKey of allRemainingDays) {
                         if (!state.orderSelection[dayKey]) {
-                            // Check if this day has reopen status
                             const dayData = await getDocument(currentWeekString, dayKey, true);
                             if (dayData && dayData[userEmailKey] && dayData[userEmailKey].status === 'reopen') {
-                                // Remove the reopen entry completely
                                 await updateDoc(doc(db, currentWeekString, dayKey), {
                                     [userEmailKey]: deleteField()
                                 });
