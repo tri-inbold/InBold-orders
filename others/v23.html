@@ -1150,41 +1150,22 @@
             }
             hideLoader();
         }
-      
+
         async function renderToday() {
             const dayKey = getDayKey();
             const firstName = getFirstName(state.staffProfile.name);
             const userEmailKey = emailToKey(state.currentUser.email);
-            const currentWeekString = getWeekString(new Date());
-            
-            const cacheKey = `hasFullWeekOrder_${currentWeekString}_${userEmailKey}`;
-            let hasFullWeekOrder = state.cachedData.get(cacheKey);
-            
-            if (hasFullWeekOrder === undefined) {
-                const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
-                let orderCount = 0;
-                
-                for (const dk of dayKeys) {
-                    const dayData = await getDocument(currentWeekString, dk, false);
-                    if (dayData && dayData[userEmailKey] && dayData[userEmailKey].status !== 'reopen') {
-                        orderCount++;
-                    }
-                }
-                
-                hasFullWeekOrder = orderCount === 5;
-                state.cachedData.set(cacheKey, hasFullWeekOrder);
-            }
             
             let isReopenMode = false;
-            if (!hasFullWeekOrder && !['sun', 'sat'].includes(dayKey)) {
-                try {
-                    const todayData = await getDocument(currentWeekString, dayKey, false);
-                    if (todayData && todayData[userEmailKey] && todayData[userEmailKey].status === 'reopen') {
-                        isReopenMode = true;
-                    }
-                } catch (err) {
-                    console.error('Check reopen status error:', err);
+            try {
+                const currentWeekString = getWeekString(new Date());
+                const todayData = await getDocument(currentWeekString, dayKey, true);
+                
+                if (todayData && todayData[userEmailKey] && todayData[userEmailKey].status === 'reopen') {
+                    isReopenMode = true;
                 }
+            } catch (err) {
+                console.error('Check reopen status error:', err);
             }
             
             if (isReopenMode) {
@@ -1206,7 +1187,7 @@
             if (['sun', 'sat'].includes(dayKey)) {
                 heroHtml = `<div class="card hero-card"><div class="hero-content"><div class="hero-greeting">${__('hi')} ${firstName}</div><div class="hero-title">${__('weekend')}</div></div></div>`;
             } else {
-                const dayData = await getDocument(currentWeekString, dayKey, false);
+                const dayData = await getDocument(getWeekString(new Date()), dayKey, false);
                 const userOrder = dayData?.[userEmailKey];
                 if (userOrder && userOrder.status !== 'reopen') {
                     const currentStatus = userOrder.status || 'not';
@@ -1234,8 +1215,8 @@
             }
             el('main-content').innerHTML = heroHtml + `<div id="order-section-container"></div>`;
             await renderOrderSection(el('order-section-container'));
-        }        
-
+        }
+        
         async function renderOrderSection(container) {
             const today = new Date();
             const dayOfWeek = today.getDay();
@@ -1254,13 +1235,30 @@
             const currentWeekOrders = await getDocument(currentWeekString, 'mon', true);
             const hasOrderedCurrentWeek = currentWeekOrders && currentWeekOrders[userEmailKey];
             
+            let hasAnyCurrentWeekOrders = false;
             if (isCurrentWeekPeriod) {
-                if (hasOrderedCurrentWeek) {
+                for (const dayKey of dayKeys) {
+                    const dayData = await getDocument(currentWeekString, dayKey, true);
+                    if (dayData && dayData[userEmailKey] && dayData[userEmailKey].status !== 'reopen') {
+                        hasAnyCurrentWeekOrders = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (isCurrentWeekPeriod) {
+                if (hasOrderedCurrentWeek || hasAnyCurrentWeekOrders) {
                     let summaryHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderedWeek')} ${currentWeekString.split('_')[1]}</h2></div><ul class="staff-list">`;
                     for (const key of dayKeys) {
                         const dayData = await getDocument(currentWeekString, key, true);
-                        const dish = dayData?.[userEmailKey]?.food;
-                        summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish">${parseDish(dish) || __('rest')}</div></div></li>`;
+                        const userOrder = dayData?.[userEmailKey];
+                        
+                        if (userOrder && userOrder.status !== 'reopen') {
+                            const dish = userOrder.food;
+                            summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish">${parseDish(dish)}</div></div></li>`;
+                        } else if (!userOrder || userOrder.status === 'reopen') {
+                            summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[key]}</div><div class="staff-dish text-muted">${__('notOrdered')}</div></div></li>`;
+                        }
                     }
                     container.innerHTML = summaryHTML + `</ul></div>`;
                     return;
@@ -1297,7 +1295,7 @@
                 for (const dayKey of dayKeys) {
                     summaryHTML += `<li class="staff-item summary-list-item"><div class="staff-details"><div class="staff-name">${dayNames[dayKey]}</div><div class="staff-dish">${parseDish(state.orderSelection[dayKey])}</div></div></li>`;
                 }
-                summaryHTML += `</ul><button id="submit-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check-circle"></i> ${__('complete')}</button></div>`;
+                summaryHTML += `</ul><button id="submit-order-btn" class="btn btn-primary btn-block mt-3"><i class="fas fa-check"></i> ${__('complete')}</button></div>`;
                 container.innerHTML = summaryHTML;
                 return;
             }
@@ -1330,7 +1328,7 @@
             
             container.innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">${__('orderForWeek')} ${nextWeekString.split('_')[1]}</h2></div>${shiftToggleHTML}${tabsHTML}${daysContentHTML}</div>`;
         }
-                
+        
         async function renderReopenOrderSection(container) {
             const today = new Date();
             const dayOfWeek = today.getDay();
@@ -2069,9 +2067,6 @@
                     state.orderSelection = {};
                     state.currentOrderDay = 'mon';
                     state.cachedData.clear();
-                    const userEmailKey = emailToKey(state.currentUser.email);
-                    state.cachedData.delete(`hasFullWeekOrder_${targetWeek}_${userEmailKey}`);
-                    state.cachedData.delete(`weeklySummary_${targetWeek}_${userEmailKey}`);
                     await render();
                     await checkOrderNotification();
                 } catch { showToast(__('orderFailed'), 'error'); } finally { hideLoader(); }
@@ -2381,8 +2376,6 @@
                     state.orderSelection = {};
                     state.currentOrderDay = 'mon';
                     state.cachedData.clear();
-                    state.cachedData.delete(`hasFullWeekOrder_${currentWeekString}_${userEmailKey}`);
-                    state.cachedData.delete(`weeklySummary_${currentWeekString}_${userEmailKey}`);
                     await render();
                     await checkOrderNotification();
                 } catch (err) { 
