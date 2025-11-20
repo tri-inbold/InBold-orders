@@ -584,7 +584,7 @@
                 const { status } = parseDishValue(order.rawDish);
                 const statusClass = status === 'eaten' ? 'eaten' : (status === 'giveup' ? 'skipped' : '');
                 const isPlaceholder = status === 'placeholder';
-                const actionBtn = (showMarkEaten && !isPlaceholder) ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${dayKey}"><i class="fas fa-check"></i> ${eaten}</button></div>` : '';
+                const actionBtn = (showMarkEaten && !isPlaceholder) ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${dayKey}"><i class="fas fa-check"></i> ${__('eaten')}</button></div>` : '';
                 return `<li class="staff-item ${statusClass}"><div class="staff-details"><div class="staff-name">${order.name}</div><div class="staff-dish">${parseDish(order.rawDish)}</div></div>${actionBtn}</li>`;
             };
             
