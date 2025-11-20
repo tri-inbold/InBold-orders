@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inbold Menu</title>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-lite.js">
     <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3e%3cpath fill='%23667eea' d='M63.9 14.4C63.1 6.2 56.2 0 48 0s-15.1 6.2-16 14.3L17.9 149.7c-1.3 6-1.9 12.1-1.9 18.2 0 45.9 35.1 83.6 80 87.7L96 480c0 17.7 14.3 32 32 32s32-14.3 32-32l0-224.4c44.9-4.1 80-41.8 80-87.7 0-6.1-.6-12.2-1.9-18.2L223.9 14.3C223.1 6.2 216.2 0 208 0s-15.1 6.2-15.9 14.4L178.5 149.9c-.6 5.7-5.4 10.1-11.1 10.1-5.8 0-10.6-4.4-11.2-10.2L143.9 14.6C143.2 6.3 136.3 0 128 0s-15.2 6.3-15.9 14.6L99.8 149.8c-.5 5.8-5.4 10.2-11.2 10.2-5.8 0-10.6-4.4-11.1-10.1L63.9 14.4zM448 0C432 0 320 32 320 176l0 112c0 35.3 28.7 64 64 64l32 0 0 128c0 17.7 14.3 32 32 32s32-14.3 32-32l0-448c0-17.7-14.3-32-32-32z'/%3e%3c/svg%3e">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
         
@@ -139,9 +141,21 @@
         .toast-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
         .toast-icon.success { background: var(--success); } .toast-icon.error { background: var(--error); }
 
-        #loader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .spinner { width: 48px; height: 48px; border: 3px solid rgba(102, 126, 234, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        #loader { 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: #0f172a;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 9999; 
+        }
+        
+        .static-logo {
+            width: 180px;
+            max-width: 40%;
+            height: auto;
+        }
 
         .table-wrapper { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 1rem; }
         table { width: 100%; border-collapse: collapse; }
@@ -207,12 +221,23 @@
 
         <nav id="tab-bar" class="hidden"></nav>
         <div id="toast-notification"></div>
-        <div id="loader" class="hidden"><div class="spinner"></div></div>
+        <div id="loader" class="hidden">
+            <div class="static-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 865.5 254.7">
+                    <path d="M0,251.3V5.6h55.5v245.8H0Z" fill="#fff"/>
+                    <path d="M70.8,251.3V81.9h42.7l5.6,11.8c2.9-2.5,6-4.6,9.1-6.4,3.1-1.8,6.4-3.4,9.7-4.7,3.4-1.3,6.9-2.2,10.7-2.8,3.7-.6,7.6-.8,11.7-.8,11.7,0,21.8,1.8,30.3,5.5,8.5,3.7,15.5,8.9,21,15.6,5.5,6.7,9.6,14.9,12.3,24.5,2.6,9.6,4,20.2,4,31.8v95h-51.1v-93.8c0-5.3-.6-9.8-1.7-13.6-1.1-3.8-2.8-6.9-4.9-9.4-2.1-2.5-4.8-4.3-8-5.5-3.2-1.2-6.9-1.8-11.2-1.8s-8,.6-11.5,1.8c-3.5,1.2-6.5,3.2-9.1,5.9-2.5,2.8-4.6,6.4-6,11-1.5,4.6-2.2,10.2-2.2,16.8v88.5h-51.3,0Z" fill="#fff"/>
+                    <path d="M334,5.6c12.9,0,24.3,1.8,34.2,5.2,9.9,3.5,18.3,8.3,25,14.4,6.7,6.1,11.8,13.3,15.3,21.6,3.5,8.3,5.2,17.2,5.2,26.8s-.7,11.8-2.1,17c-1.4,5.3-3.4,10-6.1,14.2-2.7,4.2-5.9,8-9.6,11.2-3.8,3.2-8.1,5.9-13,8,6,2.5,11.3,5.6,16,9.4,4.7,3.8,8.6,8.1,11.8,13,3.2,4.9,5.7,10.3,7.4,16.2,1.7,5.9,2.5,12.3,2.5,19,0,9.8-1.8,19-5.5,27.5-3.7,8.5-9,15.9-15.9,22.1-6.9,6.2-15.4,11.1-25.5,14.6-10,3.6-21.4,5.3-34,5.3h-96.8V5.6h91.1ZM333.5,104.6c3.9,0,7.5-.6,10.7-1.9,3.2-1.2,5.8-2.9,8-5.1,2.2-2.1,3.9-4.6,5-7.4,1.1-2.8,1.7-5.9,1.7-9.1s-.6-6.4-1.8-9.4c-1.2-3-2.9-5.6-5.2-7.8-2.3-2.2-5-3.9-8.3-5.2-3.3-1.3-7-2-11.2-2h-35v47.9h36.1,0ZM337.7,200.2c4.2,0,8-.7,11.3-2s6.3-3.2,8.6-5.4c2.4-2.3,4.2-4.9,5.6-8,1.4-3.1,2-6.4,2-9.9s-.6-6.6-1.7-9.6c-1.1-3-2.8-5.7-5.1-8-2.3-2.3-5-4.1-8.3-5.5-3.3-1.4-7.1-2-11.3-2h-41.5v50.6h40.3Z" fill="#fff"/>
+                    <path d="M435.7,132.2c4.7-10.7,11.3-20,19.6-27.9,8.3-7.9,18-14.1,29.2-18.6,11.2-4.5,23.2-6.8,36.2-6.8s25,2.3,36.2,6.8c11.2,4.5,20.9,10.7,29.1,18.6,8.2,7.9,14.8,17.2,19.6,27.9,4.8,10.7,7.2,22.3,7.2,34.7s-2.4,24-7.2,34.7c-4.8,10.7-11.3,20-19.6,27.8-8.2,7.8-18,14-29.2,18.5-11.2,4.5-23.3,6.8-36.3,6.8s-24.9-2.3-36.1-6.8-20.9-10.7-29.2-18.5c-8.3-7.8-14.8-17.1-19.6-27.8-4.7-10.7-7.1-22.3-7.1-34.7s2.4-24,7.1-34.7h0ZM482.2,182.4c2.2,4.8,5.2,8.9,9,12.4,3.8,3.5,8.2,6.3,13.2,8.3,5,2,10.4,3,16.2,3s11.2-1,16.3-3c5.1-2,9.6-4.7,13.4-8.3,3.8-3.5,6.8-7.7,9-12.5,2.2-4.8,3.3-10,3.3-15.5s-1.1-10.9-3.3-15.7c-2.2-4.8-5.2-9-9-12.5-3.8-3.5-8.2-6.3-13.3-8.3-5.1-2-10.5-3-16.2-3s-11.2,1-16.2,3c-5.1,2-9.5,4.7-13.3,8.3-3.8,3.6-6.8,7.7-9,12.5-2.2,4.8-3.3,10-3.3,15.5s1.1,10.9,3.3,15.7h0Z" fill="#fff"/>
+                    <path d="M625.4,0l51.3,18.3v233.1h-51.3V0Z" fill="#fff"/>
+                    <path d="M865.5,18.3v233.1h-41.5l-5.8-11.3c-2.8,2.4-5.8,4.4-9,6.2-3.2,1.7-6.5,3.2-10.1,4.4-3.6,1.2-7.3,2-11.2,2.5-3.9.5-8,.8-12.3.8-12.5,0-24.1-2.3-34.6-6.8-10.5-4.5-19.7-10.7-27.4-18.7-7.7-7.9-13.8-17.3-18.1-28-4.3-10.7-6.5-22.2-6.5-34.5s2.2-24,6.5-34.7c4.3-10.7,10.3-20,18-27.9,7.7-7.9,16.8-14.1,27.5-18.6,10.7-4.5,22.2-6.8,34.6-6.8s7.3.2,10.7.7c3.4.5,6.8,1.2,10,2.1,3.2,1,6.3,2.2,9.2,3.6,2.9,1.5,5.8,3.2,8.5,5.2V0l51.3,18.3h0ZM812.5,149c-1.8-4.9-4.4-9-7.7-12.4-3.3-3.3-7.3-5.9-12-7.6-4.7-1.8-9.9-2.6-15.5-2.6s-10.8,1-15.4,3c-4.6,2-8.6,4.7-11.9,8.2-3.3,3.5-5.9,7.6-7.8,12.4-1.9,4.8-2.8,10-2.8,15.7s.9,10.9,2.7,15.7c1.8,4.9,4.4,9.1,7.8,12.6,3.4,3.5,7.4,6.3,12,8.3,4.6,2,9.8,3,15.4,3s10.8-.9,15.5-2.6c4.7-1.7,8.7-4.3,12-7.7s5.9-7.6,7.7-12.5c1.8-5,2.7-10.5,2.7-16.8s-.9-11.8-2.7-16.7h0Z" fill="#fff"/>
+                </svg> menu
+            </div>
+        </div>
     </div>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-lite.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
@@ -229,7 +254,7 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
         
-        const SUPPORT_EMAIL = 'truc.tran@inbold.com';
+        const SUPPORT_EMAIL = 'truc.tran@inbold.com'; // email người hỗ trợ
 
         const state = {
             currentUser: null, staffProfile: null, isAdmin: false,
@@ -239,6 +264,17 @@
             guestCurrentOrderDay: 'mon', guestShiftSelection: 'morning',
             reopenTarget: { key: null, name: null }, deleteTarget: { key: null, name: null },
             statsViewMode: 'day', statsViewDate: new Date(), guestOrderSelection: {}
+        };
+
+        const loadXLSXLibrary = () => {
+            return new Promise((resolve, reject) => {
+                if (window.XLSX) return resolve();
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
         };
         
         const t = {
@@ -1035,6 +1071,7 @@
             } 
             else if (id === 'export-stats-btn') {
                 try {
+                    await loadXLSXLibrary();
                     const wb = XLSX.utils.book_new(); const tables = el('stats-content').querySelectorAll('table');
                     if (tables.length === 0) { showToast(__('noData'), 'error'); return; }
                     tables.forEach((table, idx) => {
@@ -1047,6 +1084,7 @@
             } 
             else if (id === 'export-personnel-btn') {
                 try {
+                    await loadXLSXLibrary();
                     const allStaff = await getDocument("staff_list", "staffs");
                     const data = Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_')).map(([_, p]) => ({ [__('name')]: p.name, [__('email')]: p.email, [__('department')]: p.depart || '-' }));
                     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), __('personnel'));
