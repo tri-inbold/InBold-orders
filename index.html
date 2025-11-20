@@ -485,7 +485,8 @@
             const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
             const dayNames = { mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') };
         
-            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek <= 4) || (dayOfWeek === 5 && hour < 15);
+            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek <= 3) || (dayOfWeek === 4 && hour < 15);
+
             const currentWeekString = getWeekString(today);
             const nextWeekString = getWeekString(new Date(today.getTime() + 7 * 86400000));
             
@@ -914,7 +915,9 @@
             const dayOfWeek = today.getDay();
             const hour = today.getHours();
             const userEmailKey = emailToKey(state.currentUser.email);
-            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek <= 4) || (dayOfWeek === 5 && hour < 15);
+            
+            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek <= 3) || (dayOfWeek === 4 && hour < 15);
+
             const checkWeekString = isCurrentWeekPeriod ? getWeekString(today) : getWeekString(new Date(today.getTime() + 7 * 86400000));
             const weekDoc = await getDocument('order_list', checkWeekString);
             const hasOrder = weekDoc && weekDoc[userEmailKey] && weekDoc[userEmailKey].order === 'ordered';
@@ -996,7 +999,8 @@
                     const today = new Date();
                     const dayOfWeek = today.getDay();
                     const hour = today.getHours();
-                    const canOrderNextWeek = (dayOfWeek === 5 && hour >= 15) || dayOfWeek === 6 || dayOfWeek === 0;
+                    const canOrderNextWeek = (dayOfWeek === 4 && hour >= 15) || dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0;
+
                     const targetWeek = canOrderNextWeek ? getWeekString(new Date(today.getTime() + 7 * 86400000)) : getWeekString(today);
                     const userKey = emailToKey(state.currentUser.email);
                     
