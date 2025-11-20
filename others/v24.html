@@ -607,8 +607,8 @@
                 return `<div class="skipped-section"><div class="skipped-section-header"><i class="fas fa-hand-holding-heart"></i><span>${__('skippedList')} (${list.length})</span></div><ul class="staff-list">${sorted.map(order => createStaffItem(order, true)).join('')}</ul></div>`;
             };
             
-            const sang = staffOrders.filter(o => o.shift === 'morning' || o.shift === 'M');
-            const chieu = staffOrders.filter(o => o.shift === 'evening' || o.shift === 'E');
+            const sang = staffOrders.filter(o => o.shift === 'morning');
+            const chieu = staffOrders.filter(o => o.shift === 'evening');
             
             const createShiftHTML = (list) => {
                 const skipped = list.filter(o => parseDishValue(o.rawDish).status === 'giveup');
@@ -670,8 +670,8 @@
                     const dish = parseDish(val[dayKey]);
                     
                     let shift = val.shift || 'morning';
-                    if (shift === 'M') shift = 'morning';
-                    if (shift === 'E') shift = 'evening';
+                    if (shift === 'morning') shift = 'morning';
+                    if (shift === 'evening') shift = 'evening';
 
                     if (stats[shift]) {
                         if (!stats[shift][dish]) stats[shift][dish] = { ordered: 0, eaten: 0, notEaten: 0 };
