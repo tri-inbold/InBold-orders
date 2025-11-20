@@ -83,10 +83,10 @@
         .staff-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; background: rgb(25, 34, 49); border-radius: var(--radius-sm); margin-bottom: 4px; border: 1px solid transparent; }
         .staff-item.eaten { opacity: 0.5; }
         .staff-details { flex: 1; }
-        .staff-name { font-weight: 500; font-size: 10px; margin-bottom: 2px; }
-        .summary-list-item .staff-name { font-size: 10px; font-weight: 500; color: var(--text-muted); }
-        .staff-dish { font-size: 12px; color: var(--text-muted); }
-        .summary-list-item .staff-dish { font-size: 12px; font-weight: 500; color: var(--text); }
+        .staff-name { font-weight: 500; font-size: 12px; margin-bottom: 2px; }
+        .summary-list-item .staff-name { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+        .staff-dish { font-size: 14px; color: var(--text-muted); }
+        .summary-list-item .staff-dish { font-size: 14px; font-weight: 500; color: var(--text); }
         
         .profile-avatar { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--primary); margin: 0 auto 1rem; object-fit: cover; display: block; }
         .profile-name { font-size: 20px; font-weight: 600; text-align: center; }
@@ -262,7 +262,7 @@
                 reopenOrderFor: 'Mở lại đặt món cho', reopenConfirmText: 'Thao tác này sẽ cho phép người này đặt lại món trong tuần. Bạn có chắc chắn?',
                 confirm: 'Xác nhận', reopenSuccess: 'Đã mở lại đặt món',
                 stats: 'Thống kê', day: 'Ngày', week: 'Tuần', month: 'Tháng',
-                ordered: 'Đã đặt', eaten: 'Đã ăn', notEaten: 'Chưa ăn', dish: 'Món ăn',
+                ordered: 'Đã đặt', eaten: 'Ăn', notEaten: 'Chưa ăn', dish: 'Món ăn',
                 total: 'Tổng', downloadXLSX: 'Tải XLSX', menu: 'Thực đơn',
                 menuThisWeek: 'Tuần này', menuNextWeek: 'Tuần sau', noDishYet: 'Chưa có món',
                 saveMenu: 'Lưu menu cho tuần sau', personnel: 'Nhân sự', name: 'Tên',
@@ -272,7 +272,7 @@
                 tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6',
                 menuSaved: 'Đã lưu thực đơn', unknown: 'Chưa rõ', today: 'Hôm nay',
                 oneDishPerLine: 'Tên món tiếng việt | Tên món tiếng anh', 
-                skip: 'Nhường', skipped: 'Đã nhường', eaten: 'Đã ăn', skipSuccess: 'Đã nhường suất ăn', eatenSuccess: 'Đã xác nhận ăn', 
+                skip: 'Nhường', skipped: 'Đã nhường', skipSuccess: 'Đã nhường suất ăn', eatenSuccess: 'Đã xác nhận ăn', 
                 skippedList: 'Danh sách đã nhường', addPersonnel: 'Thêm nhân viên', editPersonnel: 'Chỉnh sửa nhân viên', deletePersonnel: 'Xóa nhân viên',
                 deleteConfirm: 'Bạn có chắc chắn muốn xóa?', personnelAdded: 'Đã thêm nhân viên', personnelUpdated: 'Đã cập nhật nhân viên',
                 personnelDeleted: 'Đã xóa nhân viên', emailExists: 'Email này đã tồn tại', invalidEmail: 'Email không hợp lệ', fillAllFields: 'Vui lòng điền đầy đủ thông tin',
@@ -298,7 +298,7 @@
                 reopenOrderFor: 'Reopen order for', reopenConfirmText: 'This action will allow this person to re-order this week. Are you sure?',
                 confirm: 'Confirm', reopenSuccess: 'Order reopened',
                 stats: 'Statistics', day: 'Day', week: 'Week', month: 'Month',
-                ordered: 'Ordered', eaten: 'Eaten', notEaten: 'Not eaten', dish: 'Dish',
+                ordered: 'Ordered', eaten: 'Ate', notEaten: 'Not eaten', dish: 'Dish',
                 total: 'Total', downloadXLSX: 'Download XLSX', menu: 'Menu',
                 menuThisWeek: 'This week', menuNextWeek: 'Next week', noDishYet: 'No dishes yet',
                 saveMenu: 'Save menu for next week', personnel: 'Personnel', name: 'Name',
@@ -308,7 +308,7 @@
                 tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday',
                 menuSaved: 'Menu saved', unknown: 'Unknown', today: 'Today',
                 oneDishPerLine: 'Name of dish in Vietnamese | Name of dish in English', 
-                skip: 'Give', skipped: 'Given', eaten: 'Eaten', skipSuccess: 'Given', eatenSuccess: 'Confirmed eaten',
+                skip: 'Give', skipped: 'Given', skipSuccess: 'Given', eatenSuccess: 'Confirmed eaten',
                 skippedList: 'Given meals list', addPersonnel: 'Add personnel', editPersonnel: 'Edit personnel',
                 deletePersonnel: 'Delete personnel', deleteConfirm: 'Are you sure you want to delete?',
                 personnelAdded: 'Personnel added', personnelUpdated: 'Personnel updated',
@@ -584,7 +584,7 @@
                 const { status } = parseDishValue(order.rawDish);
                 const statusClass = status === 'eaten' ? 'eaten' : (status === 'giveup' ? 'skipped' : '');
                 const isPlaceholder = status === 'placeholder';
-                const actionBtn = (showMarkEaten && !isPlaceholder) ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${dayKey}"><i class="fas fa-check"></i> Đã ăn</button></div>` : '';
+                const actionBtn = (showMarkEaten && !isPlaceholder) ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${dayKey}"><i class="fas fa-check"></i> ${eaten}</button></div>` : '';
                 return `<li class="staff-item ${statusClass}"><div class="staff-details"><div class="staff-name">${order.name}</div><div class="staff-dish">${parseDish(order.rawDish)}</div></div>${actionBtn}</li>`;
             };
             
