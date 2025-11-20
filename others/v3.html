@@ -4,27 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inbold Menu</title>
-    <!-- 1. Tối ưu kết nối mạng -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
     <link rel="preconnect" href="https://firestore.googleapis.com">
-    
     <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3e%3cpath fill='%23667eea' d='M63.9 14.4C63.1 6.2 56.2 0 48 0s-15.1 6.2-16 14.3L17.9 149.7c-1.3 6-1.9 12.1-1.9 18.2 0 45.9 35.1 83.6 80 87.7L96 480c0 17.7 14.3 32 32 32s32-14.3 32-32l0-224.4c44.9-4.1 80-41.8 80-87.7 0-6.1-.6-12.2-1.9-18.2L223.9 14.3C223.1 6.2 216.2 0 208 0s-15.1 6.2-15.9 14.4L178.5 149.9c-.6 5.7-5.4 10.1-11.1 10.1-5.8 0-10.6-4.4-11.2-10.2L143.9 14.6C143.2 6.3 136.3 0 128 0s-15.2 6.3-15.9 14.6L99.8 149.8c-.5 5.8-5.4 10.2-11.2 10.2-5.8 0-10.6-4.4-11.1-10.1L63.9 14.4zM448 0C432 0 320 32 320 176l0 112c0 35.3 28.7 64 64 64l32 0 0 128c0 17.7 14.3 32 32 32s32-14.3 32-32l0-448c0-17.7-14.3-32-32-32z'/%3e%3c/svg%3e">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <!-- Đã gỡ script XLSX ở đây để load sau -->
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
         
         :root { 
-            --primary: #667eea; --primary-dark: #5a67d8; --primary-light: #7c8aed;
-            --secondary: #4299e1; --accent: #ed64a6; --success: #48bb78;
-            --warning: #ed8936; --error: #f56565; --dark-bg: #0f172a;
-            --card-bg: #1e293b; --card-hover: #334155; --border: #334155;
-            --text: #f1f5f9; --text-muted: #94a3b8;
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --primary-light: #7c8aed;
+            --secondary: #4299e1;
+            --accent: #ed64a6;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --error: #f56565;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+            --border: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
             --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1); --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15); --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.2);
-            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.2);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -132,9 +144,7 @@
         .toast-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
         .toast-icon.success { background: var(--success); } .toast-icon.error { background: var(--error); }
 
-        /* 2. Hiển thị Loader ngay lập tức (bỏ class .hidden mặc định trong style này) */
-        #loader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.3s ease; }
-        #loader.hidden { opacity: 0; pointer-events: none; }
+        #loader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .spinner { width: 48px; height: 48px; border: 3px solid rgba(102, 126, 234, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -160,7 +170,15 @@
 </head>
 <body>
     <div id="app">
-        <main id="main-content"></main>
+        <main id="main-content">
+            <div class="card hero-card" style="opacity: 0.7; animation: none;">
+                <div class="hero-content">
+                    <div class="hero-greeting">Đang tải...</div>
+                    <div class="hero-title">Inbold Menu</div>
+                    <div class="spinner" style="width: 24px; height: 24px; border-width: 2px; margin-top: 10px;"></div>
+                </div>
+            </div>
+        </main>
         
         <div id="personnel-modal" class="modal hidden">
             <div class="modal-content">
@@ -202,8 +220,7 @@
 
         <nav id="tab-bar" class="hidden"></nav>
         <div id="toast-notification"></div>
-        <!-- Xóa class hidden để loader hiện ngay khi load trang -->
-        <div id="loader"><div class="spinner"></div></div>
+        <div id="loader" class="hidden"><div class="spinner"></div></div>
     </div>
     
     <script type="module">
@@ -237,19 +254,6 @@
             statsViewMode: 'day', statsViewDate: new Date(), guestOrderSelection: {}
         };
         
-        // 3. Lazy load function cho XLSX
-        const loadXLSX = async () => {
-            if (window.XLSX) return;
-            showLoader();
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        };
-        
         const t = {
             vi: {
                 welcome: 'Chào mừng!', pleaseLogin: 'Vui lòng đăng nhập', login: 'Đăng nhập',
@@ -271,17 +275,17 @@
                 reopenOrderFor: 'Mở lại đặt món cho', reopenConfirmText: 'Thao tác này sẽ cho phép người này đặt lại món trong tuần. Bạn có chắc chắn?',
                 confirm: 'Xác nhận', reopenSuccess: 'Đã mở lại đặt món',
                 stats: 'Thống kê', day: 'Ngày', week: 'Tuần', month: 'Tháng',
-                ordered: 'Đã đặt', eaten: 'Đã ăn', notEaten: 'Chưa ăn', dish: 'Món ăn',
+                ordered: 'Đã đặt', eaten: 'Ăn', notEaten: 'Chưa ăn', dish: 'Món ăn',
                 total: 'Tổng', downloadXLSX: 'Tải XLSX', menu: 'Thực đơn',
                 menuThisWeek: 'Tuần này', menuNextWeek: 'Tuần sau', noDishYet: 'Chưa có món',
-                saveMenu: 'Lưu menu cho tuần sau', personnel: 'NHÂN SỰ', name: 'Tên',
+                saveMenu: 'Lưu menu cho tuần sau', personnel: 'Nhân sự', name: 'Tên',
                 email: 'Email', actions: ' ', save: 'Lưu',
                 addDish: 'Thêm món', removedDish: 'Đã xóa món ăn', added: 'Đã thêm',
                 dishes: 'món', exportPersonnel: 'Export nhân sự', mon: 'Thứ 2',
                 tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6',
                 menuSaved: 'Đã lưu thực đơn', unknown: 'Chưa rõ', today: 'Hôm nay',
                 oneDishPerLine: 'Tên món tiếng việt | Tên món tiếng anh', 
-                skip: 'Nhường', skipped: 'Đã nhường', eaten: 'Đã ăn', skipSuccess: 'Đã nhường suất ăn', eatenSuccess: 'Đã xác nhận ăn', 
+                skip: 'Nhường', skipped: 'Đã nhường', skipSuccess: 'Đã nhường suất ăn', eatenSuccess: 'Đã xác nhận ăn', 
                 skippedList: 'Danh sách đã nhường', addPersonnel: 'Thêm nhân viên', editPersonnel: 'Chỉnh sửa nhân viên', deletePersonnel: 'Xóa nhân viên',
                 deleteConfirm: 'Bạn có chắc chắn muốn xóa?', personnelAdded: 'Đã thêm nhân viên', personnelUpdated: 'Đã cập nhật nhân viên',
                 personnelDeleted: 'Đã xóa nhân viên', emailExists: 'Email này đã tồn tại', invalidEmail: 'Email không hợp lệ', fillAllFields: 'Vui lòng điền đầy đủ thông tin',
@@ -307,17 +311,17 @@
                 reopenOrderFor: 'Reopen order for', reopenConfirmText: 'This action will allow this person to re-order this week. Are you sure?',
                 confirm: 'Confirm', reopenSuccess: 'Order reopened',
                 stats: 'Statistics', day: 'Day', week: 'Week', month: 'Month',
-                ordered: 'Ordered', eaten: 'Eaten', notEaten: 'Not eaten', dish: 'Dish',
+                ordered: 'Ordered', eaten: 'Ate', notEaten: 'Not eaten', dish: 'Dish',
                 total: 'Total', downloadXLSX: 'Download XLSX', menu: 'Menu',
                 menuThisWeek: 'This week', menuNextWeek: 'Next week', noDishYet: 'No dishes yet',
-                saveMenu: 'Save menu for next week', personnel: 'PERSONNEL', name: 'Name',
+                saveMenu: 'Save menu for next week', personnel: 'Personnel', name: 'Name',
                 email: 'Email', actions: ' ', save: 'Save',
                 addDish: 'Add dish', removedDish: 'Dish removed', added: 'Added',
                 dishes: 'dishes', exportPersonnel: 'Export personnel', mon: 'Monday',
                 tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday',
                 menuSaved: 'Menu saved', unknown: 'Unknown', today: 'Today',
                 oneDishPerLine: 'Name of dish in Vietnamese | Name of dish in English', 
-                skip: 'Give', skipped: 'Given', eaten: 'Eaten', skipSuccess: 'Given', eatenSuccess: 'Confirmed eaten',
+                skip: 'Give', skipped: 'Given', skipSuccess: 'Given', eatenSuccess: 'Confirmed eaten',
                 skippedList: 'Given meals list', addPersonnel: 'Add personnel', editPersonnel: 'Edit personnel',
                 deletePersonnel: 'Delete personnel', deleteConfirm: 'Are you sure you want to delete?',
                 personnelAdded: 'Personnel added', personnelUpdated: 'Personnel updated',
@@ -458,8 +462,7 @@
             const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
             const dayNames = { mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') };
         
-            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek < 4) || (dayOfWeek === 4 && hour < 13);
-            
+            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek <= 4) || (dayOfWeek === 5 && hour < 15);
             const currentWeekString = getWeekString(today);
             const nextWeekString = getWeekString(new Date(today.getTime() + 7 * 86400000));
             
@@ -594,9 +597,7 @@
                 const { status } = parseDishValue(order.rawDish);
                 const statusClass = status === 'eaten' ? 'eaten' : (status === 'giveup' ? 'skipped' : '');
                 const isPlaceholder = status === 'placeholder';
-                
                 const actionBtn = (showMarkEaten && !isPlaceholder) ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${dayKey}"><i class="fas fa-check"></i> ${__('eaten')}</button></div>` : '';
-                
                 return `<li class="staff-item ${statusClass}"><div class="staff-details"><div class="staff-name">${order.name}</div><div class="staff-dish">${parseDish(order.rawDish)}</div></div>${actionBtn}</li>`;
             };
             
@@ -825,27 +826,63 @@
         }
         
         async function syncUserProfile() {
-            const userEmailKey = emailToKey(state.currentUser.email);
-            // 2. Tối ưu tải dữ liệu: Dùng Promise.all để tải song song Staff và Admin
-            // Thay vì đợi tải xong staff rồi mới tải admin
-            try {
-                const [staffData, adminData] = await Promise.all([
-                    getDocument("staff_list", "staffs"),
-                    getDocument("staff_list", "admins")
-                ]);
-
-                if (!staffData || !staffData[userEmailKey]) { 
-                    await signOut(auth); 
-                    throw new Error("Tài khoản không có trong danh sách."); 
+                const userEmailKey = emailToKey(state.currentUser.email);
+                const CACHE_KEY = `cache_profile_${userEmailKey}`;
+                
+                const cachedData = localStorage.getItem(CACHE_KEY);
+                let usedCache = false;
+    
+                if (cachedData) {
+                    try {
+                        const parsed = JSON.parse(cachedData);
+                        state.staffProfile = parsed.profile;
+                        state.isAdmin = parsed.isAdmin;
+                        
+                        updateUIForUser(state.currentUser);
+                        await render(); 
+                        usedCache = true;
+                        hideLoader();
+                    } catch (e) {
+                        console.warn("Cache lỗi, bỏ qua");
+                    }
                 }
-                state.staffProfile = staffData[userEmailKey];
-                state.isAdmin = adminData && adminData[userEmailKey] === true;
-            } catch (error) {
-                // Nếu lỗi không phải do không có quyền (ví dụ lỗi mạng), vẫn set isAdmin = false
-                if (error.message === "Tài khoản không có trong danh sách.") throw error;
-                state.isAdmin = false;
+    
+                try {
+                    const staffData = await getDocument("staff_list", "staffs");
+                    
+                    if (!staffData || !staffData[userEmailKey]) {
+                        await signOut(auth);
+                        throw new Error("Tài khoản không có trong danh sách.");
+                    }
+    
+                    const latestProfile = staffData[userEmailKey];
+                    let latestIsAdmin = false;
+                    try {
+                        const adminData = await getDocument("admin_list", "admins");
+                        latestIsAdmin = adminData && adminData[userEmailKey] === true;
+                    } catch { latestIsAdmin = false; }
+    
+                    const isDifferent = !usedCache || 
+                                        JSON.stringify(state.staffProfile) !== JSON.stringify(latestProfile) ||
+                                        state.isAdmin !== latestIsAdmin;
+    
+                    if (isDifferent) {
+                        state.staffProfile = latestProfile;
+                        state.isAdmin = latestIsAdmin;
+                        
+                        localStorage.setItem(CACHE_KEY, JSON.stringify({
+                            profile: state.staffProfile,
+                            isAdmin: state.isAdmin,
+                            timestamp: Date.now()
+                        }));
+    
+                        updateUIForUser(state.currentUser);
+                        await render();
+                    }
+                } catch (e) {
+                    if (!usedCache) throw e;
+                }
             }
-        }
 
         function updateUIForUser(user) {
             const tabBar = el('tab-bar');
@@ -905,7 +942,7 @@
             const dayOfWeek = today.getDay();
             const hour = today.getHours();
             const userEmailKey = emailToKey(state.currentUser.email);
-            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek < 4) || (dayOfWeek === 4 && hour < 13);
+            const isCurrentWeekPeriod = (dayOfWeek >= 1 && dayOfWeek <= 4) || (dayOfWeek === 5 && hour < 15);
             const checkWeekString = isCurrentWeekPeriod ? getWeekString(today) : getWeekString(new Date(today.getTime() + 7 * 86400000));
             const weekDoc = await getDocument('order_list', checkWeekString);
             const hasOrder = weekDoc && weekDoc[userEmailKey] && weekDoc[userEmailKey].order === 'ordered';
@@ -1062,8 +1099,6 @@
             } 
             else if (id === 'export-stats-btn') {
                 try {
-                    // Load XLSX khi cần
-                    await loadXLSX();
                     const wb = XLSX.utils.book_new(); const tables = el('stats-content').querySelectorAll('table');
                     if (tables.length === 0) { showToast(__('noData'), 'error'); return; }
                     tables.forEach((table, idx) => {
@@ -1076,8 +1111,6 @@
             } 
             else if (id === 'export-personnel-btn') {
                 try {
-                    // Load XLSX khi cần
-                    await loadXLSX();
                     const allStaff = await getDocument("staff_list", "staffs");
                     const data = Object.entries(allStaff).filter(([key]) => !key.startsWith('guest_')).map(([_, p]) => ({ [__('name')]: p.name, [__('email')]: p.email, [__('department')]: p.depart || '-' }));
                     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), __('personnel'));
@@ -1172,30 +1205,20 @@
             else if(dataset.modal) el(dataset.modal).classList.toggle('hidden');
         });
 
-        // Logic mới để hiện loader ngay
         async function main() {
-            // Loader đã có sẵn trong HTML, không cần gọi showLoader() ở đây
+            showLoader();
             try {
                 await setPersistence(auth, browserLocalPersistence);
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         state.currentUser = user; state.authReady = true;
-                        try { 
-                            await syncUserProfile(); 
-                            updateUIForUser(user); 
-                            await render(); 
-                            showToast(`${__('hi')}, ${getFirstName(state.staffProfile.name)}!`); 
-                            await checkOrderNotification(); 
-                        } catch(e) { 
-                            showToast(e.message, 'error'); 
-                            await signOut(auth); 
-                        }
+                        try { await syncUserProfile(); updateUIForUser(user); await render(); showToast(`${__('hi')}, ${getFirstName(state.staffProfile.name)}!`); await checkOrderNotification(); } catch(e) { showToast(e.message, 'error'); await signOut(auth); }
                     } else {
                         state.currentUser = null; state.isAdmin = false; state.authReady = true;
                         Object.assign(state, { orderSelection: {}, currentOrderDay: 'mon', userShiftSelection: 'morning', guestOrderSelection: {} });
                         updateUIForUser(null);
                     }
-                    hideLoader(); // Chỉ ẩn loader khi mọi thứ đã xong
+                    hideLoader();
                 });
             } catch { hideLoader(); showToast('Lỗi khởi tạo', 'error'); }
         }
@@ -1203,5 +1226,3 @@
     </script>
 </body>
 </html>
-
---- END OF FILE index (1).html ---
