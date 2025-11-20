@@ -265,7 +265,7 @@
                 ordered: 'Đã đặt', eaten: 'Đã ăn', notEaten: 'Chưa ăn', dish: 'Món ăn',
                 total: 'Tổng', downloadXLSX: 'Tải XLSX', menu: 'Thực đơn',
                 menuThisWeek: 'Tuần này', menuNextWeek: 'Tuần sau', noDishYet: 'Chưa có món',
-                saveMenu: 'Lưu menu cho tuần sau', personnel: 'NHÂN SỰ', name: 'Tên',
+                saveMenu: 'Lưu menu cho tuần sau', personnel: 'Nhân sự', name: 'Tên',
                 email: 'Email', actions: ' ', save: 'Lưu',
                 addDish: 'Thêm món', removedDish: 'Đã xóa món ăn', added: 'Đã thêm',
                 dishes: 'món', exportPersonnel: 'Export nhân sự', mon: 'Thứ 2',
@@ -301,7 +301,7 @@
                 ordered: 'Ordered', eaten: 'Eaten', notEaten: 'Not eaten', dish: 'Dish',
                 total: 'Total', downloadXLSX: 'Download XLSX', menu: 'Menu',
                 menuThisWeek: 'This week', menuNextWeek: 'Next week', noDishYet: 'No dishes yet',
-                saveMenu: 'Save menu for next week', personnel: 'PERSONNEL', name: 'Name',
+                saveMenu: 'Save menu for next week', personnel: 'Personnel', name: 'Name',
                 email: 'Email', actions: ' ', save: 'Save',
                 addDish: 'Add dish', removedDish: 'Dish removed', added: 'Added',
                 dishes: 'dishes', exportPersonnel: 'Export personnel', mon: 'Monday',
@@ -659,32 +659,60 @@
             
             if (state.statsViewMode === 'day') {
                 const dayKey = getDayKey(state.statsViewDate);
-                const weekDoc = await getDocument('order_list', getWeekString(state.statsViewDate));
-                if (!weekDoc) { statsContent.innerHTML = `<p class="text-center text-muted p-3">${__('noData')}</p>`; return; }
+                const weekStr = getWeekString(state.statsViewDate);
+                
+                const weekDoc = await getDocument('order_list', weekStr);
+                
+                if (!weekDoc) { 
+                    statsContent.innerHTML = `<p class="text-center text-muted p-3">${__('noData')}</p>`; 
+                    return; 
+                }
                 
                 const stats = { morning: {}, evening: {} };
+                let hasData = false;
+                
                 Object.entries(weekDoc).forEach(([key, val]) => {
-                    if (key === 'menu' || val.order === 'reopen' || !val[dayKey]) return;
-                    const { status } = parseDishValue(val[dayKey]);
-                    if (status === 'giveup' || status === 'placeholder') return;
-                    const dish = parseDish(val[dayKey]);
+                    if (key === 'menu' || typeof val !== 'object' || !val) return;
+                    if (val.order === 'reopen' || !val[dayKey]) return;
                     
-                    let shift = val.shift || 'morning';
-                    if (shift === 'M') shift = 'morning';
-                    if (shift === 'E') shift = 'evening';
+                    const { status } = parseDishValue(val[dayKey]);
+                    
+                    if (status === 'placeholder') return;
 
-                    if (stats[shift]) {
-                        if (!stats[shift][dish]) stats[shift][dish] = { ordered: 0, eaten: 0, notEaten: 0 };
-                        stats[shift][dish].ordered++;
-                        if (status === 'eaten') stats[shift][dish].eaten++; else stats[shift][dish].notEaten++;
+                    const dish = parseDish(val[dayKey]);
+                    if (!dish) return;
+
+                    const rawShift = String(val.shift || 'morning').toLowerCase().trim();
+                    const shiftKey = (rawShift.includes('e') || rawShift === 'evening') ? 'evening' : 'morning';
+                    
+                    if (!stats[shiftKey][dish]) {
+                        stats[shiftKey][dish] = { ordered: 0, eaten: 0, notEaten: 0 };
+                    }
+                    
+                    hasData = true;
+                    
+                    stats[shiftKey][dish].ordered++;
+                    
+                    if (status === 'eaten') {
+                        stats[shiftKey][dish].eaten++; 
+                    } else {
+                        stats[shiftKey][dish].notEaten++;
                     }
                 });
+
+                if (!hasData) {
+                    statsContent.innerHTML = `<p class="text-center text-muted p-3">${__('noData')}</p>`;
+                    return;
+                }
+
                 const createTable = (data, name) => {
                     if (Object.keys(data).length === 0) return '';
                     const totals = Object.values(data).reduce((acc, curr) => ({ordered: acc.ordered + curr.ordered, eaten: acc.eaten + curr.eaten, notEaten: acc.notEaten + curr.notEaten}), {ordered: 0, eaten: 0, notEaten: 0});
                     return `<div class="table-wrapper"><table><thead><tr><th>${name}</th><th>${headers.ordered}</th><th>${headers.eaten}</th><th>${headers.notEaten}</th></tr></thead><tbody>${Object.entries(data).map(([dish, d]) => `<tr><td>${dish}</td><td>${d.ordered}</td><td>${d.eaten}</td><td>${d.notEaten}</td></tr>`).join('')}<tr style="font-weight:600;background:rgba(102,126,234,0.1)"><td>${__('total')}</td><td>${totals.ordered}</td><td>${totals.eaten}</td><td>${totals.notEaten}</td></tr></tbody></table></div>`;
                 };
+                
                 statsContent.innerHTML = createTable(stats.morning, __('morning')) + createTable(stats.evening, __('evening'));
+
             } else {
                 const isMonth = state.statsViewMode === 'month', date = new Date(state.statsViewDate);
                 const first = isMonth ? new Date(date.getFullYear(), date.getMonth(), 1) : new Date(date.setDate(date.getDate() - (date.getDay() || 7) + 1));
@@ -695,22 +723,26 @@
                     if (d.getDay() === 0 || d.getDay() === 6) continue;
                     const dayKey = getDayKey(d);
                     const weekDoc = await getDocument('order_list', getWeekString(d));
+                    
                     if (weekDoc) Object.entries(weekDoc).forEach(([key, val]) => {
-                        if (key === 'menu' || val.order === 'reopen' || !val[dayKey]) return;
+                        if (key === 'menu' || typeof val !== 'object' || val.order === 'reopen' || !val[dayKey]) return;
+                        
                         const { status } = parseDishValue(val[dayKey]);
-                        if (status === 'giveup' || status === 'placeholder') return;
+                        if (status === 'placeholder') return;
+                        
                         const depart = val.depart || __('unknown');
                         if (!departStats[depart]) departStats[depart] = { ordered: 0, eaten: 0, notEaten: 0 };
+                        
                         departStats[depart].ordered++;
-                        if (status === 'eaten') departStats[depart].eaten++; else departStats[depart].notEaten++;
+                        if (status === 'eaten') departStats[depart].eaten++; 
+                        else departStats[depart].notEaten++;
                     });
                 }
                 if (Object.keys(departStats).length === 0) { statsContent.innerHTML = `<p class="text-center text-muted p-3">${__('noData')}</p>`; return; }
                 const totals = Object.values(departStats).reduce((acc, curr) => ({ordered: acc.ordered + curr.ordered, eaten: acc.eaten + curr.eaten, notEaten: acc.notEaten + curr.notEaten}), {ordered: 0, eaten: 0, notEaten: 0});
                 statsContent.innerHTML = `<div class="table-wrapper"><table><thead><tr><th>${__('department')}</th><th>${headers.ordered}</th><th>${headers.eaten}</th><th>${headers.notEaten}</th></tr></thead><tbody>${Object.entries(departStats).map(([dep, d]) => `<tr><td>${dep}</td><td>${d.ordered}</td><td>${d.eaten}</td><td>${d.notEaten}</td></tr>`).join('')}<tr style="font-weight:600;background:rgba(102,126,234,0.1)"><td>${__('total')}</td><td>${totals.ordered}</td><td>${totals.eaten}</td><td>${totals.notEaten}</td></tr></tbody></table></div>`;
             }
-        }
-
+        }        
         async function renderAdminMenu() {
             const today = new Date();
             const thisWeek = getWeekString(today);
