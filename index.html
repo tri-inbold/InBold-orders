@@ -791,7 +791,9 @@
             const renderReadOnlyMenuSection = (menuData, title) => {
                 let html = `<h3 style="color:var(--primary);margin:1.5rem 0 1rem;font-size:18px;">${title}</h3>`;
                 for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
-                    const dishes = menuData[dayKey] || [];
+                    let dishes = menuData[dayKey];
+                    if (!Array.isArray(dishes)) dishes = [];
+
                     html += `<div class="form-group"><label class="form-label">${dayName}</label><ul class="staff-list">`;
                     if (dishes.length > 0) dishes.forEach(dish => html += `<li class="staff-item"><div class="staff-details"><div class="staff-dish">${parseDish(dish)}</div></div></li>`);
                     else html += `<li class="staff-item"><div class="staff-details"><div class="staff-dish text-muted">${__('noDishYet')}</div></div></li>`;
@@ -803,9 +805,15 @@
             const renderEditableMenuSection = (weekKey, menuData, title) => {
                 let html = `<h3 style="color:var(--primary);margin:1.5rem 0 1rem;font-size:18px;">${title}</h3>`;
                 for (const [dayKey, dayName] of Object.entries({ mon: __('mon'), tue: __('tue'), wed: __('wed'), thu: __('thu'), fri: __('fri') })) {
-                    const dishes = menuData[dayKey] || [];
+                    let dishes = menuData[dayKey];
+                    if (!Array.isArray(dishes)) dishes = [];
+
                     html += `<div class="form-group"><label class="form-label">${dayName}</label>`;
-                    if (dishes.length > 0) { html += `<ul class="staff-list">`; dishes.forEach(dish => html += `<li class="staff-item"><div class="staff-details"><div class="staff-dish">${parseDish(dish)}</div></div></li>`); html += `</ul>`; }
+                    if (dishes.length > 0) { 
+                        html += `<ul class="staff-list">`; 
+                        dishes.forEach(dish => html += `<li class="staff-item"><div class="staff-details"><div class="staff-dish">${parseDish(dish)}</div></div></li>`); 
+                        html += `</ul>`; 
+                    }
                     html += `<div id="menu-dishes-${weekKey}-${dayKey}" style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem;"><div style="display:flex;gap:0.5rem;align-items:center;"><textarea class="form-textarea menu-dish-textarea" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}" placeholder="${__('oneDishPerLine')}" style="flex:1;min-height:40px;padding-bottom:10px;overflow:hidden;"></textarea><button class="icon-btn remove-menu-dish-btn hidden" data-week="${weekKey}" data-day="${dayKey}" data-index="${dishes.length}"><i class="fas fa-times"></i></button></div></div></div>`;
                 }
                 return html;
