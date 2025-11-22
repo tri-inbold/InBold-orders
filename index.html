@@ -376,15 +376,35 @@
         
         const parseDishValue = (rawString) => {
             if (!rawString) return { status: 'not', dish: '' };
-            if (!rawString.includes(':')) return { status: 'not', dish: rawString };
-            const parts = rawString.split(/:(.+)/);
-            return { status: parts[0].trim(), dish: parts[1] ? parts[1].trim() : '' };
+
+            if (rawString.startsWith('[ignore]')) {
+                let cleanDish = rawString.substring(8).trim(); 
+                return { status: 'ignore', dish: cleanDish };
+            }
+
+            const prefixes = ['eaten:', 'giveup:', 'not:', 'placeholder:'];
+            for (const prefix of prefixes) {
+                if (rawString.startsWith(prefix)) {
+                    let status = prefix.replace(':', '');
+                    if (status === 'placeholder') status = 'ignore';
+                    
+                    return { 
+                        status: status, 
+                        dish: rawString.substring(prefix.length).trim() 
+                    };
+                }
+            }
+
+            return { status: 'not', dish: rawString };
         };
 
         const parseDish = (rawString) => {
             const { dish } = parseDishValue(rawString);
             if (!dish) return '';
-            const parts = dish.split('|');
+            
+            let displayDish = dish.replace('[ignore]', '').trim();
+            
+            const parts = displayDish.split('|');
             const lang = state.staffProfile?.lan || 'vi';
             return (lang.startsWith('en') && parts.length > 1) ? parts[1].trim() : parts[0].trim();
         };
@@ -453,7 +473,8 @@
                     const { status, dish } = parseDishValue(rawDishString);
                     const isSkipped = status === 'giveup';
                     const isEaten = status === 'eaten';
-                    const isPlaceholder = status === 'placeholder';
+                    const isPlaceholder = status === 'ignore' || status === 'placeholder';
+
                     
                     heroHtml = `<div class="card hero-card">
                         <div class="hero-content">
@@ -620,7 +641,7 @@
             const createStaffItem = (order, showMarkEaten = false) => {
                 const { status } = parseDishValue(order.rawDish);
                 const statusClass = status === 'eaten' ? 'eaten' : (status === 'giveup' ? 'skipped' : '');
-                const isPlaceholder = status === 'placeholder';
+                const isPlaceholder = status === 'ignore' || status === 'placeholder';
                 const actionBtn = (showMarkEaten && !isPlaceholder) ? `<div class="staff-item-actions"><button class="btn-mark-eaten mark-eaten-btn" data-key="${order.key}" data-day="${dayKey}"><i class="fas fa-check"></i> ${__('eaten')}</button></div>` : '';
                 return `<li class="staff-item ${statusClass}"><div class="staff-details"><div class="staff-name">${order.name}</div><div class="staff-dish">${parseDish(order.rawDish)}</div></div>${actionBtn}</li>`;
             };
@@ -714,7 +735,7 @@
                     
                     const { status } = parseDishValue(val[dayKey]);
                     
-                    if (status === 'placeholder') return;
+                    if (status === 'ignore' || status === 'placeholder') return;
 
                     const dish = parseDish(val[dayKey]);
                     if (!dish) return;
@@ -1007,16 +1028,20 @@
                     const payload = { [userKey]: { name: state.staffProfile.name, email: state.currentUser.email, depart: state.staffProfile.depart, shift: state.userShiftSelection, order: 'ordered' } };
                     for (const day of ['mon', 'tue', 'wed', 'thu', 'fri']) {
                          if(state.orderSelection[day]) {
-                             const isNoOrder = state.orderSelection[day] === 'Không đặt cơm | No order' || state.orderSelection[day] === 'Không đặt cơm';
-                             const statusPrefix = isNoOrder ? 'placeholder:' : 'not:';
-                             payload[userKey][day] = `${statusPrefix} ${state.orderSelection[day]}`;
+                             const dishName = state.orderSelection[day];
+                             // Kiểm tra nếu là món "Không đặt cơm"
+                             const isNoOrder = dishName.toLowerCase().includes('không đặt cơm') || dishName.toLowerCase().includes('no order');
+                             
+                             // Nếu là Không đặt cơm -> dùng [ignore], ngược lại dùng not:
+                             const prefix = isNoOrder ? '[ignore] ' : 'not: ';
+                             payload[userKey][day] = `${prefix}${dishName}`;
                          }
                     }
                     
                     await setDoc(doc(db, 'order_list', targetWeek), payload, { merge: true });
                     showToast(__('orderSuccess')); state.orderSelection = {}; state.currentOrderDay = 'mon'; await render(); await checkOrderNotification();
                 } catch (e) { console.error(e); showToast(__('orderFailed'), 'error'); } finally { hideLoader(); }
-            } 
+            }
             else if (dataset.action === 'skip' || dataset.action === 'eaten') {
                 showLoader();
                 try {
@@ -1118,14 +1143,17 @@
                     const guestKey = `guest_${Date.now()}`;
                     const payload = { [guestKey]: { name: guestName, depart: el('guest-depart-input').value.trim(), shift: state.guestShiftSelection, order: 'ordered' } };
                     for (const day in state.guestOrderSelection) {
-                        const isNoOrder = state.guestOrderSelection[day].includes('Không đặt cơm');
-                        payload[guestKey][day] = `${isNoOrder ? 'placeholder:' : 'not:'} ${state.guestOrderSelection[day]}`;
+                        const dishName = state.guestOrderSelection[day];
+                        const isNoOrder = dishName.toLowerCase().includes('không đặt cơm');
+                        // Sử dụng [ignore] thay vì placeholder:
+                        const prefix = isNoOrder ? '[ignore] ' : 'not: ';
+                        payload[guestKey][day] = `${prefix}${dishName}`;
                     }
                     await setDoc(doc(db, 'order_list', targetWeek), payload, { merge: true });
                     showToast(`${__('orderSuccess')} cho khách ${guestName}`);
                     state.guestOrderSelection = {}; el('guest-order-modal').classList.add('hidden'); await renderAdmin();
                 } catch(err) { console.error(err); showToast(__('orderFailed'), 'error'); } finally { hideLoader(); }
-            } 
+            }
             else if (classList.contains('reopen-order-btn')) {
                  state.reopenTarget = { key: dataset.key, name: dataset.name };
                  el('reopen-order-modal-title').textContent = `${__('reopenOrderFor')} ${dataset.name}?`;
